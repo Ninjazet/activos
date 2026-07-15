@@ -1,0 +1,136 @@
+/* ============================================
+   LOGIN.CSS — GestActivos
+   Estilo tipo Mazer para la pantalla de login
+   ============================================ */
+
+/* --------------------------------------------
+   1. BASE DEL LAYOUT
+   -------------------------------------------- */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Fondo de respaldo del body: evita franjas blancas
+   si el contenido llega a superar el 100vh */
+body {
+    background: linear-gradient(
+        to right,
+        #6f42c1 0%,
+        #6f42c1 58.33%,
+        #f4f4f6 58.33%,
+        #e9e9ee 100%
+    );
+}
+
+#auth {
+    min-height: 100vh;   /* antes decía 1000vh: eso empujaba el formulario fuera de vista */
+    display: flex;
+    flex-direction: column;
+}
+
+#auth .row {
+    flex: 1;
+}
+
+/* --------------------------------------------
+   2. COLUMNA IZQUIERDA (panel morado)
+   -------------------------------------------- */
+#auth .col-lg-7 {
+    background: linear-gradient(135deg, #6f42c1, #3b2660);
+}
+
+/* Por si en algún punto se usa la clase .bg-primary de Bootstrap */
+.bg-primary {
+    background: linear-gradient(135deg, #6f42c1, #3b2660) !important;
+}
+
+/* Color de marca (título visible solo en móvil) */
+.text-brand {
+    color: #6f42c1 !important;
+}
+
+/* --------------------------------------------
+   3. COLUMNA DERECHA (formulario) — degradado gris claro
+   -------------------------------------------- */
+#auth .col-lg-5 {
+    background: linear-gradient(160deg, #ffffff 0%, #f2f2f5 45%, #e8e8ec 100%);
+}
+
+/* --------------------------------------------
+   4. CAMPOS DEL FORMULARIO
+   -------------------------------------------- */
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: 0;
+}
+
+.form-control {
+    border-left: 0;
+}
+
+.form-control:focus {
+    border-color: #6f42c1;
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+}
+
+/* --------------------------------------------
+   5. BOTÓN PRIMARIO
+   -------------------------------------------- */
+.btn-primary {
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+    transition: 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #5a32a3;
+    border-color: #5a32a3;
+}
+
+/* --------------------------------------------
+   6. RESPONSIVE (pantallas menores a 992px)
+   -------------------------------------------- */
+@media (max-width: 991.98px) {
+    #auth .col-lg-7 {
+        display: none;
+    }
+
+    #auth .col-lg-5 {
+        background: linear-gradient(135deg, #6f42c1, #3b2660);
+        color: #fff;
+    }
+
+    #auth .col-lg-5 .form-label,
+    #auth .col-lg-5 h4 {
+        color: #fff !important;
+    }
+
+    #auth .col-lg-5 .input-group-text {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    #auth .col-lg-5 .form-control {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    #auth .col-lg-5 .form-control::placeholder {
+        color: #ddd;
+    }
+
+    #auth .btn-primary {
+        background-color: #fff;
+        color: #6f42c1;
+        border-color: #fff;
+    }
+
+    #auth .btn-primary:hover {
+        background-color: #e9ecef;
+        color: #5a32a3;
+    }
+}

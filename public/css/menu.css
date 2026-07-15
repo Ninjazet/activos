@@ -1,0 +1,288 @@
+:root{
+    --width: 300px;
+    --padding: 10px;
+    --bgcolor: rgb(52,52,52);
+    --hovercolor: rgb(23,23,23);
+    --width-collapsed: 50px;
+}
+
+body{
+    /* background-color: #032c55; */
+    background-color: #ededed;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    padding: 0;
+    margin: 0;
+    margin-left: var(--width); /* el sidebar inicia expandido (300px) */
+}
+
+.body-expanded{
+    margin-left: var(--width-collapsed); /* se reduce cuando el sidebar se colapsa */
+}
+
+#main-contanier{
+    color: white;
+    background-color: #fcfcfc;
+    width: 70%;
+    
+    margin-left: 300px;
+}
+
+#sidemenu{
+    background-color: var(--bgcolor);
+    color: hsl(0, 0%, 100%);
+    position: absolute;
+    height: 150%;
+    left: 0;
+    top: 0;
+}
+
+#sidemenu a{
+    color: white;
+    text-decoration: none;
+}
+
+#sidemenu #header{
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--hovercolor);
+
+}
+
+#sidmenu #header #title{
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#sidemenu #header #title, #sidemenu #header #menu-btn{
+    vertical-align: middle;
+}
+
+#sidemenu #header #menu-btn{
+    display: inline-block;
+}
+
+#sidemenu #header #menu-btn{
+    cursor: pointer;
+    padding: 10px;
+    width: var(--width-collapsed);
+    box-sizing: border-box;
+}
+
+#sidemenu #header #menu-btn:hover{
+    background-color: var(--hovercolor);
+}
+
+#sidemenu #header #menu-btn .btn-hamburger{
+    background-color: #fff;
+    width: 100%;
+    height: 2px;
+    margin: 5px 0;
+}
+
+#sidemenu #profile{
+    border-bottom: 1px solid var(--hovercolor);
+    padding: var(--padding) 0;
+    text-align: center;
+}
+
+#sidemenu #profile #photo{
+    box-sizing: border-box;
+    padding: var(--padding);
+    margin: 0 auto;
+}
+
+#sidemenu #profile #photo img {
+    border-radius: 50%;
+    
+}
+
+#sidemenu #profile #photo, #sidemenu #profile #name{
+    font-size: 24px;
+    padding: var(--padding) 0;
+    overflow: hidden;
+}
+
+#sidemenu #menu-items{
+    overflow: hidden;
+}
+
+#sidemenu #menu-items .item{
+    width: var(--width);
+}
+
+#sidemenu #menu-items .item .icon{
+    display: inline-block;
+}
+
+#sidemenu #menu-items .item .icon,
+#sidemenu #menu-items .item .title
+{
+    font-size: 14px;
+    vertical-align: middle;
+    overflow: hidden;
+    display: inline-block;
+}
+
+#sidemenu #menu-items .item a{
+    display: block;
+}
+
+#sidemenu #menu-items .item a:hover{
+    background-color: var(--hovercolor);
+}
+
+#sidemenu #menu-items .item .icon{
+   box-sizing: border-box;
+   padding: var(--padding);
+   width: var(--width-collapsed);
+}
+
+#sidemenu #menu-items .item .icon img{
+    width: 100%;
+}
+
+#sidemenu #menu-items .item .title{
+    padding: var(--padding) 0;
+}
+
+#sidemenu #menu-items .item.separator{
+    height: 1px;
+    border-bottom: 1px solid var(--hovercolor);
+    margin: 15px 0;
+}
+
+.menu-expanded{
+    width: var(--width);
+    box-shadow: 1px solid 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.menu-expanded #header #title{
+    display: inline-block;
+    width: calc(100% - 50px);
+    margin-right: -5px;
+    padding: var(--padding);
+}
+
+
+.menu-expanded #header #title span{
+    width: calc(var(--width) - var(--width-collapsed) -5px);
+    overflow: hidden;
+    display: inline-block;
+}
+
+.menu-expanded #profile #photo{
+    width: 95px;
+}
+
+
+.menu-expanded #profile #photo img{
+    width: 95px;
+    height: 95px;
+}
+
+
+.menu-expanded #profile #name{
+    width: 100%;
+}
+
+.menu-expanded #profile #cerrarIcon{
+    display: none;
+}
+
+
+
+.menu-collapsed{
+    width: var(--width-collapsed);
+}
+
+.menu-collapsed .main-container{
+    background-color: blue;
+    width: 70%;
+  
+    margin-left: 200px;
+}
+
+
+ /*.menu-collapsed #header #title{
+    width: 0;
+    height: 0;
+    padding: 0;
+    margin: 0;
+   
+}*/
+
+.menu-collapsed #profile #name {
+    display: none;
+}
+
+.menu-collapsed .item {
+    width: 100px;
+}
+
+.menu-collapsed #profile #cerrar{
+    display: none;
+}
+
+.menu-collapsed #profile #cerrarIcon{
+    display: block;
+}
+ 
+#mifoto{
+    width: 45px;
+    height: 45px;
+ }
+
+ /* SUBMENU */
+
+
+.subitem{
+    display: none;
+}
+
+.subitem .icon img{
+    width: 100px;
+    height: 25px;
+}
+
+.fas{
+    padding-left: 22px;
+}
+
+.fa-home{
+    padding-right: 20px;
+}
+
+.menu-collapsed .fa-home{
+    position: relative;
+    left: -7px;
+}
+
+#sidemenu #profile #cerrar{
+    color: #0A7DAB;
+    font-size: 14px;
+}
+
+/* 
+ .subitem{
+    position: absolute;
+    display: none;
+    list-style: none;
+    width: 200px;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+#menu-items .item:hover .subitem{
+    display: block;
+}
+
+
+.subitem :hover{
+    background-color: #8E8989;
+}
+
+.subitem a{
+    display: block;
+    color: white;
+    padding: 15px 15px 15px 20px;
+    text-decoration: none;
+} */

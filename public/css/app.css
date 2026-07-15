@@ -1,0 +1,7 @@
+/* GestActivos - Estilos globales */
+.wrapper        { width: 900px; margin: 0 auto; }
+.fa-edit        { color: #31E814; }
+.fa-trash       { color: #e81414; }
+#buscar         { width: 400px; }
+#imgIcon        { color: #D8A30B; }
+.page-header h2 { color: #333; }

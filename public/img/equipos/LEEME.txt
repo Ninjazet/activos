@@ -1,0 +1,6 @@
+Esta carpeta se usa para guardar las fotos que se suben desde
+el módulo de Equipos (Datos Maestros → Equipos, al agregar o
+editar). Empieza vacía a propósito: se llena conforme subes fotos.
+
+Puedes borrar este archivo, solo existe para que la carpeta no
+desaparezca al comprimir/descomprimir el proyecto.
