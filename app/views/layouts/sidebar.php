@@ -167,7 +167,16 @@ $seg  = $_SESSION['seguridad']     ?? '0';
     </div>
 </div>
 
-<div id="main-container"></div>
+<div id="topbar">
+    <div id="topbar-title">
+        <h1><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Inicio' ?></h1>
+        <span>Panel de control · <?= htmlspecialchars(APP_NAME) ?></span>
+    </div>
+    <div id="topbar-user">
+        <img src="<?= htmlspecialchars($imagen) ?>" alt="">
+        <span><?= htmlspecialchars($nomApe) ?></span>
+    </div>
+</div>
 
 <script>
 const btn  = document.querySelector('#menu-btn');

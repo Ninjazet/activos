@@ -3,26 +3,34 @@ require_once __DIR__ . '/bootstrap.php';
 $pageTitle = 'Inicio';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 Auth::guardarPagina(__FILE__);
+
+$accesos = [
+    ['icono' => 'icons/Maestros.png',      'titulo' => 'Datos Maestros', 'desc' => 'Empleados, cargos, equipos, marcas, modelos y áreas.',  'url' => 'empleados.php',           'permiso' => $mae  ?? '0'],
+    ['icono' => 'icons/Transacciones.png', 'titulo' => 'Transacciones',  'desc' => 'Asignación de equipos a empleados.',                     'url' => 'asignarequipo.php',       'permiso' => $tran ?? '0'],
+    ['icono' => 'icons/consulta.png',      'titulo' => 'Consultas',      'desc' => 'Búsqueda general de información del sistema.',           'url' => 'consultas/empleados.php', 'permiso' => $con  ?? '0'],
+    ['icono' => 'icons/reportes.png',      'titulo' => 'Reportes',       'desc' => 'Reportes descargables de empleados y equipos.',          'url' => 'reportes/empleados.php',  'permiso' => $rep  ?? '0'],
+];
 ?>
 
-<style>
-    .wrapper { width: 90%; max-width: 1000px; margin: 0 auto; }
-</style>
-
 <div class="wrapper">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-6">
-                <img src="<?= BASE_URL ?>/public/icons/logo.png" alt="Logo"
-                     style="width:300px;height:300px;">
-            </div>
-            <div class="col-md-6" style="margin-top:80px;">
-                <h1 class="display-3" style="color:#222;"><?= APP_NAME ?></h1>
-                <p class="lead" style="color:#444;">Control de Activos Empresariales</p>
-                <hr style="border-color:#bbb; margin:20px 0;">
-                <p style="color:#666;">Bienvenido al sistema.</p>
-            </div>
+    <div class="dash-hero">
+        <img src="<?= BASE_URL ?>/public/icons/logo.png" alt="Logo" class="dash-hero-logo">
+        <div class="dash-hero-text">
+            <h1><?= htmlspecialchars(APP_NAME) ?></h1>
+            <p class="dash-hero-subtitle">Control de Activos Empresariales</p>
+            <hr>
+            <p class="dash-hero-welcome">Bienvenido, <strong><?= htmlspecialchars(Auth::get('nombre')) ?></strong>.</p>
         </div>
+    </div>
+
+    <div class="dash-grid">
+        <?php foreach ($accesos as $a): if ($a['permiso'] != '1') continue; ?>
+        <a href="<?= BASE_URL ?>/<?= $a['url'] ?>" class="dash-card">
+            <div class="dash-card-icon"><img src="<?= BASE_URL ?>/public/<?= $a['icono'] ?>" alt=""></div>
+            <div class="dash-card-title"><?= htmlspecialchars($a['titulo']) ?></div>
+            <div class="dash-card-desc"><?= htmlspecialchars($a['desc']) ?></div>
+        </a>
+        <?php endforeach; ?>
     </div>
 </div>
 

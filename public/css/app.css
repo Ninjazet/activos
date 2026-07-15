@@ -1,7 +1,123 @@
-/* GestActivos - Estilos globales */
-.wrapper        { width: 900px; margin: 0 auto; }
-.fa-edit        { color: #31E814; }
-.fa-trash       { color: #e81414; }
-#buscar         { width: 400px; }
-#imgIcon        { color: #D8A30B; }
-.page-header h2 { color: #333; }
+/* ============================================
+   APP.CSS — GestActivos
+   Estilos generales de contenido + dashboard
+   ============================================ */
+
+.wrapper {
+    max-width: 1100px;
+    width: 92%;
+    margin: 28px auto;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    padding: 30px;
+}
+
+.fa-edit  { color: #31E814; }
+.fa-trash { color: #e81414; }
+#buscar   { width: 400px; }
+#imgIcon  { color: #D8A30B; }
+
+.page-header h2 {
+    color: #1e1e2d;
+    font-weight: 700;
+}
+
+/* --------------------------------------------
+   DASHBOARD (index.php)
+   -------------------------------------------- */
+.dash-hero {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    padding-bottom: 20px;
+}
+
+.dash-hero-logo {
+    width: 160px;
+    height: 160px;
+    object-fit: contain;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, #f6f0ff, #ece3fb);
+    padding: 20px;
+}
+
+.dash-hero-text h1 {
+    margin: 0 0 4px;
+    font-size: 32px;
+    font-weight: 800;
+    color: #1e1e2d;
+}
+
+.dash-hero-subtitle {
+    margin: 0;
+    font-size: 16px;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.dash-hero-text hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 16px 0;
+}
+
+.dash-hero-welcome {
+    margin: 0;
+    color: #666;
+    font-size: 15px;
+}
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-top: 26px;
+}
+
+.dash-card {
+    display: block;
+    padding: 22px;
+    border-radius: var(--radius);
+    background: var(--content-bg);
+    border: 1px solid #ececf3;
+    text-decoration: none;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.dash-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(111, 66, 193, 0.15);
+    border-color: var(--accent);
+}
+
+.dash-card-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.dash-card-icon img {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
+}
+
+.dash-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e1e2d;
+    margin-bottom: 6px;
+}
+
+.dash-card-desc {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.4;
+}
