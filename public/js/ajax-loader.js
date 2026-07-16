@@ -3,12 +3,13 @@
 // ============================================================
 
 // Carga el contenido de una URL AJAX dentro del div #datos
-function ajaxLoad(url, query) {
+function ajaxLoad(url, query, extraData) {
+    var data = $.extend({ query: query || '' }, extraData || {});
     $.ajax({
         url:      url,
         type:     'POST',
         dataType: 'html',
-        data:     { query: query || '' }
+        data:     data
     })
     .done(function (resp) { $('#datos').html(resp); })
     .fail(function ()     { $('#datos').html('<p class="text-danger">Error al cargar datos.</p>'); });

@@ -18,6 +18,7 @@ if ($q !== '') {
     $params = ["%$q%", "%$q%", "%$q%"];
 }
 
+$sql .= " ORDER BY us.idusuario DESC";
 $resultado = $db->consulta($sql, $params);
 
 // Cargar solo empleados activos que no tengan cuenta de usuario asignada
@@ -86,7 +87,7 @@ $empleados_todos = $db->consulta(
 
 <script>
 $(document).ready(function(){
-    $("#datosE").DataTable({ dom: 'lrtip' });
+    $("#datosE").DataTable({ dom: 'lrtip', order: [[0, 'desc']] });
     var hide = [4,5,6,7,8];
     hide.forEach(function(i){ $("#datosE th:nth-child("+i+"), #datosE td:nth-child("+i+")").hide(); });
 });

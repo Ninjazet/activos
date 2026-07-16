@@ -10,7 +10,7 @@ $q      = trim($_POST['query'] ?? '');
 $verTodos = ($_POST['ver_todos'] ?? '0') === '1';
 
 $sql = "SELECT em.idempleado, em.nombre, em.apellidos, em.edad,
-               em.telefono, em.direccion, em.imagen, em.activo,
+               em.telefono, em.correo, em.direccion, em.imagen, em.activo,
                em.idarea, em.idcargo, em.idsexo,
                ar.descripcionarea, ca.descripcioncargo
         FROM empleados em
@@ -24,14 +24,15 @@ if (!$verTodos) {
     $conditions[] = "em.activo = 1";
 }
 if ($q !== '') {
-    $conditions[] = "(em.nombre LIKE ? OR em.apellidos LIKE ? OR em.telefono LIKE ? OR ar.descripcionarea LIKE ?)";
+    $conditions[] = "(em.nombre LIKE ? OR em.apellidos LIKE ? OR em.telefono LIKE ? OR em.correo LIKE ? OR ar.descripcionarea LIKE ?)";
     $like   = "%$q%";
-    $params = array_merge($params, [$like, $like, $like, $like]);
+    $params = array_merge($params, [$like, $like, $like, $like, $like]);
 }
 if ($conditions) {
     $sql .= " WHERE " . implode(" AND ", $conditions);
 }
 
+$sql .= " ORDER BY em.idempleado DESC";
 $rows   = $db->consulta($sql, $params);
 $areas  = $db->consulta("SELECT * FROM areas  WHERE activo=1 ORDER BY descripcionarea");
 $cargos = $db->consulta("SELECT * FROM cargos WHERE activo=1 ORDER BY descripcioncargo");
@@ -47,7 +48,7 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
     <small class="text-muted">
         <?php if (!$verTodos): ?>
             Solo se muestran empleados activos.
-            <a href="#" onclick="ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/empleados.php'); return false;">Mostrar todos</a>
+            <a href="#" onclick="ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/empleados.php', '', { ver_todos: 1 }); return false;">Mostrar todos</a>
         <?php else: ?>
             Mostrando todos (activos e inactivos).
         <?php endif; ?>
@@ -58,10 +59,7 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
     <thead style="background-color:#D3E9F1">
         <tr>
             <th>ID</th><th>Nombre</th><th>Apellidos</th><th>Edad</th>
-            <th>Teléfono</th><th>Área</th><th>Cargo</th><th>Estado</th>
-            <th style="display:none">idarea</th>
-            <th style="display:none">idcargo</th>
-            <th style="display:none">idsexo</th>
+            <th>Teléfono</th><th>Correo</th><th>Área</th><th>Cargo</th><th>Estado</th>
             <th>Acción</th>
         </tr>
     </thead>
@@ -74,18 +72,18 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
                 ? BASE_URL . '/public/img/empleados/' . $archivoImagen
                 : BASE_URL . '/public/img/empleados/avatar1.png';
         ?>
-        <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>">
+        <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>"
+            data-idarea="<?= (int)$r['idarea'] ?>" data-idcargo="<?= (int)$r['idcargo'] ?>" data-idsexo="<?= (int)$r['idsexo'] ?>"
+            data-direccion="<?= htmlspecialchars($r['direccion'] ?? '', ENT_QUOTES) ?>">
             <td><?= $r['idempleado'] ?></td>
             <td><?= htmlspecialchars($r['nombre']) ?></td>
             <td><?= htmlspecialchars($r['apellidos']) ?></td>
             <td><?= $r['edad'] ?></td>
             <td><?= htmlspecialchars($r['telefono'] ?? '') ?></td>
+            <td><?= htmlspecialchars($r['correo'] ?? '') ?></td>
             <td><?= htmlspecialchars($r['descripcionarea'] ?? '') ?></td>
             <td><?= htmlspecialchars($r['descripcioncargo'] ?? '') ?></td>
             <td><?= $activo === 1 ? '<span class="label label-success">Activo</span>' : '<span class="label label-default">Inactivo</span>' ?></td>
-            <td style="display:none"><?= $r['idarea'] ?></td>
-            <td style="display:none"><?= $r['idcargo'] ?></td>
-            <td style="display:none"><?= $r['idsexo'] ?></td>
             <td>
                 <a href="#" onclick="return modalImg('<?= htmlspecialchars($imgUrl, ENT_QUOTES) ?>')"
                    data-toggle="modal" data-target="#imgModal">
@@ -113,10 +111,7 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
 
 <script>
 $(document).ready(function(){
-    $('#tablaEmp').DataTable({ dom:'lrtip' });
-    $('#tablaEmp th:nth-child(8), #tablaEmp td:nth-child(8)').hide();
-    $('#tablaEmp th:nth-child(9), #tablaEmp td:nth-child(9)').hide();
-    $('#tablaEmp th:nth-child(10),#tablaEmp td:nth-child(10)').hide();
+    $('#tablaEmp').DataTable({ dom: 'lrtip', order: [[0, 'desc']] });
 });
 
 function modalImg(src) {
@@ -129,9 +124,11 @@ function editEmp(e) {
     $('#apellidosAct').val(tr.find('td').eq(2).text());
     $('#edadAct').val(tr.find('td').eq(3).text());
     $('#telefonoAct').val(tr.find('td').eq(4).text());
-    $('#areaAct').val(tr.find('td').eq(7).text());
-    $('#cargoAct').val(tr.find('td').eq(8).text());
-    $('#sexoAct').val(tr.find('td').eq(9).text());
+    $('#correoAct').val(tr.find('td').eq(5).text());
+    $('#direccionAct').val(tr.attr('data-direccion'));
+    $('#areaAct').val(tr.data('idarea'));
+    $('#cargoAct').val(tr.data('idcargo'));
+    $('#sexoAct').val(tr.data('idsexo'));
 }
 function delEmp(e) {
     var tr = $(e.target).closest('tr');
@@ -179,6 +176,8 @@ function delEmp(e) {
           <input type="number" name="edad" class="form-control" required></div>
         <div class="form-group"><label>Teléfono</label>
           <input type="text" name="telefono" class="form-control"></div>
+        <div class="form-group"><label>Correo</label>
+          <input type="email" name="correo" class="form-control" maxlength="150" placeholder="nombre@empresa.com"></div>
         <div class="form-group"><label>Dirección</label>
           <input type="text" name="direccion" class="form-control"></div>
         <div class="form-group"><label>Área</label>
@@ -229,6 +228,10 @@ function delEmp(e) {
           <input type="number" name="edadAct" id="edadAct" class="form-control" required></div>
         <div class="form-group"><label>Teléfono</label>
           <input type="text" name="telefonoAct" id="telefonoAct" class="form-control"></div>
+        <div class="form-group"><label>Correo</label>
+          <input type="email" name="correoAct" id="correoAct" class="form-control" maxlength="150" placeholder="nombre@empresa.com"></div>
+        <div class="form-group"><label>Dirección</label>
+          <input type="text" name="direccionAct" id="direccionAct" class="form-control"></div>
         <div class="form-group"><label>Área</label>
           <select name="areaAct" id="areaAct" class="form-control">
             <?php foreach ($areasTodas as $a): ?>

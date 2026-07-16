@@ -9,7 +9,8 @@ $db  = Database::getInstance();
 $q   = trim($_POST['query'] ?? '');
 
 $sql = "SELECT eq.idequipo, eq.imagen, eq.idmarca_equipo, eq.idmodelo_equipo,
-               eq.activo, ma.nombreMarca, mo.nombreModelo
+               eq.activo, eq.fecha_compra, eq.costo, eq.factura, eq.vencimiento_garantia,
+               eq.estado_equipo, eq.numero_serie, eq.codigo_activo, eq.tipo_equipo, ma.nombreMarca, mo.nombreModelo
         FROM equipo eq
         INNER JOIN marca  ma ON eq.idmarca_equipo  = ma.idmarca
         INNER JOIN modelo mo ON eq.idmodelo_equipo = mo.idmodelo";
@@ -17,14 +18,15 @@ $sql = "SELECT eq.idequipo, eq.imagen, eq.idmarca_equipo, eq.idmodelo_equipo,
 $conditions = [];
 $params     = [];
 if ($q !== '') {
-    $conditions[] = "(ma.nombreMarca LIKE ? OR mo.nombreModelo LIKE ? OR eq.idequipo LIKE ?)";
+    $conditions[] = "(ma.nombreMarca LIKE ? OR mo.nombreModelo LIKE ? OR eq.idequipo LIKE ? OR eq.codigo_activo LIKE ? OR eq.numero_serie LIKE ? OR eq.tipo_equipo LIKE ?)";
     $like   = "%$q%";
-    $params = [$like, $like, $like];
+    $params = [$like, $like, $like, $like, $like, $like];
 }
 if ($conditions) {
     $sql .= " WHERE " . implode(" AND ", $conditions);
 }
 
+$sql .= " ORDER BY eq.idequipo DESC";
 $rows    = $db->consulta($sql, $params);
 $marcas  = $db->consulta("SELECT * FROM marca  WHERE activo=1 ORDER BY nombreMarca");
 $modelos = $db->consulta("SELECT * FROM modelo WHERE activo=1 ORDER BY nombreModelo");
@@ -38,22 +40,40 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
 <table class="table table-bordered table-striped" id="tablaEquipo">
     <thead style="background-color:#D3E9F1">
         <tr>
-            <th>ID</th><th>Marca</th><th>Modelo</th><th>Estado</th>
-            <th style="display:none">idmarca</th>
-            <th style="display:none">idmodelo</th>
+            <th>ID</th><th>Código</th><th>Tipo</th><th>Número de serie</th>
+            <th>Marca</th><th>Modelo</th><th>Estado del equipo</th>
+            <th>Fecha compra</th><th>Costo</th><th>Factura</th><th>Garantía</th>
             <th>Acción</th>
         </tr>
     </thead>
     <tbody>
     <?php foreach ($rows as $r): ?>
-        <?php $activo = (int)$r['activo']; ?>
-        <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>">
+        <?php
+        $activo = (int)$r['activo'];
+        $estados = [1 => ['Disponible', 'success'], 2 => ['Asignado', 'primary'], 3 => ['En mantenimiento', 'warning'], 4 => ['Perdido o robado', 'danger'], 5 => ['Dado de baja', 'default']];
+        $estadoEquipo = (int)$r['estado_equipo'];
+        $estadoInfo = $estados[$estadoEquipo] ?? ['Sin definir', 'default'];
+        ?>
+        <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>"
+            data-idmarca="<?= (int)$r['idmarca_equipo'] ?>" data-idmodelo="<?= (int)$r['idmodelo_equipo'] ?>"
+            data-fecha-compra="<?= htmlspecialchars($r['fecha_compra'] ?? '', ENT_QUOTES) ?>"
+            data-costo="<?= htmlspecialchars($r['costo'] ?? '', ENT_QUOTES) ?>"
+            data-factura="<?= htmlspecialchars($r['factura'] ?? '', ENT_QUOTES) ?>"
+            data-garantia="<?= htmlspecialchars($r['vencimiento_garantia'] ?? '', ENT_QUOTES) ?>"
+            data-estado-equipo="<?= $estadoEquipo ?>"
+            data-numero-serie="<?= htmlspecialchars($r['numero_serie'] ?? '', ENT_QUOTES) ?>"
+            data-tipo-equipo="<?= htmlspecialchars($r['tipo_equipo'] ?? 'Otro', ENT_QUOTES) ?>">
             <td><?= $r['idequipo'] ?></td>
+            <td><strong><?= htmlspecialchars($r['codigo_activo'] ?? '') ?></strong></td>
+            <td><?= htmlspecialchars($r['tipo_equipo'] ?? 'Otro') ?></td>
+            <td><?= htmlspecialchars($r['numero_serie'] ?: '—') ?></td>
             <td><?= htmlspecialchars($r['nombreMarca']) ?></td>
             <td><?= htmlspecialchars($r['nombreModelo']) ?></td>
-            <td><?= $activo === 1 ? '<span class="label label-success">Activo</span>' : '<span class="label label-default">Inactivo</span>' ?></td>
-            <td style="display:none"><?= $r['idmarca_equipo'] ?></td>
-            <td style="display:none"><?= $r['idmodelo_equipo'] ?></td>
+            <td><span class="label label-<?= $estadoInfo[1] ?>"><?= $estadoInfo[0] ?></span><?= $activo === 0 ? ' <span class="label label-default">Inactivo</span>' : '' ?></td>
+            <td><?= $r['fecha_compra'] ? date('d/m/Y', strtotime($r['fecha_compra'])) : '—' ?></td>
+            <td><?= $r['costo'] !== null ? 'L ' . number_format((float)$r['costo'], 2) : '—' ?></td>
+            <td><?= htmlspecialchars($r['factura'] ?: '—') ?></td>
+            <td><?= $r['vencimiento_garantia'] ? date('d/m/Y', strtotime($r['vencimiento_garantia'])) : '—' ?></td>
             <td>
                 <?php $img = $r['imagen'] ? (BASE_URL . '/' . $r['imagen']) : (BASE_URL . '/public/icons/equipo.png'); ?>
                 <a href="#" onclick="return modalImg('<?= htmlspecialchars($img, ENT_QUOTES) ?>')"
@@ -82,9 +102,7 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
 
 <script>
 $(document).ready(function () {
-    $('#tablaEquipo').DataTable({ dom: 'lrtip' });
-    $('#tablaEquipo th:nth-child(4), #tablaEquipo td:nth-child(4)').hide();
-    $('#tablaEquipo th:nth-child(5), #tablaEquipo td:nth-child(5)').hide();
+    $('#tablaEquipo').DataTable({ dom: 'lrtip', order: [[0, 'desc']] });
 });
 
 function modalImg(src) {
@@ -93,13 +111,20 @@ function modalImg(src) {
 function editEquipo(e) {
     var tr = $(e.target).closest('tr');
     $('#idequipo').val(tr.find('td').eq(0).text());
-    $('#marcaAct').val(tr.find('td').eq(3).text());
-    $('#modeloAct').val(tr.find('td').eq(4).text());
+    $('#marcaAct').val(tr.data('idmarca'));
+    $('#modeloAct').val(tr.data('idmodelo'));
+    $('#numero_serieAct').val(tr.attr('data-numero-serie'));
+    $('#tipo_equipoAct').val(tr.attr('data-tipo-equipo'));
+    $('#fecha_compraAct').val(tr.attr('data-fecha-compra'));
+    $('#costoAct').val(tr.attr('data-costo'));
+    $('#facturaAct').val(tr.attr('data-factura'));
+    $('#vencimiento_garantiaAct').val(tr.attr('data-garantia'));
+    $('#estado_equipoAct').val(tr.data('estado-equipo'));
 }
 function delEquipo(e) {
     var tr = $(e.target).closest('tr');
     $('#idEquipoDel').val(tr.find('td').eq(0).text());
-    $('#lblEquipoDel').text(tr.find('td').eq(1).text() + ' ' + tr.find('td').eq(2).text());
+    $('#lblEquipoDel').text(tr.find('td').eq(1).text() + ' - ' + tr.find('td').eq(4).text() + ' ' + tr.find('td').eq(5).text());
 }
 </script>
 
@@ -146,8 +171,18 @@ function delEquipo(e) {
             <option value="<?= $mo['idmodelo'] ?>"><?= htmlspecialchars($mo['nombreModelo']) ?></option>
             <?php endforeach; ?>
           </select></div>
-        <div class="form-group"><label>Foto</label>
-          <input type="file" name="archivo" class="form-control" accept="image/*"></div>
+        <div class="form-group"><label>Número de serie</label><input type="text" name="numero_serie" class="form-control" maxlength="100" placeholder="Identificador del fabricante"></div>
+        <div class="form-group"><label>Tipo de equipo</label><select name="tipo_equipo" class="form-control" required>
+          <option value="Laptop">Laptop</option><option value="Computadora de escritorio">Computadora de escritorio</option>
+          <option value="Monitor">Monitor</option><option value="Teléfono">Teléfono</option><option value="Impresora">Impresora</option>
+          <option value="Servidor">Servidor</option><option value="Equipo de red">Equipo de red</option><option value="Otro">Otro</option></select></div>
+        <div class="form-group"><label>Código de activo</label><input type="text" class="form-control" value="Se generará automáticamente (EQ-0001)" disabled></div>
+        <div class="form-group"><label>Fecha de compra</label><input type="date" name="fecha_compra" class="form-control"></div>
+        <div class="form-group"><label>Costo (L)</label><input type="number" name="costo" class="form-control" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="form-group"><label>Número de factura</label><input type="text" name="factura" class="form-control" maxlength="100"></div>
+        <div class="form-group"><label>Vencimiento de garantía</label><input type="date" name="vencimiento_garantia" class="form-control"></div>
+        <div class="form-group"><label>Estado inicial</label><input type="text" class="form-control" value="Disponible" disabled><small class="text-muted">Todo equipo nuevo inicia automáticamente como disponible.</small></div>
+        <div class="form-group"><label>Foto</label><input type="file" name="archivo" class="form-control" accept="image/*"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -181,8 +216,18 @@ function delEquipo(e) {
             <option value="<?= $mo['idmodelo'] ?>"><?= htmlspecialchars($mo['nombreModelo']) ?><?= (int)$mo['activo'] === 0 ? ' (inactivo)' : '' ?></option>
             <?php endforeach; ?>
           </select></div>
-        <div class="form-group"><label>Nueva foto (opcional)</label>
-          <input type="file" name="archivoAct" class="form-control" accept="image/*"></div>
+        <div class="form-group"><label>Número de serie</label><input type="text" name="numero_serieAct" id="numero_serieAct" class="form-control" maxlength="100"></div>
+        <div class="form-group"><label>Tipo de equipo</label><select name="tipo_equipoAct" id="tipo_equipoAct" class="form-control" required>
+          <option value="Laptop">Laptop</option><option value="Computadora de escritorio">Computadora de escritorio</option>
+          <option value="Monitor">Monitor</option><option value="Teléfono">Teléfono</option><option value="Impresora">Impresora</option>
+          <option value="Servidor">Servidor</option><option value="Equipo de red">Equipo de red</option><option value="Otro">Otro</option></select></div>
+        <div class="form-group"><label>Fecha de compra</label><input type="date" name="fecha_compraAct" id="fecha_compraAct" class="form-control"></div>
+        <div class="form-group"><label>Costo (L)</label><input type="number" name="costoAct" id="costoAct" class="form-control" min="0" step="0.01"></div>
+        <div class="form-group"><label>Número de factura</label><input type="text" name="facturaAct" id="facturaAct" class="form-control" maxlength="100"></div>
+        <div class="form-group"><label>Vencimiento de garantía</label><input type="date" name="vencimiento_garantiaAct" id="vencimiento_garantiaAct" class="form-control"></div>
+        <div class="form-group"><label>Estado del equipo</label><select name="estado_equipoAct" id="estado_equipoAct" class="form-control" required>
+          <option value="1">Disponible</option><option value="2" disabled>Asignado (automático)</option><option value="3">En mantenimiento</option><option value="4">Perdido o robado</option><option value="5">Dado de baja</option></select></div>
+        <div class="form-group"><label>Nueva foto (opcional)</label><input type="file" name="archivoAct" class="form-control" accept="image/*"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>

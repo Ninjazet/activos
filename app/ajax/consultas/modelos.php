@@ -35,7 +35,7 @@ $resultado = $db->consulta($sql, $params);
     </tbody>
 </table>
 <script>
-$(document).ready(function(){ $('#tablaConsModelo').DataTable({ dom: 'lrtip' }); });
+$(document).ready(function(){ $('#tablaConsModelo').DataTable({ dom: 'lrtip', order: [[1, 'asc']] }); });
 </script>
 <?php else: ?>
 <p class="lead"><em>No hay registros.</em></p>

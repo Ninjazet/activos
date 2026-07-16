@@ -26,7 +26,7 @@ class MYPDF extends TCPDF {
 }
 
 $pdf = new MYPDF(PDF_PAGE_ORIENTATION, 'mm', 'Letter', true, 'UTF-8', false);
-$pdf->SetMargins(50, 35, 25);
+$pdf->SetMargins(18, 35, 18);
 $pdf->SetHeaderMargin(20);
 $pdf->setPrintFooter(false);
 $pdf->setPrintHeader(true);
@@ -64,31 +64,38 @@ $pdf->SetTextColor(0, 0, 0);
 
 $pdf->SetFillColor(232, 232, 232);
 $pdf->SetFont('helvetica', 'B', 12);
-$pdf->Cell(20, 6, 'Id', 1, 0, 'C', 1);
-$pdf->Cell(45, 6, 'Marca', 1, 0, 'C', 1);
-$pdf->Cell(45, 6, 'Modelo', 1, 0, 'C', 1);
-$pdf->Cell(30, 6, 'Estado', 1, 1, 'C', 1);
+$pdf->Cell(27, 6, 'Codigo', 1, 0, 'C', 1);
+$pdf->Cell(38, 6, 'Tipo', 1, 0, 'C', 1);
+$pdf->Cell(30, 6, 'Marca', 1, 0, 'C', 1);
+$pdf->Cell(38, 6, 'Modelo', 1, 0, 'C', 1);
+$pdf->Cell(42, 6, 'Estado', 1, 1, 'C', 1);
 
 $pdf->SetFont('helvetica', '', 10);
 
 $filtro = trim($_REQUEST['buscar'] ?? '');
-$sql = "SELECT eq.idequipo, eq.activo, ma.nombreMarca, mo.nombreModelo
+$sql = "SELECT eq.idequipo, eq.activo, eq.codigo_activo, eq.tipo_equipo, eq.estado_equipo, ma.nombreMarca, mo.nombreModelo
         FROM equipo eq
         INNER JOIN marca  ma ON eq.idmarca_equipo  = ma.idmarca
         INNER JOIN modelo mo ON eq.idmodelo_equipo = mo.idmodelo";
 $params = [];
 if ($filtro !== '') {
-    $sql   .= " WHERE ma.nombreMarca LIKE ? OR eq.idequipo LIKE ? OR mo.nombreModelo LIKE ?";
-    $params = ["%$filtro%", "%$filtro%", "%$filtro%"];
+    $sql   .= " WHERE ma.nombreMarca LIKE ? OR eq.idequipo LIKE ? OR mo.nombreModelo LIKE ? OR eq.codigo_activo LIKE ? OR eq.tipo_equipo LIKE ?";
+    $params = ["%$filtro%", "%$filtro%", "%$filtro%", "%$filtro%", "%$filtro%"];
 }
-$sql .= " ORDER BY ma.nombreMarca, mo.nombreModelo";
+$sql .= " ORDER BY eq.idequipo DESC";
 $rows = $db->consulta($sql, $params);
 
 foreach ($rows as $r) {
-    $pdf->Cell(20, 6, $r['idequipo'], 1, 0, 'C');
-    $pdf->Cell(45, 6, $r['nombreMarca'], 1, 0, 'C');
-    $pdf->Cell(45, 6, $r['nombreModelo'], 1, 0, 'C');
-    $pdf->Cell(30, 6, (int)$r['activo'] === 1 ? 'Activo' : 'Inactivo', 1, 1, 'C');
+    $estados = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido/robado', 5 => 'Dado de baja'];
+    $estado = $estados[(int)$r['estado_equipo']] ?? 'Sin definir';
+    if ((int)$r['activo'] === 0 && (int)$r['estado_equipo'] !== 5) {
+        $estado .= ' (inactivo)';
+    }
+    $pdf->Cell(27, 6, $r['codigo_activo'] ?: ('EQ-' . $r['idequipo']), 1, 0, 'C');
+    $pdf->Cell(38, 6, $r['tipo_equipo'] ?: 'Otro', 1, 0, 'C');
+    $pdf->Cell(30, 6, $r['nombreMarca'], 1, 0, 'C');
+    $pdf->Cell(38, 6, $r['nombreModelo'], 1, 0, 'C');
+    $pdf->Cell(42, 6, $estado, 1, 1, 'C');
 }
 
 $pdf->Output('ReporteEquipos_' . date('d_m_y') . '.pdf', 'I');

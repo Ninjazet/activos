@@ -100,14 +100,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ---- ELIMINAR / REACTIVAR (baja lógica reversible) ----
     if (isset($_POST['del'])) {
         $id         = (int)($_POST['idUsuarioDel'] ?? 0);
-        $filaActual = $db->fila("SELECT estado FROM usuarios WHERE idusuario=?", [$id]);
+        $filaActual = $db->fila("SELECT us.estado, em.activo AS empleado_activo FROM usuarios us INNER JOIN empleados em ON us.idempleado=em.idempleado WHERE us.idusuario=?", [$id]);
 
-        if ($id === (int)Auth::get('idusuario')) {
+        if (!$filaActual) {
+            Auth::flash('error', 'El usuario indicado no existe.');
+        } elseif ($id === (int)Auth::get('idusuario')) {
             Auth::flash('error', 'No puedes desactivar tu propia cuenta mientras tienes la sesión abierta.');
-        } elseif ($filaActual && (int)$filaActual['estado'] === 1) {
+        } elseif ((int)$filaActual['estado'] === 1) {
             $db->ejecutar("UPDATE usuarios SET estado=0 WHERE idusuario=?", [$id]);
             Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'eliminar', 'usuarios', "#$id");
             Auth::flash('success', 'Usuario desactivado correctamente.');
+        } elseif ((int)$filaActual['empleado_activo'] !== 1) {
+            Auth::flash('error', 'No se puede reactivar esta cuenta porque el empleado está inactivo. Reactiva primero al empleado.');
         } else {
             $db->ejecutar("UPDATE usuarios SET estado=1 WHERE idusuario=?", [$id]);
             Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'reactivar', 'usuarios', "#$id");

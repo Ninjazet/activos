@@ -33,7 +33,9 @@ ALTER TABLE `equipo`
 ALTER TABLE `asignacion`
   ADD COLUMN IF NOT EXISTS `activa` TINYINT(1) NOT NULL DEFAULT 1,
   ADD COLUMN IF NOT EXISTS `fecha_asignacion` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-  ADD COLUMN IF NOT EXISTS `fecha_devolucion` DATETIME NULL;
+  ADD COLUMN IF NOT EXISTS `fecha_devolucion` DATETIME NULL,
+  ADD COLUMN IF NOT EXISTS `firma` VARCHAR(255) NULL,
+  ADD COLUMN IF NOT EXISTS `firma_fecha` DATETIME NULL;
 
 -- ---------- 2. Restricción UNIQUE en usuarios ----------
 -- Evita usuarios duplicados a nivel de base de datos (antes solo

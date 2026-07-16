@@ -17,7 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idcargo   = (int)($_POST['idcargo'] ?? 0);
         $idsexo    = (int)($_POST['idsexo'] ?? 0);
         $telefono  = trim($_POST['telefono'] ?? '')  ?: null;
+        $correo    = strtolower(trim($_POST['correo'] ?? '')) ?: null;
         $direccion = trim($_POST['direccion'] ?? '') ?: null;
+
+        if ($correo !== null && (strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL))) {
+            Auth::flash('error', 'Ingresa un correo electrónico válido.');
+            header('Location: ' . BASE_URL . '/empleados.php');
+            exit;
+        }
         $imagen    = '';
 
         try {
@@ -27,9 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $db->ejecutar(
-                "INSERT INTO empleados (nombre, apellidos, edad, telefono, direccion, imagen, idarea, idcargo, idsexo, activo)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
-                [$nombre, $apellidos, $edad, $telefono, $direccion, $imagen, $idarea, $idcargo, $idsexo]
+                "INSERT INTO empleados (nombre, apellidos, edad, telefono, correo, direccion, imagen, idarea, idcargo, idsexo, activo)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
+                [$nombre, $apellidos, $edad, $telefono, $correo, $direccion, $imagen, $idarea, $idcargo, $idsexo]
             );
             Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'crear', 'empleados', "$nombre $apellidos");
             Auth::flash('success', 'Empleado creado correctamente.');
@@ -50,22 +57,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idcargo   = (int)($_POST['cargoAct'] ?? 0);
         $idsexo    = (int)($_POST['sexoAct'] ?? 0);
         $telefono  = trim($_POST['telefonoAct'] ?? '')  ?: null;
+        $correo    = strtolower(trim($_POST['correoAct'] ?? '')) ?: null;
         $direccion = trim($_POST['direccionAct'] ?? '') ?: null;
+
+        if ($correo !== null && (strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL))) {
+            Auth::flash('error', 'Ingresa un correo electrónico válido.');
+            header('Location: ' . BASE_URL . '/empleados.php');
+            exit;
+        }
 
         try {
             if (!Upload::estaVacio($_FILES['archivoAct'] ?? null)) {
                 $archivoGuardado = Upload::guardarImagen($_FILES['archivoAct'], IMG_EMPLEADOS, 'emp');
                 $db->ejecutar(
-                    "UPDATE empleados SET nombre=?, apellidos=?, edad=?, telefono=?, direccion=?,
+                    "UPDATE empleados SET nombre=?, apellidos=?, edad=?, telefono=?, correo=?, direccion=?,
                      imagen=?, idarea=?, idcargo=?, idsexo=? WHERE idempleado=?",
-                    [$nombre, $apellidos, $edad, $telefono, $direccion,
+                    [$nombre, $apellidos, $edad, $telefono, $correo, $direccion,
                      'public/img/empleados/' . $archivoGuardado, $idarea, $idcargo, $idsexo, $id]
                 );
             } else {
                 $db->ejecutar(
-                    "UPDATE empleados SET nombre=?, apellidos=?, edad=?, telefono=?, direccion=?,
+                    "UPDATE empleados SET nombre=?, apellidos=?, edad=?, telefono=?, correo=?, direccion=?,
                      idarea=?, idcargo=?, idsexo=? WHERE idempleado=?",
-                    [$nombre, $apellidos, $edad, $telefono, $direccion, $idarea, $idcargo, $idsexo, $id]
+                    [$nombre, $apellidos, $edad, $telefono, $correo, $direccion, $idarea, $idcargo, $idsexo, $id]
                 );
             }
             Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'editar', 'empleados', "$nombre $apellidos (#$id)");
@@ -82,15 +96,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idEmpleadoDel = (int)($_POST['idEmpleadoDel'] ?? 0);
         $filaActual    = $db->fila("SELECT activo FROM empleados WHERE idempleado=?", [$idEmpleadoDel]);
 
-        if ($filaActual && (int)$filaActual['activo'] === 1) {
-            // Va a desactivarse: validar que no tenga nada vinculado activo
-            $tieneUsuario = $db->fila("SELECT idusuario FROM usuarios WHERE idempleado=?", [$idEmpleadoDel]);
-            $tieneEquipo  = $db->fila("SELECT idasignacion FROM asignacion WHERE idempleado=? AND activa=1", [$idEmpleadoDel]);
+        if (!$filaActual) {
+            Auth::flash('error', 'El empleado indicado no existe.');
+        } elseif ((int)$filaActual['activo'] === 1) {
+            // Una asignación abierta debe cerrarse antes de inactivar al empleado.
+            $asignacionesAbiertas = $db->contar(
+                "SELECT COUNT(*) FROM asignacion WHERE idempleado=? AND activa=1",
+                [$idEmpleadoDel]
+            );
+            $tieneUsuario = $db->fila("SELECT idusuario FROM usuarios WHERE idempleado=? AND estado=1", [$idEmpleadoDel]);
 
-            if ($tieneUsuario) {
-                Auth::flash('error', 'No se puede dar de baja: este empleado tiene una cuenta de usuario vinculada. Elimina primero ese usuario en Seguridad.');
-            } elseif ($tieneEquipo) {
-                Auth::flash('error', 'No se puede dar de baja: este empleado tiene un equipo asignado. Quita primero la asignación.');
+            if ($asignacionesAbiertas > 0) {
+                $detalle = $asignacionesAbiertas === 1 ? '1 asignación abierta' : "$asignacionesAbiertas asignaciones abiertas";
+                Auth::flash('error', "No se puede inactivar al empleado: tiene $detalle. Debes devolver los equipos primero.");
+            } elseif ($tieneUsuario) {
+                Auth::flash('error', 'No se puede inactivar: este empleado tiene una cuenta de usuario activa. Desactiva primero esa cuenta en Seguridad.');
             } else {
                 $db->ejecutar("UPDATE empleados SET activo=0 WHERE idempleado=?", [$idEmpleadoDel]);
                 Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'eliminar', 'empleados', "#$idEmpleadoDel");

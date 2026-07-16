@@ -20,7 +20,7 @@ if ($q !== '') {
     $like   = "%$q%";
     $params = [$like, $like, $like, $like];
 }
-$sql .= " ORDER BY em.nombre, em.apellidos";
+$sql .= " ORDER BY em.idempleado DESC";
 
 $resultado = $db->consulta($sql, $params);
 ?>
@@ -55,7 +55,7 @@ $resultado = $db->consulta($sql, $params);
     </tbody>
 </table>
 <script>
-$(document).ready(function(){ $('#tablaConsEmp').DataTable({ dom: 'lrtip' }); });
+$(document).ready(function(){ $('#tablaConsEmp').DataTable({ dom: 'lrtip', order: [[1, 'desc']] }); });
 </script>
 <?php else: ?>
 <p class="lead"><em>No hay registros.</em></p>

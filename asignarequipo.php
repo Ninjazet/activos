@@ -8,84 +8,103 @@ $db = Database::getInstance();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     Auth::verificarCsrf();
 
-    // ---- INSERTAR ----
-    if (isset($_POST['add'])) {
-        $idempleado = (int)($_POST['empleado'] ?? 0);
-        $idequipo   = (int)($_POST['equipo'] ?? 0);
-
-        if ($idempleado <= 0 || $idequipo <= 0) {
-            Auth::flash('error', 'Debe seleccionar empleado y equipo.');
-        } else {
-            $yaAsignado = $db->fila(
-                "SELECT asg.idasignacion, CONCAT(em.nombre,' ',em.apellidos) AS empleado
-                 FROM asignacion asg
-                 INNER JOIN empleados em ON asg.idempleado = em.idempleado
-                 WHERE asg.idequipo = ? AND asg.activa = 1",
-                [$idequipo]
-            );
-            if ($yaAsignado) {
-                Auth::flash('error', 'Ese equipo ya está asignado a ' . $yaAsignado['empleado'] . '. Quita esa asignación primero.');
-            } else {
-                try {
-                    $db->ejecutar(
-                        "INSERT INTO asignacion (idempleado, idequipo, activa, fecha_asignacion) VALUES (?, ?, 1, NOW())",
-                        [$idempleado, $idequipo]
-                    );
-                    Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'crear', 'asignacion', "emp=$idempleado equipo=$idequipo");
-                    Auth::flash('success', 'Asignación creada correctamente.');
-                } catch (PDOException $e) {
-                    Auth::flash('error', 'No se pudo crear la asignación. Verifica los datos seleccionados.');
+    try {
+        if (isset($_POST['add'])) {
+            $idempleado = (int)($_POST['empleado'] ?? 0);
+            $idequipo   = (int)($_POST['equipo'] ?? 0);
+            if ($idempleado <= 0 || $idequipo <= 0) {
+                throw new RuntimeException('Debe seleccionar un empleado y un equipo.');
+            }
+            $db->transaccion(function (Database $db) use ($idempleado, $idequipo) {
+                $empleado = $db->fila("SELECT activo FROM empleados WHERE idempleado=? FOR UPDATE", [$idempleado]);
+                $equipo = $db->fila("SELECT activo, estado_equipo FROM equipo WHERE idequipo=? FOR UPDATE", [$idequipo]);
+                if (!$empleado || (int)$empleado['activo'] !== 1) {
+                    throw new RuntimeException('El empleado seleccionado no está activo.');
                 }
-            }
-        }
-    }
-
-    // ---- EDITAR ----
-    if (isset($_POST['edit'])) {
-        $id         = (int)($_POST['idasignacion'] ?? 0);
-        $idempleado = (int)($_POST['empleado'] ?? 0);
-        $idequipo   = (int)($_POST['equipo'] ?? 0);
-
-        $yaAsignado = $db->fila(
-            "SELECT asg.idasignacion, CONCAT(em.nombre,' ',em.apellidos) AS empleado
-             FROM asignacion asg
-             INNER JOIN empleados em ON asg.idempleado = em.idempleado
-             WHERE asg.idequipo = ? AND asg.activa = 1 AND asg.idasignacion <> ?",
-            [$idequipo, $id]
-        );
-        if ($yaAsignado) {
-            Auth::flash('error', 'Ese equipo ya está asignado a ' . $yaAsignado['empleado'] . '. Quita esa asignación primero.');
-        } else {
-            try {
+                if (!$equipo || (int)$equipo['activo'] !== 1) {
+                    throw new RuntimeException('El equipo seleccionado está dado de baja.');
+                }
+                if ((int)$equipo['estado_equipo'] !== 1) {
+                    throw new RuntimeException('El equipo ya no está disponible para asignación.');
+                }
+                if ($db->fila("SELECT idasignacion FROM asignacion WHERE idequipo=? AND activa=1", [$idequipo])) {
+                    throw new RuntimeException('El equipo ya tiene una asignación abierta.');
+                }
                 $db->ejecutar(
-                    "UPDATE asignacion SET idempleado=?, idequipo=? WHERE idasignacion=?",
-                    [$idempleado, $idequipo, $id]
+                    "INSERT INTO asignacion (idempleado, idequipo, activa, fecha_asignacion) VALUES (?, ?, 1, NOW())",
+                    [$idempleado, $idequipo]
                 );
-                Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'editar', 'asignacion', "#$id emp=$idempleado equipo=$idequipo");
-                Auth::flash('success', 'Asignación actualizada correctamente.');
-            } catch (PDOException $e) {
-                Auth::flash('error', 'No se pudo actualizar. Verifica los datos seleccionados.');
-            }
+                $db->ejecutar("UPDATE equipo SET estado_equipo=2 WHERE idequipo=?", [$idequipo]);
+            });
+            Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'crear', 'asignacion', "emp=$idempleado equipo=$idequipo");
+            Auth::flash('success', 'Asignación creada y equipo marcado como asignado.');
         }
-    }
 
-    
+        if (isset($_POST['edit'])) {
+            $id         = (int)($_POST['idasignacion'] ?? 0);
+            $idempleado = (int)($_POST['empleado'] ?? 0);
+            $idequipo   = (int)($_POST['equipo'] ?? 0);
+            if ($id <= 0 || $idempleado <= 0 || $idequipo <= 0) {
+                throw new RuntimeException('Los datos de la asignación no son válidos.');
+            }
+            $equipoAnterior = $db->transaccion(function (Database $db) use ($id, $idempleado, $idequipo) {
+                $asignacion = $db->fila("SELECT idequipo FROM asignacion WHERE idasignacion=? AND activa=1 FOR UPDATE", [$id]);
+                if (!$asignacion) {
+                    throw new RuntimeException('La asignación ya está cerrada o no existe.');
+                }
+                $anterior = (int)$asignacion['idequipo'];
+                $empleado = $db->fila("SELECT activo FROM empleados WHERE idempleado=? FOR UPDATE", [$idempleado]);
+                $equipo = $db->fila("SELECT activo, estado_equipo FROM equipo WHERE idequipo=? FOR UPDATE", [$idequipo]);
+                if (!$empleado || (int)$empleado['activo'] !== 1) {
+                    throw new RuntimeException('El empleado seleccionado no está activo.');
+                }
+                if (!$equipo || (int)$equipo['activo'] !== 1) {
+                    throw new RuntimeException('El equipo seleccionado está dado de baja.');
+                }
+                if ($idequipo !== $anterior && (int)$equipo['estado_equipo'] !== 1) {
+                    throw new RuntimeException('El nuevo equipo no está disponible.');
+                }
+                if ($db->fila("SELECT idasignacion FROM asignacion WHERE idequipo=? AND activa=1 AND idasignacion<>?", [$idequipo, $id])) {
+                    throw new RuntimeException('El equipo ya tiene otra asignación abierta.');
+                }
+                $db->ejecutar("UPDATE asignacion SET idempleado=?, idequipo=? WHERE idasignacion=?", [$idempleado, $idequipo, $id]);
+                if ($anterior !== $idequipo) {
+                    $db->ejecutar("UPDATE equipo SET estado_equipo=1 WHERE idequipo=? AND activo=1", [$anterior]);
+                }
+                $db->ejecutar("UPDATE equipo SET estado_equipo=2 WHERE idequipo=?", [$idequipo]);
+                return $anterior;
+            });
+            Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'editar', 'asignacion', "#$id emp=$idempleado equipo=$idequipo anterior=$equipoAnterior");
+            Auth::flash('success', 'Asignación actualizada correctamente.');
+        }
 
-    // ---- DEVOLVER EQUIPO (cierre lógico: guarda fecha de devolución) ----
-    if (isset($_POST['del'])) {
-        $id = (int)($_POST['idAsignacionDel'] ?? 0);
-        $db->ejecutar(
-            "UPDATE asignacion SET activa=0, fecha_devolucion=NOW() WHERE idasignacion=?",
-            [$id]
-        );
-        Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'devolucion', 'asignacion', "#$id");
-        Auth::flash('success', 'Equipo devuelto. La asignación quedó registrada en el historial.');
+        if (isset($_POST['del'])) {
+            $id = (int)($_POST['idAsignacionDel'] ?? 0);
+            if ($id <= 0) {
+                throw new RuntimeException('La asignación indicada no es válida.');
+            }
+            $idequipo = $db->transaccion(function (Database $db) use ($id) {
+                $asignacion = $db->fila("SELECT idequipo FROM asignacion WHERE idasignacion=? AND activa=1 FOR UPDATE", [$id]);
+                if (!$asignacion) {
+                    throw new RuntimeException('La asignación ya fue devuelta o no existe.');
+                }
+                $idequipo = (int)$asignacion['idequipo'];
+                $db->ejecutar("UPDATE asignacion SET activa=0, fecha_devolucion=NOW() WHERE idasignacion=?", [$id]);
+                $db->ejecutar("UPDATE equipo SET estado_equipo=1 WHERE idequipo=? AND activo=1", [$idequipo]);
+                return $idequipo;
+            });
+            Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'devolucion', 'asignacion', "#$id equipo=$idequipo");
+            Auth::flash('success', 'Equipo devuelto y disponible nuevamente. El historial fue conservado.');
+        }
+    } catch (RuntimeException $e) {
+        Auth::flash('error', $e->getMessage());
+    } catch (PDOException $e) {
+        Auth::flash('error', 'No se pudo completar la operación de asignación. Intenta de nuevo.');
     }
 
     header('Location: ' . BASE_URL . '/asignarequipo.php');
     exit;
 }
-
 $pageTitle = 'Asignar Equipos';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 Auth::imprimirFlash();

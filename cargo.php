@@ -10,26 +10,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($_POST['add'])) {
         $val = trim($_POST['campo'] ?? '');
-        if ($val !== '') {
+        if ($val === '') {
+            Auth::flash('error', 'Cargo: el nombre no puede estar vacío.');
+        } elseif ($db->fila("SELECT idcargo FROM cargos WHERE descripcioncargo=?", [$val])) {
+            Auth::flash('error', 'Cargo: ya existe un registro con ese nombre; si está inactivo, puedes reactivarlo.');
+        } else {
             $db->ejecutar("INSERT INTO cargos (descripcioncargo, activo) VALUES (?, 1)", [$val]);
             Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'crear', 'cargos', $val);
             Auth::flash('success', 'Cargo creado correctamente.');
         }
     }
-
     if (isset($_POST['edit'])) {
+        $id  = (int)($_POST['id'] ?? 0);
         $val = trim($_POST['campo'] ?? '');
-        $db->ejecutar("UPDATE cargos SET descripcioncargo=? WHERE idcargo=?", [$val, (int)($_POST['id'] ?? 0)]);
-        Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'editar', 'cargos', $val);
-        Auth::flash('success', 'Cargo actualizado correctamente.');
+        if ($val === '') {
+            Auth::flash('error', 'Cargo: el nombre no puede quedar vacío.');
+        } elseif ($db->fila("SELECT idcargo FROM cargos WHERE descripcioncargo=? AND idcargo<>?", [$val, $id])) {
+            Auth::flash('error', 'Cargo: ya existe otro registro con ese nombre.');
+        } else {
+            $db->ejecutar("UPDATE cargos SET descripcioncargo=? WHERE idcargo=?", [$val, $id]);
+            Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'editar', 'cargos', $val);
+            Auth::flash('success', 'Cargo actualizado correctamente.');
+        }
     }
-
     // Alterna activo/inactivo (baja lógica reversible: nunca se borra el dato)
     if (isset($_POST['del'])) {
         $id  = (int)($_POST['id'] ?? 0);
         $fila = $db->fila("SELECT activo FROM cargos WHERE idcargo=?", [$id]);
 
-        if ($fila && (int)$fila['activo'] === 1) {
+        if (!$fila) {
+            Auth::flash('error', 'El registro indicado no existe.');
+        } elseif ((int)$fila['activo'] === 1) {
             $db->ejecutar("UPDATE cargos SET activo=0 WHERE idcargo=?", [$id]);
             Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'eliminar', 'cargos', "#$id");
             Auth::flash('success', 'Cargo dado de baja correctamente.');

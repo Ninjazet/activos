@@ -9,6 +9,7 @@ if ($q !== '') {
     $sql   .= " WHERE (descripcionarea LIKE ? OR idarea LIKE ?)";
     $params = ["%$q%", "%$q%"];
 }
+$sql .= " ORDER BY idarea DESC";
 $rows = $db->consulta($sql, $params);
 ?>
 <?php if ($rows): ?>
@@ -37,7 +38,7 @@ $rows = $db->consulta($sql, $params);
   </tbody>
 </table>
 <script>
-$(document).ready(function(){ $('#tablaareas').DataTable({dom:'lrtip'}); });
+$(document).ready(function(){ $('#tablaareas').DataTable({ dom: 'lrtip', order: [[0, 'desc']] }); });
 function editItem(e){
   var tr=$(e.target).closest('tr');
   $('#editId').val(tr.find('td').eq(0).text());

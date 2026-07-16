@@ -9,6 +9,7 @@ if ($q !== '') {
     $sql   .= " WHERE (nombreModelo LIKE ? OR idmodelo LIKE ?)";
     $params = ["%$q%", "%$q%"];
 }
+$sql .= " ORDER BY idmodelo DESC";
 $rows = $db->consulta($sql, $params);
 ?>
 <?php if ($rows): ?>
@@ -37,7 +38,7 @@ $rows = $db->consulta($sql, $params);
   </tbody>
 </table>
 <script>
-$(document).ready(function(){ $('#tablamodelos').DataTable({dom:'lrtip'}); });
+$(document).ready(function(){ $('#tablamodelos').DataTable({ dom: 'lrtip', order: [[0, 'desc']] }); });
 function editItem(e){
   var tr=$(e.target).closest('tr');
   $('#editId').val(tr.find('td').eq(0).text());

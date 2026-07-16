@@ -13,6 +13,11 @@ require_once BASE_PATH . '/lib/tcpdf/tcpdf.php';
 
 $db = Database::getInstance();
 
+// El POST guarda datos, por lo que debe validar el token del formulario.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    Auth::verificarCsrf();
+}
+
 if (ob_get_level()) {
     ob_end_clean();
 }
@@ -25,7 +30,7 @@ if ($idasignacion <= 0) {
 $row = $db->fila(
     "SELECT asg.idasignacion, asg.firma, asg.firma_fecha,
             CONCAT(em.nombre,' ',em.apellidos) AS empleado,
-            CONCAT(ma.nombreMarca,' ',mo.nombreModelo) AS equipo,
+            CONCAT(COALESCE(eq.codigo_activo, CONCAT('EQ-', eq.idequipo)), ' - ', ma.nombreMarca, ' ', mo.nombreModelo) AS equipo,
             ar.descripcionarea AS area,
             ca.descripcioncargo AS cargo
      FROM asignacion asg
@@ -49,12 +54,23 @@ $fechaFirma        = '';
 
 if (!empty($_POST['firma'])) {
 
-    $firmaBase64  = str_replace('data:image/jpeg;base64,', '', $_POST['firma']);
-    $firmaBase64  = str_replace('data:image/png;base64,', '', $firmaBase64);
-    $firmaBase64  = str_replace(' ', '+', $firmaBase64);
-    $firmaBinaria = base64_decode($firmaBase64);
+    // Impide que una peticion manipulada reemplace una firma registrada.
+    if (!empty($row['firma'])) {
+        die('Esta asignacion ya tiene una firma registrada.');
+    }
 
-    if ($firmaBinaria === false || strlen($firmaBinaria) < 100) {
+    if (!is_string($_POST['firma']) || strlen($_POST['firma']) > 2 * 1024 * 1024) {
+        die('La firma recibida excede el tamano permitido.');
+    }
+
+    if (!preg_match('#^data:image/(?:jpeg|png);base64,([A-Za-z0-9+/=]+)$#', $_POST['firma'], $coincidencia)) {
+        die('El formato de la firma no es valido.');
+    }
+    $firmaBinaria = base64_decode($coincidencia[1], true);
+    $infoImagen = $firmaBinaria !== false ? @getimagesizefromstring($firmaBinaria) : false;
+
+    if ($firmaBinaria === false || strlen($firmaBinaria) < 100 ||
+        $infoImagen === false || !in_array($infoImagen['mime'], ['image/jpeg', 'image/png'], true)) {
         die('La firma recibida no es valida.');
     }
 
@@ -63,7 +79,9 @@ if (!empty($_POST['firma'])) {
     }
 
     $nombreFirma = 'firma_' . $idasignacion . '_' . time() . '.jpg';
-    file_put_contents(IMG_FIRMAS . $nombreFirma, $firmaBinaria);
+    if (file_put_contents(IMG_FIRMAS . $nombreFirma, $firmaBinaria, LOCK_EX) === false) {
+        die('No se pudo guardar la firma.');
+    }
 
     $db->ejecutar(
         "UPDATE asignacion SET firma = ?, firma_fecha = NOW() WHERE idasignacion = ?",

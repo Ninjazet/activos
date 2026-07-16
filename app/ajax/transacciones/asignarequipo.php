@@ -11,7 +11,7 @@ $db = Database::getInstance();
 
 $sql = "SELECT asg.idasignacion,
                CONCAT(em.nombre, ' ', em.apellidos) AS empleado,
-               CONCAT(ma.nombreMarca, ' ', mo.nombreModelo) AS equipo,
+               CONCAT(COALESCE(eq.codigo_activo, CONCAT('EQ-', eq.idequipo)), ' - ', ma.nombreMarca, ' ', mo.nombreModelo) AS equipo,
                asg.idempleado,
                asg.idequipo,
                asg.fecha_asignacion,
@@ -40,22 +40,24 @@ $emps = $db->consulta("SELECT idempleado, nombre, apellidos FROM empleados WHERE
 
 // Equipos activos y SIN asignación vigente (para el modal de Nueva asignación)
 $eqsDisponibles = $db->consulta(
-    "SELECT eq.idequipo, ma.nombreMarca, mo.nombreModelo
+    "SELECT eq.idequipo, eq.codigo_activo, ma.nombreMarca, mo.nombreModelo
      FROM equipo eq
      INNER JOIN marca  ma ON eq.idmarca_equipo  = ma.idmarca
      INNER JOIN modelo mo ON eq.idmodelo_equipo = mo.idmodelo
      WHERE eq.activo = 1
+       AND eq.estado_equipo = 1
        AND eq.idequipo NOT IN (SELECT idequipo FROM asignacion WHERE activa = 1)
      ORDER BY ma.nombreMarca"
 );
 
 // Todos los equipos activos (para el modal de Editar: incluye el que ya tiene esa asignación)
 $eqsTodos = $db->consulta(
-    "SELECT eq.idequipo, ma.nombreMarca, mo.nombreModelo
+    "SELECT eq.idequipo, eq.codigo_activo, ma.nombreMarca, mo.nombreModelo
      FROM equipo eq
      INNER JOIN marca  ma ON eq.idmarca_equipo  = ma.idmarca
      INNER JOIN modelo mo ON eq.idmodelo_equipo = mo.idmodelo
      WHERE eq.activo = 1
+       AND eq.estado_equipo IN (1, 2)
      ORDER BY ma.nombreMarca"
 );
 ?>
@@ -113,7 +115,7 @@ $eqsTodos = $db->consulta(
 
 <script>
 $(document).ready(function () {
-    $("#datosE").DataTable({ dom: 'lrtip' });
+    $("#datosE").DataTable({ dom: 'lrtip', order: [[0, 'desc']] });
     $("#datosE th:nth-child(5), #datosE td:nth-child(5)").hide();
     $("#datosE th:nth-child(6), #datosE td:nth-child(6)").hide();
 });
@@ -263,7 +265,7 @@ $(document).ready(function () {
                             <option value="0">-- Seleccione un equipo --</option>
                             <?php foreach ($eqsDisponibles as $eq): ?>
                             <option value="<?= $eq['idequipo'] ?>">
-                                <?= htmlspecialchars($eq['nombreMarca'] . ' ' . $eq['nombreModelo']) ?>
+                                <?= htmlspecialchars(($eq['codigo_activo'] ?: ('EQ-' . $eq['idequipo'])) . ' - ' . $eq['nombreMarca'] . ' ' . $eq['nombreModelo']) ?>
                             </option>
                             <?php endforeach; ?>
                         </select>
@@ -308,7 +310,7 @@ $(document).ready(function () {
                             <option value="0">-- Seleccione un equipo --</option>
                             <?php foreach ($eqsTodos as $eq): ?>
                             <option value="<?= $eq['idequipo'] ?>">
-                                <?= htmlspecialchars($eq['nombreMarca'] . ' ' . $eq['nombreModelo']) ?>
+                                <?= htmlspecialchars(($eq['codigo_activo'] ?: ('EQ-' . $eq['idequipo'])) . ' - ' . $eq['nombreMarca'] . ' ' . $eq['nombreModelo']) ?>
                             </option>
                             <?php endforeach; ?>
                         </select>

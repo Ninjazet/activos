@@ -81,7 +81,7 @@ if ($filtro !== '') {
     $sql   .= " WHERE nombre LIKE ? OR apellidos LIKE ? OR idempleado LIKE ? OR telefono LIKE ?";
     $params = ["%$filtro%", "%$filtro%", "%$filtro%", "%$filtro%"];
 }
-$sql .= " ORDER BY nombre, apellidos";
+$sql .= " ORDER BY idempleado DESC";
 $rows = $db->consulta($sql, $params);
 
 foreach ($rows as $r) {

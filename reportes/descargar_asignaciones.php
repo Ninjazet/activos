@@ -77,7 +77,7 @@ $pdf->SetFont('helvetica', '', 9);
 $filtro = trim($_REQUEST['buscar'] ?? '');
 $sql = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion,
                CONCAT(em.nombre,' ',em.apellidos) AS empleado,
-               CONCAT(ma.nombreMarca,' ',mo.nombreModelo) AS equipo,
+               CONCAT(COALESCE(eq.codigo_activo, CONCAT('EQ-', eq.idequipo)), ' - ', ma.nombreMarca, ' ', mo.nombreModelo) AS equipo,
                ar.descripcionarea AS area,
                ca.descripcioncargo AS cargo
         FROM asignacion asg
@@ -94,7 +94,7 @@ if ($filtro !== '') {
               OR ar.descripcionarea LIKE ?";
     $params = ["%$filtro%", "%$filtro%", "%$filtro%"];
 }
-$sql .= " ORDER BY asg.activa DESC, asg.fecha_asignacion DESC";
+$sql .= " ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC";
 $rows = $db->consulta($sql, $params);
 
 foreach ($rows as $r) {

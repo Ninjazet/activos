@@ -10,7 +10,7 @@ $db = Database::getInstance();
 
 $sql = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion, asg.fecha_devolucion,
                CONCAT(em.nombre,' ',em.apellidos) AS empleado,
-               CONCAT(ma.nombreMarca,' ',mo.nombreModelo) AS equipo,
+               CONCAT(COALESCE(eq.codigo_activo, CONCAT('EQ-', eq.idequipo)), ' - ', ma.nombreMarca, ' ', mo.nombreModelo) AS equipo,
                ar.descripcionarea AS area,
                ca.descripcioncargo AS cargo
         FROM asignacion asg
@@ -29,7 +29,7 @@ if (isset($_POST['query']) && trim($_POST['query']) != '') {
               OR ar.descripcionarea LIKE ?";
     $params = ["%$f%", "%$f%", "%$f%"];
 }
-$sql .= " ORDER BY asg.activa DESC, asg.fecha_asignacion DESC";
+$sql .= " ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC";
 
 $resultado = $db->consulta($sql, $params);
 ?>
@@ -64,7 +64,7 @@ $resultado = $db->consulta($sql, $params);
     </tbody>
 </table>
 <script>
-$(document).ready(function(){ $("#tablaAsg").DataTable({ dom: 'lrtip' }); });
+$(document).ready(function(){ $("#tablaAsg").DataTable({ dom: 'lrtip', order: [[0, 'desc']] }); });
 </script>
 <?php else: ?>
 <p class="lead"><em>No hay registros</em></p>

@@ -10,9 +10,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ---- INSERTAR ----
     if (isset($_POST['add'])) {
-        $idmarca  = (int)($_POST['idmarca'] ?? 0);
-        $idmodelo = (int)($_POST['idmodelo'] ?? 0);
-        $imagen   = '';
+        $idmarca         = (int)($_POST['idmarca'] ?? 0);
+        $idmodelo        = (int)($_POST['idmodelo'] ?? 0);
+        $fechaCompra     = trim($_POST['fecha_compra'] ?? '') ?: null;
+        $costo           = trim($_POST['costo'] ?? '') ?: null;
+        $factura         = trim($_POST['factura'] ?? '') ?: null;
+        $garantia        = trim($_POST['vencimiento_garantia'] ?? '') ?: null;
+        $numeroSerie     = strtoupper(trim($_POST['numero_serie'] ?? '')) ?: null;
+        $tipoEquipo      = trim($_POST['tipo_equipo'] ?? '') ?: 'Otro';
+        $imagen          = '';
+
+        if (($numeroSerie !== null && strlen($numeroSerie) > 100) || strlen($tipoEquipo) > 50) {
+            Auth::flash('error', 'El número de serie o el tipo de equipo exceden el tamaño permitido.');
+            header('Location: ' . BASE_URL . '/equipos.php');
+            exit;
+        }
+        if ($costo !== null && (!is_numeric($costo) || (float)$costo < 0)) {
+            Auth::flash('error', 'El costo debe ser un número mayor o igual a cero.');
+            header('Location: ' . BASE_URL . '/equipos.php');
+            exit;
+        }
+        if ($fechaCompra && $garantia && $garantia < $fechaCompra) {
+            Auth::flash('error', 'El vencimiento de garantía no puede ser anterior a la fecha de compra.');
+            header('Location: ' . BASE_URL . '/equipos.php');
+            exit;
+        }
 
         try {
             if (!Upload::estaVacio($_FILES['archivo'] ?? null)) {
@@ -20,11 +42,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $imagen = 'public/img/equipos/' . $archivoGuardado;
             }
 
-            $db->ejecutar(
-                "INSERT INTO equipo (idmarca_equipo, idmodelo_equipo, imagen, activo) VALUES (?, ?, ?, 1)",
-                [$idmarca, $idmodelo, $imagen]
-            );
-            Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'crear', 'equipos', "marca=$idmarca modelo=$idmodelo");
+            $idEquipo = $db->transaccion(function (Database $db) use (
+                $idmarca, $idmodelo, $imagen, $fechaCompra, $costo, $factura,
+                $garantia, $numeroSerie, $tipoEquipo
+            ) {
+                $id = $db->ejecutar(
+                    "INSERT INTO equipo
+                        (idmarca_equipo, idmodelo_equipo, imagen, activo, fecha_compra, costo, factura,
+                         vencimiento_garantia, estado_equipo, numero_serie, codigo_activo, tipo_equipo)
+                     VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, ?, NULL, ?)",
+                    [$idmarca, $idmodelo, $imagen, $fechaCompra, $costo, $factura, $garantia, $numeroSerie, $tipoEquipo]
+                );
+                $codigo = 'EQ-' . str_pad((string)$id, 4, '0', STR_PAD_LEFT);
+                $db->ejecutar("UPDATE equipo SET codigo_activo=? WHERE idequipo=?", [$codigo, $id]);
+                return $id;
+            });
+            Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'crear', 'equipos', "#$idEquipo marca=$idmarca modelo=$idmodelo");
             Auth::flash('success', 'Equipo creado correctamente.');
         } catch (\RuntimeException $e) {
             Auth::flash('error', $e->getMessage());
@@ -35,21 +68,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ---- EDITAR ----
     if (isset($_POST['edit'])) {
-        $id       = (int)($_POST['idequipo'] ?? 0);
-        $idmarca  = (int)($_POST['marcaAct'] ?? 0);
-        $idmodelo = (int)($_POST['modeloAct'] ?? 0);
+        $id          = (int)($_POST['idequipo'] ?? 0);
+        $idmarca     = (int)($_POST['marcaAct'] ?? 0);
+        $idmodelo    = (int)($_POST['modeloAct'] ?? 0);
+        $fechaCompra = trim($_POST['fecha_compraAct'] ?? '') ?: null;
+        $costo       = trim($_POST['costoAct'] ?? '') ?: null;
+        $factura     = trim($_POST['facturaAct'] ?? '') ?: null;
+        $garantia    = trim($_POST['vencimiento_garantiaAct'] ?? '') ?: null;
+        $numeroSerie = strtoupper(trim($_POST['numero_serieAct'] ?? '')) ?: null;
+        $tipoEquipo  = trim($_POST['tipo_equipoAct'] ?? '') ?: 'Otro';
+        $estado      = (int)($_POST['estado_equipoAct'] ?? 1);
+
+        if (($numeroSerie !== null && strlen($numeroSerie) > 100) || strlen($tipoEquipo) > 50) {
+            Auth::flash('error', 'El número de serie o el tipo de equipo exceden el tamaño permitido.');
+            header('Location: ' . BASE_URL . '/equipos.php');
+            exit;
+        }
+        if ($costo !== null && (!is_numeric($costo) || (float)$costo < 0)) {
+            Auth::flash('error', 'El costo debe ser un número mayor o igual a cero.');
+            header('Location: ' . BASE_URL . '/equipos.php');
+            exit;
+        }
+        if ($fechaCompra && $garantia && $garantia < $fechaCompra) {
+            Auth::flash('error', 'El vencimiento de garantía no puede ser anterior a la fecha de compra.');
+            header('Location: ' . BASE_URL . '/equipos.php');
+            exit;
+        }
+        if (!in_array($estado, [1, 2, 3, 4, 5], true)) {
+            $estado = 1;
+        }
+        if ($db->fila("SELECT idasignacion FROM asignacion WHERE idequipo=? AND activa=1", [$id])) {
+            $estado = 2;
+        } elseif ($estado === 2) {
+            // "Asignado" solo puede establecerse desde el flujo de asignaciones.
+            $estado = 1;
+        }
 
         try {
             if (!Upload::estaVacio($_FILES['archivoAct'] ?? null)) {
                 $archivoGuardado = Upload::guardarImagen($_FILES['archivoAct'], IMG_EQUIPOS, 'equipo');
                 $db->ejecutar(
-                    "UPDATE equipo SET idmarca_equipo=?, idmodelo_equipo=?, imagen=? WHERE idequipo=?",
-                    [$idmarca, $idmodelo, 'public/img/equipos/' . $archivoGuardado, $id]
+                    "UPDATE equipo SET idmarca_equipo=?, idmodelo_equipo=?, imagen=?, fecha_compra=?, costo=?, factura=?, vencimiento_garantia=?, numero_serie=?, tipo_equipo=?, estado_equipo=?, activo=IF(?=5,0,activo) WHERE idequipo=?",
+                    [$idmarca, $idmodelo, 'public/img/equipos/' . $archivoGuardado, $fechaCompra, $costo, $factura, $garantia, $numeroSerie, $tipoEquipo, $estado, $estado, $id]
                 );
             } else {
                 $db->ejecutar(
-                    "UPDATE equipo SET idmarca_equipo=?, idmodelo_equipo=? WHERE idequipo=?",
-                    [$idmarca, $idmodelo, $id]
+                    "UPDATE equipo SET idmarca_equipo=?, idmodelo_equipo=?, fecha_compra=?, costo=?, factura=?, vencimiento_garantia=?, numero_serie=?, tipo_equipo=?, estado_equipo=?, activo=IF(?=5,0,activo) WHERE idequipo=?",
+                    [$idmarca, $idmodelo, $fechaCompra, $costo, $factura, $garantia, $numeroSerie, $tipoEquipo, $estado, $estado, $id]
                 );
             }
             Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'editar', 'equipos', "#$id");
@@ -66,17 +131,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idEquipoDel = (int)($_POST['idEquipoDel'] ?? 0);
         $filaActual  = $db->fila("SELECT activo FROM equipo WHERE idequipo=?", [$idEquipoDel]);
 
-        if ($filaActual && (int)$filaActual['activo'] === 1) {
+        if (!$filaActual) {
+            Auth::flash('error', 'El equipo indicado no existe.');
+        } elseif ((int)$filaActual['activo'] === 1) {
             $tieneAsignacion = $db->fila("SELECT idasignacion FROM asignacion WHERE idequipo=? AND activa=1", [$idEquipoDel]);
             if ($tieneAsignacion) {
                 Auth::flash('error', 'No se puede dar de baja: este equipo tiene una asignación activa. Quita primero la asignación.');
             } else {
-                $db->ejecutar("UPDATE equipo SET activo=0 WHERE idequipo=?", [$idEquipoDel]);
+                $db->ejecutar("UPDATE equipo SET activo=0, estado_equipo=5 WHERE idequipo=?", [$idEquipoDel]);
                 Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'eliminar', 'equipos', "#$idEquipoDel");
                 Auth::flash('success', 'Equipo dado de baja correctamente.');
             }
         } else {
-            $db->ejecutar("UPDATE equipo SET activo=1 WHERE idequipo=?", [$idEquipoDel]);
+            $db->ejecutar("UPDATE equipo SET activo=1, estado_equipo=1 WHERE idequipo=?", [$idEquipoDel]);
             Auth::registrarBitacora((int)Auth::get('idusuario'), Auth::get('usuario'), 'reactivar', 'equipos', "#$idEquipoDel");
             Auth::flash('success', 'Equipo reactivado correctamente.');
         }

@@ -55,7 +55,9 @@ INSERT INTO `areas` (`idarea`, `descripcionarea`) VALUES
 CREATE TABLE `asignacion` (
   `idasignacion` int(11) NOT NULL,
   `idempleado` int(11) DEFAULT NULL,
-  `idequipo` int(11) DEFAULT NULL
+  `idequipo` int(11) DEFAULT NULL,
+  `firma` varchar(255) DEFAULT NULL,
+  `firma_fecha` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -109,6 +111,7 @@ CREATE TABLE `empleados` (
   `apellidos` varchar(50) NOT NULL,
   `edad` int(11) NOT NULL,
   `telefono` int(11) DEFAULT NULL,
+  `correo` varchar(150) DEFAULT NULL,
   `direccion` varchar(100) DEFAULT NULL,
   `imagen` varchar(500) NOT NULL,
   `idcargo` int(11) NOT NULL,
@@ -142,7 +145,15 @@ CREATE TABLE `equipo` (
   `idequipo` int(11) NOT NULL,
   `idmarca_equipo` int(11) NOT NULL,
   `idmodelo_equipo` int(11) NOT NULL,
-  `imagen` varchar(500) NOT NULL
+  `imagen` varchar(500) NOT NULL,
+  `fecha_compra` date DEFAULT NULL,
+  `costo` decimal(12,2) DEFAULT NULL,
+  `factura` varchar(100) DEFAULT NULL,
+  `vencimiento_garantia` date DEFAULT NULL,
+  `estado_equipo` tinyint(3) unsigned NOT NULL DEFAULT 1,
+  `numero_serie` varchar(100) DEFAULT NULL,
+  `codigo_activo` varchar(20) DEFAULT NULL,
+  `tipo_equipo` varchar(50) NOT NULL DEFAULT 'Otro'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
@@ -306,7 +317,8 @@ ALTER TABLE `empleados`
 ALTER TABLE `equipo`
   ADD PRIMARY KEY (`idequipo`),
   ADD KEY `idmarca_equipo` (`idmarca_equipo`),
-  ADD KEY `idmodelo_equipo` (`idmodelo_equipo`);
+  ADD KEY `idmodelo_equipo` (`idmodelo_equipo`),
+  ADD UNIQUE KEY `uq_equipo_codigo_activo` (`codigo_activo`);
 
 --
 -- Indexes for table `marca`
