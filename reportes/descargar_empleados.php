@@ -1,97 +1,64 @@
 <?php
-// ============================================================
-// GestActivos - Generar PDF: Reporte de Empleados
-// ============================================================
 require_once __DIR__ . '/../bootstrap.php';
 Auth::requerirPermiso('reportes');
-
-require_once BASE_PATH . '/lib/tcpdf/tcpdf.php';
+require_once __DIR__ . '/pdf_layout.php';
 
 $db = Database::getInstance();
-
 if (ob_get_level()) {
     ob_end_clean();
 }
 
-class MYPDF extends TCPDF {
-    public function Header() {
-        $bMargin = $this->getBreakMargin();
-        $auto_page_break = $this->AutoPageBreak;
-        $this->SetAutoPageBreak(false, 0);
-        $img_file = BASE_PATH . '/public/icons/windows.jpg';
-        $this->Image($img_file, 85, 8, 50, 50, '', '', '', false, 30, '', false, false, 0);
-        $this->SetAutoPageBreak($auto_page_break, $bMargin);
-        $this->setPageMark();
-    }
+$filtro = trim($_REQUEST['buscar'] ?? '');
+$sql = "SELECT em.idempleado, em.nombre, em.apellidos, em.telefono, em.correo, em.activo,
+               ar.descripcionarea AS area, ca.descripcioncargo AS cargo
+        FROM empleados em
+        LEFT JOIN areas ar ON em.idarea=ar.idarea
+        LEFT JOIN cargos ca ON em.idcargo=ca.idcargo";
+$params = [];
+if ($filtro !== '') {
+    $sql .= " WHERE em.nombre LIKE ? OR em.apellidos LIKE ? OR em.idempleado LIKE ?
+              OR em.telefono LIKE ? OR em.correo LIKE ?";
+    $like = "%$filtro%";
+    $params = [$like, $like, $like, $like, $like];
 }
+$sql .= " ORDER BY em.idempleado DESC";
+$rows = $db->consulta($sql, $params);
 
-$pdf = new MYPDF(PDF_PAGE_ORIENTATION, 'mm', 'Letter', true, 'UTF-8', false);
-$pdf->SetMargins(35, 35, 20);
-$pdf->SetHeaderMargin(20);
-$pdf->setPrintFooter(false);
+$columns = [
+    ['label' => 'ID',       'width' => 12, 'align' => 'C'],
+    ['label' => 'Empleado', 'width' => 55, 'align' => 'L'],
+    ['label' => 'Correo',   'width' => 52, 'align' => 'L'],
+    ['label' => 'Telefono', 'width' => 27, 'align' => 'C'],
+    ['label' => 'Area',     'width' => 35, 'align' => 'L'],
+    ['label' => 'Cargo',    'width' => 38, 'align' => 'L'],
+    ['label' => 'Estado',   'width' => 22, 'align' => 'C'],
+];
+
+$pdf = new GestActivosPDF('L', 'mm', 'Letter', true, 'UTF-8', false);
+$pdf->configureReport('REPORTE DE EMPLEADOS', 'REP-EMP-001', count($rows) . ' registro(s) encontrado(s)', $columns, 12);
+$pdf->SetMargins(12, 60, 12);
+$pdf->SetHeaderMargin(5);
+$pdf->SetFooterMargin(8);
+$pdf->SetAutoPageBreak(true, 18);
 $pdf->setPrintHeader(true);
-$pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
-
+$pdf->setPrintFooter(true);
 $pdf->SetCreator(APP_NAME);
 $pdf->SetAuthor(APP_NAME);
 $pdf->SetTitle('Reporte de Empleados');
-
+$pdf->SetSubject('Listado de empleados');
+$pdf->setCellPaddings(1.2, 0.8, 1.2, 0.8);
 $pdf->AddPage();
-$pdf->SetFont('helvetica', 'B', 10);
-$pdf->SetXY(150, 20);
-$pdf->Write(0, 'Código: REE00001');
-$pdf->SetXY(150, 25);
-$pdf->Write(0, 'Fecha: ' . date('d-m-Y'));
-$pdf->SetXY(150, 30);
-$pdf->Write(0, 'Hora: ' . date('h:i A'));
 
-$pdf->SetFont('helvetica', 'B', 10);
-$pdf->SetXY(15, 20);
-$pdf->SetTextColor(204, 0, 0);
-$pdf->Write(0, APP_NAME);
-$pdf->SetTextColor(0, 0, 0);
-$pdf->SetXY(15, 25);
-$pdf->Write(0, 'Empresa: WEM');
-
-$pdf->Ln(35);
-$pdf->Cell(40, 26, '', 0, 0, 'C');
-$pdf->SetTextColor(34, 68, 136);
-$pdf->SetFont('helvetica', 'B', 15);
-$pdf->Cell(50, 6, 'LISTA DE EMPLEADOS', 0, 0, 'C');
-
-$pdf->Ln(10);
-$pdf->SetTextColor(0, 0, 0);
-
-$pdf->SetFillColor(232, 232, 232);
-$pdf->SetFont('helvetica', 'B', 10);
-$pdf->Cell(10, 6, 'Id', 1, 0, 'C', 1);
-$pdf->Cell(33, 6, 'Nombre', 1, 0, 'C', 1);
-$pdf->Cell(33, 6, 'Apellidos', 1, 0, 'C', 1);
-$pdf->Cell(12, 6, 'Edad', 1, 0, 'C', 1);
-$pdf->Cell(27, 6, 'Teléfono', 1, 0, 'C', 1);
-$pdf->Cell(40, 6, 'Dirección', 1, 0, 'C', 1);
-$pdf->Cell(20, 6, 'Estado', 1, 1, 'C', 1);
-
-$pdf->SetFont('helvetica', '', 9);
-
-$filtro = trim($_REQUEST['buscar'] ?? '');
-$sql = "SELECT idempleado, nombre, apellidos, edad, telefono, direccion, activo FROM empleados";
-$params = [];
-if ($filtro !== '') {
-    $sql   .= " WHERE nombre LIKE ? OR apellidos LIKE ? OR idempleado LIKE ? OR telefono LIKE ?";
-    $params = ["%$filtro%", "%$filtro%", "%$filtro%", "%$filtro%"];
-}
-$sql .= " ORDER BY idempleado DESC";
-$rows = $db->consulta($sql, $params);
-
-foreach ($rows as $r) {
-    $pdf->Cell(10, 6, $r['idempleado'], 1, 0, 'C');
-    $pdf->Cell(33, 6, $r['nombre'], 1, 0, 'L');
-    $pdf->Cell(33, 6, $r['apellidos'], 1, 0, 'L');
-    $pdf->Cell(12, 6, $r['edad'], 1, 0, 'C');
-    $pdf->Cell(27, 6, $r['telefono'], 1, 0, 'C');
-    $pdf->Cell(40, 6, $r['direccion'], 1, 0, 'L');
-    $pdf->Cell(20, 6, (int)$r['activo'] === 1 ? 'Activo' : 'Inactivo', 1, 1, 'C');
+foreach ($rows as $index => $row) {
+    $pdf->tableRow([
+        $row['idempleado'],
+        trim($row['nombre'] . ' ' . $row['apellidos']),
+        $row['correo'] ?: '-',
+        $row['telefono'] ?: '-',
+        $row['area'] ?: '-',
+        $row['cargo'] ?: '-',
+        (int)$row['activo'] === 1 ? 'Activo' : 'Inactivo',
+    ], $index);
 }
 
-$pdf->Output('ReporteEmpleados_' . date('d_m_y') . '.pdf', 'I');
+outputGestActivosPdf($pdf, 'ReporteEmpleados_' . date('d_m_Y') . '.pdf');
