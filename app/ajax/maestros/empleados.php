@@ -97,15 +97,14 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
                     <i class="fa fa-edit"></i>
                 </a>
                 <?php endif; ?>
+                
                 <a href="#" onclick="return delEmp(event)"
-                   title="<?= $activo === 1 ? 'Dar de baja' : 'Reactivar' ?>"
-                   data-toggle="modal" data-target="#delModal">
-                    <i class="fa fa-<?= $activo === 1 ? 'trash' : 'undo' ?>"
-                       style="color:<?= $activo === 1 ? '#e81414' : '#28a745' ?>"></i>
-                </a>
-                   data-toggle="modal" data-target="#delModal">
-                    <i class="fa fa-trash"></i>
-                </a>
+   title="<?= $activo === 1 ? 'Dar de baja' : 'Reactivar' ?>"
+   data-toggle="modal" data-target="#delModal">
+    <i class="fa fa-<?= $activo === 1 ? 'trash' : 'undo' ?>"
+       style="color:<?= $activo === 1 ? '#e81414' : '#28a745' ?>"></i>
+</a>
+
             </td>
         </tr>
     <?php endforeach; ?>

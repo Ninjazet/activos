@@ -29,12 +29,12 @@ body {
     color: #333;
     padding: 0;
     margin: 0;
-    margin-left: var(--sidebar-width); /* el sidebar inicia expandido */
+    margin-left: var(--sidebar-width);
     transition: margin-left 0.25s ease;
 }
 
 .body-expanded {
-    margin-left: var(--sidebar-width-collapsed); /* se reduce cuando el sidebar se colapsa */
+    margin-left: var(--sidebar-width-collapsed);
 }
 
 /* --------------------------------------------
@@ -49,16 +49,11 @@ body {
     top: 0;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;         /* el propio #sidemenu ya NO necesita scroll: lo maneja #menu-items */
     z-index: 1000;
     box-shadow: 2px 0 16px rgba(0, 0, 0, 0.25);
     transition: width 0.25s ease;
-    scrollbar-width: thin;
 }
-
-#sidemenu::-webkit-scrollbar { width: 6px; }
-#sidemenu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
 
 #sidemenu a {
     color: var(--sidebar-text);
@@ -162,12 +157,19 @@ body {
     font-weight: 600;
 }
 
-/* Menú principal */
+/* Menú principal — ESTA es la única zona que hace scroll dentro del sidebar */
 #sidemenu #menu-items {
-    overflow: hidden;
+    flex: 1;                  /* ocupa todo el espacio restante bajo header+profile */
+    min-height: 0;            /* clave: sin esto, flexbox no deja que el bloque se */
+                               /* encoja y el overflow-y de abajo nunca se activa   */
+    overflow-y: auto;         /* antes decía "overflow: hidden" y recortaba el     */
+                               /* contenido en vez de dejarlo desplazar             */
+    overflow-x: hidden;
     padding: 10px 10px 30px;
-    flex: 1;
 }
+
+#sidemenu #menu-items::-webkit-scrollbar { width: 6px; }
+#sidemenu #menu-items::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
 
 #sidemenu #menu-items .item {
     width: 100%;

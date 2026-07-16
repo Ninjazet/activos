@@ -66,16 +66,14 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
                     <i class="fa fa-edit"></i>
                 </a>
                 <?php endif; ?>
+
                 <a href="#" onclick="return delEquipo(event)"
-                   title="<?= $activo === 1 ? 'Dar de baja' : 'Reactivar' ?>"
-                   data-toggle="modal" data-target="#delModal">
-                    <i class="fa fa-<?= $activo === 1 ? 'trash' : 'undo' ?>"
-                       style="color:<?= $activo === 1 ? '#e81414' : '#28a745' ?>"></i>
-                </a>
-                <a href="#" onclick="return delEquipo(event)"
-                   data-toggle="modal" data-target="#delModal">
-                    <i class="fa fa-trash"></i>
-                </a>
+   title="<?= $activo === 1 ? 'Dar de baja' : 'Reactivar' ?>"
+   data-toggle="modal" data-target="#delModal">
+    <i class="fa fa-<?= $activo === 1 ? 'trash' : 'undo' ?>"
+       style="color:<?= $activo === 1 ? '#e81414' : '#28a745' ?>"></i>
+</a>
+
             </td>
         </tr>
     <?php endforeach; ?>

@@ -13,6 +13,7 @@ define('BASE_URL',  '/activos');  // Subcarpeta dentro de htdocs
 // Rutas de almacenamiento
 define('IMG_EMPLEADOS',   BASE_PATH . '/public/img/empleados/');
 define('IMG_EQUIPOS',     BASE_PATH . '/public/img/equipos/');
+define('IMG_FIRMAS',      BASE_PATH . '/public/img/firmas/');
 
 // Zona horaria
 date_default_timezone_set('America/Tegucigalpa');

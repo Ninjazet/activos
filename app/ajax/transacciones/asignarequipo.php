@@ -14,7 +14,8 @@ $sql = "SELECT asg.idasignacion,
                CONCAT(ma.nombreMarca, ' ', mo.nombreModelo) AS equipo,
                asg.idempleado,
                asg.idequipo,
-               asg.fecha_asignacion
+               asg.fecha_asignacion,
+               asg.firma
         FROM asignacion asg
         INNER JOIN empleados em ON asg.idempleado = em.idempleado
         INNER JOIN equipo eq    ON asg.idequipo   = eq.idequipo
@@ -92,6 +93,18 @@ $eqsTodos = $db->consulta(
                    data-toggle="modal" data-target="#deleteModal">
                     <span class="fa fa-undo" style="color:#e88e14"></span>
                 </a>
+                <?php if (!empty($r['firma'])): ?>
+                <a href="<?= BASE_URL ?>/reportes/acta_asignacion.php?idasignacion=<?= $r['idasignacion'] ?>"
+                   target="_blank" title="Ver Acta Firmada">
+                    <span class="fa fa-file-circle-check" style="color:#1a7c3e"></span>
+                </a>
+                <?php else: ?>
+                <a href="#" title="Firmar Acta"
+                   onclick="return modalFirmar(event);"
+                   data-toggle="modal" data-target="#firmarModal">
+                    <span class="fa fa-file-signature" style="color:#22648e"></span>
+                </a>
+                <?php endif; ?>
             </td>
         </tr>
         <?php endforeach; ?>
@@ -131,6 +144,92 @@ function modalDelete(evento) {
     $("#lblEmpleadoDel").text(empleado);
     $("#lblEquipoDel").text(equipo);
 }
+
+// ====================
+// Firmar Acta (canvas)
+// ====================
+var dibujandoFirma = false;
+var hayTrazoFirma  = false;
+var canvasFirma, ctxFirma;
+
+function modalFirmar(evento) {
+    var fila = $(evento.target).parents("tr");
+    var id       = fila.find("td").eq(0).text();
+    var empleado = fila.find("td").eq(1).text();
+    var equipo   = fila.find("td").eq(2).text();
+
+    $("#idasignacionFirma").val(id);
+    $("#lblEmpleadoFirma").text(empleado);
+    $("#lblEquipoFirma").text(equipo);
+    $("#avisoFirma").text("");
+
+    hayTrazoFirma = false;
+    if (ctxFirma) {
+        ctxFirma.fillStyle = "#ffffff";
+        ctxFirma.fillRect(0, 0, canvasFirma.width, canvasFirma.height);
+    }
+}
+
+$(document).ready(function () {
+
+    canvasFirma = document.getElementById("canvasFirma");
+    ctxFirma    = canvasFirma.getContext("2d");
+
+    function posicionFirma(e) {
+        var r = canvasFirma.getBoundingClientRect();
+        if (e.touches && e.touches[0]) {
+            return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+        }
+        return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+
+    function iniciarFirma(e) {
+        e.preventDefault();
+        dibujandoFirma = true;
+        hayTrazoFirma  = true;
+        var p = posicionFirma(e);
+        ctxFirma.beginPath();
+        ctxFirma.moveTo(p.x, p.y);
+    }
+
+    function trazarFirma(e) {
+        if (!dibujandoFirma) return;
+        e.preventDefault();
+        var p = posicionFirma(e);
+        ctxFirma.lineWidth   = 2;
+        ctxFirma.lineCap     = "round";
+        ctxFirma.strokeStyle = "#1e1e2d";
+        ctxFirma.lineTo(p.x, p.y);
+        ctxFirma.stroke();
+    }
+
+    function terminarFirma() {
+        dibujandoFirma = false;
+    }
+
+    canvasFirma.addEventListener("mousedown",  iniciarFirma);
+    canvasFirma.addEventListener("mousemove",  trazarFirma);
+    window.addEventListener("mouseup",         terminarFirma);
+    canvasFirma.addEventListener("touchstart", iniciarFirma);
+    canvasFirma.addEventListener("touchmove",  trazarFirma);
+    canvasFirma.addEventListener("touchend",   terminarFirma);
+
+    $("#btnLimpiarFirma").on("click", function () {
+        ctxFirma.fillStyle = "#ffffff";
+        ctxFirma.fillRect(0, 0, canvasFirma.width, canvasFirma.height);
+        hayTrazoFirma = false;
+    });
+
+    $("#formFirma").on("submit", function (e) {
+        if (!hayTrazoFirma) {
+            e.preventDefault();
+            $("#avisoFirma").text("Debe dibujar su firma antes de continuar.");
+            return;
+        }
+        $("#firmaInput").val(canvasFirma.toDataURL("image/jpeg"));
+    });
+
+});
 </script>
 <?php else: ?>
 <p class="lead"><em>No hay asignaciones activas.</em></p>
@@ -244,6 +343,45 @@ function modalDelete(evento) {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <input type="submit" class="btn btn-warning" value="Confirmar devolución" name="del">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL FIRMAR ACTA -->
+<div class="modal fade" id="firmarModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="formFirma" method="POST"
+                  action="<?= BASE_URL ?>/reportes/acta_asignacion.php" target="_blank">
+                <?= Auth::csrfField() ?>
+                <input type="hidden" name="idasignacion" id="idasignacionFirma">
+                <input type="hidden" name="firma"        id="firmaInput">
+                <div class="modal-header">
+                    <h5 class="modal-title">Firmar Acta de Entrega</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Empleado:</strong> <span id="lblEmpleadoFirma"></span></p>
+                    <p><strong>Equipo:</strong>   <span id="lblEquipoFirma"></span></p>
+                    <p class="text-muted" style="margin-bottom:6px;">Dibuje su firma en el recuadro:</p>
+                    <div style="border:2px solid #d8d8e8; border-radius:8px; display:inline-block; background:#fff; overflow:hidden;">
+                        <canvas id="canvasFirma" width="440" height="160"
+                                style="display:block; touch-action:none; cursor:crosshair;"></canvas>
+                    </div>
+                    <br>
+                    <button type="button" class="btn btn-sm btn-default" id="btnLimpiarFirma"
+                            style="margin-top:6px;">
+                        <i class="fa fa-eraser"></i> Limpiar Firma
+                    </button>
+                    <div id="avisoFirma" class="text-danger" style="min-height:20px; margin-top:6px;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa fa-file-pdf"></i> Generar Acta Firmada
+                    </button>
                 </div>
             </form>
         </div>

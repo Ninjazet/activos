@@ -3,25 +3,7 @@
    Estilos generales de contenido + dashboard
    ============================================ */
 
-.wrapper {
-    max-width: 1100px;
-    width: 92%;
-    margin: 28px auto;
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--card-shadow);
-    padding: 30px;
-}
-
-.fa-edit  { color: #31E814; }
-.fa-trash { color: #e81414; }
-#buscar   { width: 400px; }
 #imgIcon  { color: #D8A30B; }
-
-.page-header h2 {
-    color: #1e1e2d;
-    font-weight: 700;
-}
 
 /* --------------------------------------------
    DASHBOARD (index.php)
@@ -120,4 +102,235 @@
     font-size: 13px;
     color: #777;
     line-height: 1.4;
+}
+
+/* ============================================
+   TABLAS — Diseño moderno tipo tarjeta
+   ============================================ */
+
+/* Contenedor principal de cada página */
+.wrapper {
+    max-width: 1200px;
+    width: 95%;
+    margin: 28px auto;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    padding: 28px 30px;
+    border: none;
+}
+
+/* Encabezado de página dentro del wrapper */
+.page-header {
+    border-bottom: 1px solid #f0f0f5;
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+}
+
+.page-header h2 {
+    color: #1e1e2d;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 0 0 2px;
+}
+
+/* ----- Tabla base ----- */
+.table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+/* Eliminar bordes del Bootstrap 3 */
+.table-bordered,
+.table-bordered > thead > tr > th,
+.table-bordered > thead > tr > td,
+.table-bordered > tbody > tr > th,
+.table-bordered > tbody > tr > td,
+.table-bordered > tfoot > tr > th,
+.table-bordered > tfoot > tr > td {
+    border: none !important;
+    border-top: none !important;
+}
+
+/* Encabezado — color fuerte + divisores entre columnas */
+.table > thead > tr > th,
+.table thead th {
+    background: #ecedf5 !important;
+    color: #3a3a5c !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.07em !important;
+    padding: 13px 16px !important;
+    border-bottom: 3px solid #6f42c1 !important;
+    border-top: none !important;
+    border-right: 1px solid #d8d8e8 !important;
+    white-space: nowrap;
+}
+
+/* Última columna sin divisor derecho */
+.table > thead > tr > th:last-child,
+.table thead th:last-child {
+    border-right: none !important;
+}
+
+/* Quitar el fondo inline del thead (el style="background-color:#D3E9F1") */
+.table > thead {
+    background: #ecedf5 !important;
+}
+
+/* Filas del cuerpo */
+.table > tbody > tr > td,
+.table tbody td {
+    vertical-align: middle !important;
+    padding: 14px 16px !important;
+    border-top: 1px solid #e6e6f0 !important;
+    border-right: 1px solid #f0f0f8 !important;
+    font-size: 14px;
+    color: #333;
+    background: #fff;
+}
+
+/* Última celda sin divisor derecho */
+.table > tbody > tr > td:last-child,
+.table tbody td:last-child {
+    border-right: none !important;
+}
+
+/* Quitar el striped de Bootstrap 3 */
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background: #fff !important;
+}
+
+/* Hover en filas */
+.table > tbody > tr:hover > td {
+    background: #f5f3ff !important;
+    transition: background 0.15s ease;
+}
+
+/* Filas de registros inactivos */
+.table > tbody > tr.text-muted > td {
+    color: #aaa !important;
+    background: #fafafa !important;
+}
+
+/* ----- Badges / Labels ----- */
+/* Reemplaza los label de Bootstrap 3 por pills modernas */
+.label {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+.label-success  { background: #d1fae5; color: #065f46; }
+.label-default  { background: #e5e7eb; color: #6b7280; }
+.label-danger   { background: #fee2e2; color: #991b1b; }
+.label-warning  { background: #fef3c7; color: #92400e; }
+.label-info     { background: #dbeafe; color: #1e40af; }
+.label-primary  { background: #ede9fe; color: #5b21b6; }
+
+/* ----- Botones de acción en tablas ----- */
+.table td .fa-edit,
+.table td .fa-undo {
+    font-size: 15px;
+}
+
+.table td a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    margin: 0 2px;
+    text-decoration: none;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.table td a:hover {
+    transform: translateY(-1px);
+}
+
+.table td a .fa-edit  { color: #5b21b6; }
+.table td a .fa-trash { color: #dc3545; }
+.table td a .fa-undo  { color: #065f46; }
+
+.table td a:has(.fa-edit)  { background: #ede9fe; }
+.table td a:has(.fa-trash) { background: #fee2e2; }
+.table td a:has(.fa-undo)  { background: #d1fae5; }
+
+/* ----- DataTables: estilo de paginación ----- */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 8px !important;
+    border: none !important;
+    padding: 4px 10px !important;
+    margin: 0 2px !important;
+    font-size: 13px !important;
+    color: #555 !important;
+    background: transparent !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #ede9fe !important;
+    color: #5b21b6 !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: #6f42c1 !important;
+    color: #fff !important;
+    border: none !important;
+}
+.dataTables_wrapper .dataTables_info {
+    font-size: 13px;
+    color: #888;
+    padding-top: 10px;
+}
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+    border: 1px solid #e0e0e8 !important;
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+    font-size: 13px !important;
+    outline: none;
+}
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: #6f42c1 !important;
+    box-shadow: 0 0 0 3px rgba(111,66,193,.12) !important;
+}
+
+/* Buscador principal (#buscar) */
+#buscar {
+    width: 340px;
+    border: 1px solid #e0e0e8;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+#buscar:focus {
+    outline: none;
+    border-color: #6f42c1;
+    box-shadow: 0 0 0 3px rgba(111,66,193,.12);
+}
+
+/* Botón "+ Agregar" */
+.btn-primary.pull-right {
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #6f42c1, #5b21b6);
+    border: none;
+    box-shadow: 0 4px 12px rgba(111,66,193,.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-primary.pull-right:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(111,66,193,.38);
+    background: linear-gradient(135deg, #7c4fcc, #6f42c1);
 }
