@@ -12,7 +12,7 @@ $preseleccionarEquipo = max(0, (int)($_POST['preseleccionar_equipo'] ?? 0));
 
 $sql = "SELECT asg.idasignacion, asg.idempleado, asg.idequipo, asg.fecha_asignacion,
                asg.condicion_entrega, asg.entrega_cargador, asg.entrega_maletin,
-               asg.entrega_otros, asg.observaciones_entrega, asg.firma,
+               asg.entrega_otros, asg.observaciones_entrega, asg.firma, asg.requiere_firma_entrega,
                CONCAT(em.nombre, ' ', em.apellidos) AS empleado,
                CONCAT(COALESCE(eq.codigo_activo, CONCAT('EQ-', eq.idequipo)), ' - ', ma.nombreMarca, ' ', mo.nombreModelo) AS equipo
         FROM asignacion asg
@@ -105,10 +105,16 @@ $abrirModalNuevo = $empleadoPreseleccionable || $equipoPreseleccionable;
                 <a href="#" title="Editar asignación y checklist" onclick="return modalEdit(event);"
                    data-toggle="modal" data-target="#editModal"><span class="fa fa-edit"></span></a>
                 <?php endif; ?>
+                <?php if ((int)$r['requiere_firma_entrega'] === 1 && empty($r['firma'])): ?>
+                <span title="Debe firmar el acta de entrega antes de devolver este equipo">
+                    <span class="fa fa-rotate-left" style="color:#9ca3af"></span>
+                </span>
+                <?php else: ?>
                 <a href="#" title="Devolver equipo" onclick="return modalDevolver(event);"
                    data-toggle="modal" data-target="#devolucionModal">
                     <span class="fa fa-rotate-left" style="color:#c56b08"></span>
                 </a>
+                <?php endif; ?>
                 <?php if (!empty($r['firma'])): ?>
                 <a href="<?= BASE_URL ?>/reportes/acta_asignacion.php?idasignacion=<?= (int)$r['idasignacion'] ?>"
                    target="_blank" title="Ver acta de entrega firmada">

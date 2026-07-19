@@ -67,8 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id = (int)$db->ejecutar(
                     "INSERT INTO asignacion
                         (idempleado, idequipo, activa, fecha_asignacion, condicion_entrega,
-                         entrega_cargador, entrega_maletin, entrega_otros, observaciones_entrega)
-                     VALUES (?, ?, 1, NOW(), ?, ?, ?, ?, ?)",
+                         entrega_cargador, entrega_maletin, entrega_otros, observaciones_entrega,
+                         requiere_firma_entrega)
+                     VALUES (?, ?, 1, NOW(), ?, ?, ?, ?, ?, 1)",
                     [
                         $idempleado, $idequipo, $entrega['condicion'], $entrega['cargador'],
                         $entrega['maletin'], $entrega['otros'], $entrega['observaciones'],

@@ -6,7 +6,7 @@ $db = Database::getInstance();
 
 $sql = "SELECT us.idusuario, username, us.estado,
                CONCAT(nombre, ' ', apellidos) AS Nombre,
-               datosmaestros, transacciones, consultas, reportes, seguridad
+               datosmaestros, transacciones, consultas, reportes, actas, seguridad
         FROM usuarios us
         INNER JOIN empleados em ON us.idempleado = em.idempleado
         INNER JOIN permisos  pe ON us.idusuario  = pe.idusuario";
@@ -49,6 +49,7 @@ $empleados_todos = $db->consulta(
             <th>Transacciones</th>
             <th>Consultas</th>
             <th>Reportes</th>
+            <th>Actas</th>
             <th>Seguridad</th>
             <th>Acción</th>
         </tr>
@@ -65,6 +66,7 @@ $empleados_todos = $db->consulta(
             <td><?= $registro['transacciones'] ?></td>
             <td><?= $registro['consultas'] ?></td>
             <td><?= $registro['reportes'] ?></td>
+            <td><?= $registro['actas'] ?></td>
             <td><?= $registro['seguridad'] ?></td>
             <td>
                 <a href='#' title='Editar' onclick='return modalEdit(event);'
@@ -88,7 +90,7 @@ $empleados_todos = $db->consulta(
 <script>
 $(document).ready(function(){
     $("#datosE").DataTable({ dom: 'lrtip', order: [[0, 'desc']] });
-    var hide = [4,5,6,7,8];
+    var hide = [5,6,7,8,9,10];
     hide.forEach(function(i){ $("#datosE th:nth-child("+i+"), #datosE td:nth-child("+i+")").hide(); });
 });
 </script>
@@ -151,6 +153,11 @@ $(document).ready(function(){
                     <div class="custom-control custom-checkbox">
                     <input type="checkbox" class="custom-control-input" name="reportes" id="reportes"/>
                     <label class="custom-control-label" for="reportes">Reportes</label>
+                    </div>
+
+                    <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" name="actas" id="actas"/>
+                    <label class="custom-control-label" for="actas">Actas firmadas</label>
                     </div>
 
                     <div class="custom-control custom-checkbox">
@@ -231,8 +238,13 @@ $(document).ready(function(){
                     </div>
 
                     <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" name="actasAct" id="actasAct"/>
+                        <label class="custom-control-label" for="actasAct">Actas firmadas</label>
+                    </div>
+
+                    <div class="custom-control custom-checkbox">
                         <input type="checkbox" class="custom-control-input" name="seguridadAct" id="seguridadAct"/>
-                        <label class="custom-control-label" for="seguridad">Seguridad</label>
+                        <label class="custom-control-label" for="seguridadAct">Seguridad</label>
                     </div>
 
                 </div>
@@ -281,8 +293,8 @@ function modalEdit(evento) {
     $("#idusuario").val(tr.find('td').eq(0).text());
     $("#usuarioAct").val(tr.find('td').eq(1).text());
     $("#passAct").val(''); // nunca pre-llenar la contraseña
-    var perms = [4,5,6,7,8];
-    var ids   = ['maestrosAct','transaccionesAct','consultasAct','reportesAct','seguridadAct'];
+    var perms = [4,5,6,7,8,9];
+    var ids   = ['maestrosAct','transaccionesAct','consultasAct','reportesAct','actasAct','seguridadAct'];
     perms.forEach(function(col, i){
         var val = parseInt(tr.find('td').eq(col).text());
         $('#'+ids[i]).prop('checked', val === 1);

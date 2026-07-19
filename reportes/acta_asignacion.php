@@ -1,13 +1,18 @@
 <?php
 // GestActivos - Acta firmada de entrega de equipo.
 require_once __DIR__ . '/../bootstrap.php';
-Auth::requerirPermiso('transacciones');
+$esPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+if ($esPost) {
+    Auth::requerirPermiso('transacciones');
+} else {
+    Auth::requerirPermisoActas();
+}
 require_once __DIR__ . '/pdf_layout.php';
 require_once __DIR__ . '/firma_digital.php';
 require_once __DIR__ . '/acta_helpers.php';
 
 $db = Database::getInstance();
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($esPost) {
     Auth::verificarCsrf();
 }
 if (ob_get_level()) {

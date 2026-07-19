@@ -38,6 +38,19 @@ class Auth {
         }
     }
 
+    // Permite consultar actas sin conceder acceso a las transacciones.
+    // Transacciones conserva acceso implícito por compatibilidad operativa.
+    public static function requerirPermisoActas(): void {
+        self::requerir();
+        $puedeVer = (string)($_SESSION['actas'] ?? '0') === '1'
+            || (string)($_SESSION['transacciones'] ?? '0') === '1';
+        if (!$puedeVer) {
+            $pagina = $_SESSION['pagina'] ?? (BASE_URL . '/index.php');
+            header('Location: ' . $pagina);
+            exit();
+        }
+    }
+
     // Guarda la página actual en sesión (para redirecciones)
     public static function guardarPagina(string $archivo): void {
         $_SESSION['pagina'] = $_SERVER['REQUEST_URI'] ?? (BASE_URL . '/index.php');

@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reg = $db->fila(
                 "SELECT us.idusuario, us.username, us.pass, us.idempleado,
                         em.nombre, em.apellidos, em.imagen,
-                        pe.datosmaestros, pe.transacciones, pe.consultas, pe.reportes, pe.seguridad
+                        pe.datosmaestros, pe.transacciones, pe.consultas, pe.reportes, pe.actas, pe.seguridad
                  FROM usuarios us
                  INNER JOIN empleados em ON us.idempleado = em.idempleado
                  LEFT  JOIN permisos pe ON us.idusuario   = pe.idusuario
@@ -65,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['transacciones'] = $reg['transacciones'];
                 $_SESSION['consultas']     = $reg['consultas'];
                 $_SESSION['reportes']      = $reg['reportes'];
+                $_SESSION['actas']         = $reg['actas'];
                 $_SESSION['seguridad']     = $reg['seguridad'];
 
                 Auth::registrarBitacora((int)$reg['idusuario'], $reg['username'], 'login_exitoso');

@@ -24,12 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($yaVinculado) {
             Auth::flash('error', 'Ese empleado ya tiene una cuenta de usuario.');
         } else {
+            $permisoTransacciones = isset($_POST['transacciones']) ? 1 : 0;
             $permisos = [
-                isset($_POST['maestros'])      ? 1 : 0,
-                isset($_POST['transacciones']) ? 1 : 0,
-                isset($_POST['consultas'])     ? 1 : 0,
-                isset($_POST['reportes'])      ? 1 : 0,
-                isset($_POST['seguridad'])     ? 1 : 0,
+                isset($_POST['maestros']) ? 1 : 0,
+                $permisoTransacciones,
+                isset($_POST['consultas']) ? 1 : 0,
+                isset($_POST['reportes']) ? 1 : 0,
+                isset($_POST['actas']) || $permisoTransacciones === 1 ? 1 : 0,
+                isset($_POST['seguridad']) ? 1 : 0,
             ];
             $passHash = Auth::hashPassword($pass);
 
@@ -40,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         [$usuario, $passHash, $idempleado]
                     );
                     $db->ejecutar(
-                        "INSERT INTO permisos (idusuario, datosmaestros, transacciones, consultas, reportes, seguridad)
-                         VALUES (?, ?, ?, ?, ?, ?)",
+                        "INSERT INTO permisos (idusuario, datosmaestros, transacciones, consultas, reportes, actas, seguridad)
+                         VALUES (?, ?, ?, ?, ?, ?, ?)",
                         array_merge([$idusuario], $permisos)
                     );
                 });
@@ -66,12 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($yaExiste) {
             Auth::flash('error', 'Ese nombre de usuario ya lo usa otra cuenta.');
         } else {
+            $permisoTransacciones = isset($_POST['transaccionesAct']) ? 1 : 0;
             $permisos = [
-                isset($_POST['maestrosAct'])      ? 1 : 0,
-                isset($_POST['transaccionesAct']) ? 1 : 0,
-                isset($_POST['consultasAct'])     ? 1 : 0,
-                isset($_POST['reportesAct'])      ? 1 : 0,
-                isset($_POST['seguridadAct'])     ? 1 : 0,
+                isset($_POST['maestrosAct']) ? 1 : 0,
+                $permisoTransacciones,
+                isset($_POST['consultasAct']) ? 1 : 0,
+                isset($_POST['reportesAct']) ? 1 : 0,
+                isset($_POST['actasAct']) || $permisoTransacciones === 1 ? 1 : 0,
+                isset($_POST['seguridadAct']) ? 1 : 0,
             ];
             // La contraseña solo se cambia si el admin escribió una nueva.
             // Si se cambia, se guarda con hash (nunca en texto plano).
@@ -85,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $db->ejecutar("UPDATE usuarios SET username=? WHERE idusuario=?", [$usuario, $id]);
                     }
                     $db->ejecutar(
-                        "UPDATE permisos SET datosmaestros=?, transacciones=?, consultas=?, reportes=?, seguridad=? WHERE idusuario=?",
+                        "UPDATE permisos SET datosmaestros=?, transacciones=?, consultas=?, reportes=?, actas=?, seguridad=? WHERE idusuario=?",
                         array_merge($permisos, [$id])
                     );
                 });

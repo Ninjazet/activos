@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../../bootstrap.php';
 Auth::requerirPermiso('consultas');
 
 $db = Database::getInstance();
-$puedeVerActas = (string)Auth::get('transacciones') === '1';
+$puedeVerActas = (string)Auth::get('actas') === '1' || (string)Auth::get('transacciones') === '1';
 $filtro = is_string($_POST['query'] ?? null) ? trim($_POST['query']) : '';
 
 $sql = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion, asg.fecha_devolucion,

@@ -1,13 +1,17 @@
 <?php
 // GestActivos - Recepción y acta firmada de devolución de equipo.
 require_once __DIR__ . '/../bootstrap.php';
-Auth::requerirPermiso('transacciones');
+$esPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+if ($esPost) {
+    Auth::requerirPermiso('transacciones');
+} else {
+    Auth::requerirPermisoActas();
+}
 require_once __DIR__ . '/pdf_layout.php';
 require_once __DIR__ . '/firma_digital.php';
 require_once __DIR__ . '/acta_helpers.php';
 
 $db = Database::getInstance();
-$esPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
 if ($esPost) {
     Auth::verificarCsrf();
 }
@@ -59,7 +63,7 @@ if ($esPost) {
             $observaciones, $estadoEquipo, $firmaGuardada, $idusuario
         ): void {
             $actual = $db->fila(
-                "SELECT asg.activa, asg.firma_devolucion, asg.idequipo, eq.activo
+                "SELECT asg.activa, asg.firma, asg.requiere_firma_entrega, asg.firma_devolucion, asg.idequipo, eq.activo
                  FROM asignacion asg
                  INNER JOIN equipo eq ON asg.idequipo=eq.idequipo
                  WHERE asg.idasignacion=? FOR UPDATE",
@@ -70,6 +74,9 @@ if ($esPost) {
             }
             if ((int)$actual['activa'] !== 1 || !empty($actual['firma_devolucion'])) {
                 throw new RuntimeException('Esta asignación ya fue devuelta.');
+            }
+            if ((int)$actual['requiere_firma_entrega'] === 1 && empty($actual['firma'])) {
+                throw new RuntimeException('Debe firmar el acta de entrega antes de devolver este equipo.');
             }
             if ((int)$actual['activo'] !== 1) {
                 throw new RuntimeException('El equipo está inactivo y no puede procesarse esta devolución.');
