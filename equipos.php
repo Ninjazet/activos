@@ -158,6 +158,7 @@ require BASE_PATH . '/app/views/layouts/encabezado.php';
 Auth::imprimirFlash();
 ?>
 <script src="<?= BASE_URL ?>/public/js/ajax-loader.js"></script>
+<script src="<?= BASE_URL ?>/public/js/catalogos-contextuales.js"></script>
 <script>
 $(document).ready(function(){ ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/equipos.php'); });
 $(document).on('keyup','#buscar',function(){ ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/maestros/equipos.php',$(this).val()); });

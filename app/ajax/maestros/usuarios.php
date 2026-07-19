@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . "/../../../bootstrap.php";
-Auth::requerir();
+Auth::requerirPermiso('seguridad');
 
 $db = Database::getInstance();
 

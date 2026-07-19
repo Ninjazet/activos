@@ -3,7 +3,7 @@
 // GestActivos - AJAX: Tabla + modales de Empleados
 // ============================================================
 require_once __DIR__ . '/../../../bootstrap.php';
-Auth::requerir();
+Auth::requerirPermiso('maestros');
 
 $db = Database::getInstance();
 $q      = trim($_POST['query'] ?? '');
@@ -89,6 +89,12 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
                    data-toggle="modal" data-target="#imgModal">
                     <i id="imgIcon" class="fa fa-image"></i>
                 </a>
+                <?php if ($activo === 1 && (string)($_SESSION['transacciones'] ?? '0') === '1'): ?>
+                <a href="<?= BASE_URL ?>/asignarequipo.php?idempleado=<?= (int)$r['idempleado'] ?>"
+                   title="Asignar equipo a este empleado">
+                    <i class="fa fa-laptop-file"></i>
+                </a>
+                <?php endif; ?>
                 <?php if ($activo === 1): ?>
                 <a href="#" onclick="return editEmp(event)"
                    data-toggle="modal" data-target="#editModal">
@@ -180,18 +186,60 @@ function delEmp(e) {
           <input type="email" name="correo" class="form-control" maxlength="150" placeholder="nombre@empresa.com"></div>
         <div class="form-group"><label>Dirección</label>
           <input type="text" name="direccion" class="form-control"></div>
-        <div class="form-group"><label>Área</label>
-          <select name="idarea" class="form-control">
+        <div class="form-group">
+          <div class="catalogo-contextual-encabezado">
+            <label for="nuevoEmpleadoArea">Área</label>
+            <button type="button" class="btn btn-link btn-xs js-catalogo-toggle" data-target="#altaAreaEmpleado">
+              <i class="fa fa-plus"></i> Nueva área
+            </button>
+          </div>
+          <select name="idarea" id="nuevoEmpleadoArea" class="form-control" data-catalogo-select="area" required>
             <?php foreach ($areas as $a): ?>
             <option value="<?= $a['idarea'] ?>"><?= htmlspecialchars($a['descripcionarea']) ?></option>
             <?php endforeach; ?>
-          </select></div>
-        <div class="form-group"><label>Cargo</label>
-          <select name="idcargo" class="form-control">
+          </select>
+          <div id="altaAreaEmpleado" class="catalogo-contextual-panel"
+               data-tipo="area" data-select="#nuevoEmpleadoArea"
+               data-endpoint="<?= BASE_URL ?>/app/ajax/maestros/catalogos_contextuales.php"
+               data-csrf="<?= htmlspecialchars(Auth::csrfToken(), ENT_QUOTES) ?>">
+            <div class="input-group">
+              <input type="text" class="form-control js-catalogo-nombre" maxlength="100" placeholder="Nombre de la nueva área" autocomplete="off">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-primary js-catalogo-guardar"><i class="fa fa-check"></i> Guardar</button>
+                <button type="button" class="btn btn-default js-catalogo-cancelar" title="Cancelar"><i class="fa fa-times"></i></button>
+              </span>
+            </div>
+            <small class="catalogo-contextual-ayuda">Se agregará al catálogo y quedará seleccionada.</small>
+            <span class="catalogo-contextual-error" aria-live="polite"></span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="catalogo-contextual-encabezado">
+            <label for="nuevoEmpleadoCargo">Cargo</label>
+            <button type="button" class="btn btn-link btn-xs js-catalogo-toggle" data-target="#altaCargoEmpleado">
+              <i class="fa fa-plus"></i> Nuevo cargo
+            </button>
+          </div>
+          <select name="idcargo" id="nuevoEmpleadoCargo" class="form-control" data-catalogo-select="cargo" required>
             <?php foreach ($cargos as $c): ?>
             <option value="<?= $c['idcargo'] ?>"><?= htmlspecialchars($c['descripcioncargo']) ?></option>
             <?php endforeach; ?>
-          </select></div>
+          </select>
+          <div id="altaCargoEmpleado" class="catalogo-contextual-panel"
+               data-tipo="cargo" data-select="#nuevoEmpleadoCargo"
+               data-endpoint="<?= BASE_URL ?>/app/ajax/maestros/catalogos_contextuales.php"
+               data-csrf="<?= htmlspecialchars(Auth::csrfToken(), ENT_QUOTES) ?>">
+            <div class="input-group">
+              <input type="text" class="form-control js-catalogo-nombre" maxlength="100" placeholder="Nombre del nuevo cargo" autocomplete="off">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-primary js-catalogo-guardar"><i class="fa fa-check"></i> Guardar</button>
+                <button type="button" class="btn btn-default js-catalogo-cancelar" title="Cancelar"><i class="fa fa-times"></i></button>
+              </span>
+            </div>
+            <small class="catalogo-contextual-ayuda">Se agregará al catálogo y quedará seleccionado.</small>
+            <span class="catalogo-contextual-error" aria-live="polite"></span>
+          </div>
+        </div>
         <div class="form-group"><label>Sexo</label>
           <select name="idsexo" class="form-control">
             <option value="1">Masculino</option>
@@ -233,13 +281,13 @@ function delEmp(e) {
         <div class="form-group"><label>Dirección</label>
           <input type="text" name="direccionAct" id="direccionAct" class="form-control"></div>
         <div class="form-group"><label>Área</label>
-          <select name="areaAct" id="areaAct" class="form-control">
+          <select name="areaAct" id="areaAct" class="form-control" data-catalogo-select="area">
             <?php foreach ($areasTodas as $a): ?>
             <option value="<?= $a['idarea'] ?>"><?= htmlspecialchars($a['descripcionarea']) ?><?= (int)$a['activo'] === 0 ? ' (inactiva)' : '' ?></option>
             <?php endforeach; ?>
           </select></div>
         <div class="form-group"><label>Cargo</label>
-          <select name="cargoAct" id="cargoAct" class="form-control">
+          <select name="cargoAct" id="cargoAct" class="form-control" data-catalogo-select="cargo">
             <?php foreach ($cargosTodos as $c): ?>
             <option value="<?= $c['idcargo'] ?>"><?= htmlspecialchars($c['descripcioncargo']) ?><?= (int)$c['activo'] === 0 ? ' (inactivo)' : '' ?></option>
             <?php endforeach; ?>

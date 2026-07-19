@@ -18,6 +18,15 @@ $tran = $_SESSION['transacciones'] ?? '0';
 $con  = $_SESSION['consultas']     ?? '0';
 $rep  = $_SESSION['reportes']      ?? '0';
 $seg  = $_SESSION['seguridad']     ?? '0';
+
+$rutaActual = trim(str_replace('\\', '/', $_SERVER['PHP_SELF'] ?? ''), '/');
+$baseMenu = trim((string)(parse_url(BASE_URL, PHP_URL_PATH) ?? ''), '/');
+if ($baseMenu !== '' && strpos($rutaActual, $baseMenu . '/') === 0) {
+    $rutaActual = substr($rutaActual, strlen($baseMenu) + 1);
+}
+$esRutaActiva = static function (string $url) use ($rutaActual): bool {
+    return trim($url, '/') === $rutaActual;
+};
 ?>
 
 <div id="sidemenu" class="menu-expanded">
@@ -45,37 +54,54 @@ $seg  = $_SESSION['seguridad']     ?? '0';
 
     <div id="menu-items">
 
-        <!-- DATOS MAESTROS -->
+        <!-- ACCESOS PRINCIPALES Y CATÁLOGOS -->
         <?php if ($mae == '1'): ?>
-        <div class="item" id="mae">
-            <a href="#mae">
-                <div class="icon"><img src="<?= BASE_URL ?>/public/icons/Maestros.png" alt=""></div>
-                <div class="title"><span>Datos Maestros</span></div>
+        <div class="item menu-directo">
+            <a href="<?= BASE_URL ?>/equipos.php" class="<?= $esRutaActiva('equipos.php') ? 'active' : '' ?>">
+                <div class="icon"><img src="<?= BASE_URL ?>/public/icons/equipo.png" alt=""></div>
+                <div class="title"><span>Inventario</span></div>
             </a>
-            <?php
-            $submenuMaestros = [
-                'empleados.php'  => ['icons/empleados.png', 'Empleados'],
-                'cargo.php'      => ['icons/cargo.png',     'Cargos'],
-                'equipos.php'    => ['icons/equipo.png',    'Equipos'],
-                'marcas.php'     => ['icons/marca.png',     'Marcas'],
-                'modelos.php'    => ['icons/modelo.png',    'Modelos'],
-                'areas.php'      => ['icons/area.png',      'Áreas'],
-            ];
-            foreach ($submenuMaestros as $url => [$icon, $label]): ?>
+        </div>
+
+        <div class="item menu-directo">
+            <a href="<?= BASE_URL ?>/empleados.php" class="<?= $esRutaActiva('empleados.php') ? 'active' : '' ?>">
+                <div class="icon"><img src="<?= BASE_URL ?>/public/icons/empleados.png" alt=""></div>
+                <div class="title"><span>Personal</span></div>
+            </a>
+        </div>
+
+        <?php
+        $submenuCatalogos = [
+            'marcas.php'  => ['icons/marca.png',  'Marcas'],
+            'modelos.php' => ['icons/modelo.png', 'Modelos'],
+            'areas.php'   => ['icons/area.png',   'Áreas'],
+            'cargo.php'   => ['icons/cargo.png',  'Cargos'],
+        ];
+        $catalogoActivo = false;
+        foreach (array_keys($submenuCatalogos) as $urlCatalogo) {
+            $catalogoActivo = $catalogoActivo || $esRutaActiva($urlCatalogo);
+        }
+        ?>
+        <div class="item has-submenu <?= $catalogoActivo ? 'is-open' : '' ?>" id="catalogos">
+            <a href="#catalogos" class="<?= $catalogoActivo ? 'active' : '' ?>">
+                <div class="icon"><i class="fa-solid fa-gears"></i></div>
+                <div class="title"><span>Configuración / Catálogos</span></div>
+            </a>
             <div class="subitem">
-                <a href="<?= BASE_URL ?>/<?= $url ?>">
-                    <div class="icon"><img src="<?= BASE_URL ?>/public/<?= $icon ?>"></div>
+                <?php foreach ($submenuCatalogos as $url => [$icon, $label]): ?>
+                <a href="<?= BASE_URL ?>/<?= $url ?>" class="<?= $esRutaActiva($url) ? 'active' : '' ?>">
+                    <div class="icon"><img src="<?= BASE_URL ?>/public/<?= $icon ?>" alt=""></div>
                     <div class="title"><span><?= $label ?></span></div>
                 </a>
+                <?php endforeach; ?>
             </div>
-            <?php endforeach; ?>
         </div>
         <div class="item separator"></div>
         <?php endif; ?>
 
         <!-- TRANSACCIONES -->
         <?php if ($tran == '1'): ?>
-        <div class="item" id="tran">
+        <div class="item has-submenu" id="tran">
             <a href="#tran">
                 <div class="icon"><img src="<?= BASE_URL ?>/public/icons/Transacciones.png" alt=""></div>
                 <div class="title"><span>Transacciones</span></div>
@@ -92,7 +118,7 @@ $seg  = $_SESSION['seguridad']     ?? '0';
 
         <!-- CONSULTAS -->
         <?php if ($con == '1'): ?>
-        <div class="item" id="con">
+        <div class="item has-submenu" id="con">
             <a href="#con">
                 <div class="icon"><img src="<?= BASE_URL ?>/public/icons/consulta.png" alt=""></div>
                 <div class="title"><span>Consultas</span></div>
@@ -121,7 +147,7 @@ $seg  = $_SESSION['seguridad']     ?? '0';
 
         <!-- REPORTES -->
         <?php if ($rep == '1'): ?>
-        <div class="item" id="repo">
+        <div class="item has-submenu" id="repo">
             <a href="#repo">
                 <div class="icon"><img src="<?= BASE_URL ?>/public/icons/reportes.png" alt=""></div>
                 <div class="title"><span>Reportes</span></div>
@@ -146,7 +172,7 @@ $seg  = $_SESSION['seguridad']     ?? '0';
 
         <!-- SEGURIDAD -->
         <?php if ($seg == '1'): ?>
-        <div class="item" id="seg">
+        <div class="item has-submenu" id="seg">
             <a href="#seg">
                 <div class="icon"><img src="<?= BASE_URL ?>/public/icons/seguridad.png" alt=""></div>
                 <div class="title"><span>Seguridad</span></div>
@@ -182,21 +208,27 @@ $seg  = $_SESSION['seguridad']     ?? '0';
 const btn  = document.querySelector('#menu-btn');
 const menu = document.querySelector('#sidemenu');
 
+// Resalta la página actual y mantiene abierto su grupo en todo el menú.
+const currentPath = window.location.pathname.replace(/\/+$/, '');
+$('#menu-items a[href]').each(function () {
+    const href = this.getAttribute('href');
+    if (!href || href.charAt(0) === '#') {
+        return;
+    }
+    const linkPath = new URL(this.href, window.location.origin).pathname.replace(/\/+$/, '');
+    if (linkPath === currentPath) {
+        $(this).addClass('active');
+        $(this).closest('.item.has-submenu').addClass('is-open').children('.subitem').show();
+    }
+});
+
 btn.addEventListener('click', () => {
     menu.classList.toggle('menu-expanded');
     menu.classList.toggle('menu-collapsed');
     document.body.classList.toggle('body-expanded');
 });
 
-$('.item').on('click', function (event) {
-    // Si el clic fue en una sub-opción real (un link a una página, ej. Empleados),
-    // dejamos que el navegador navegue normalmente, sin interferir.
-    if ($(event.target).closest('.subitem').length) {
-        return;
-    }
-
-    // Si el clic fue en el título de la categoría (ej. "Datos Maestros"),
-    // evitamos que el navegador salte al ancla "#mae" y solo desplegamos el submenú.
+$('#menu-items').on('click', '.item.has-submenu > a', function (event) {
     event.preventDefault();
 
     if (document.body.classList.contains('body-expanded')) {
@@ -204,7 +236,15 @@ $('.item').on('click', function (event) {
         menu.classList.toggle('menu-collapsed');
         document.body.classList.toggle('body-expanded');
     }
-    const sub = $(this).children('.subitem');
-    sub.css('display') === 'none' ? sub.show() : sub.hide();
+    const item = $(this).parent();
+    const sub = item.children('.subitem');
+    if (item.hasClass('is-open')) {
+        sub.stop(true, true).slideUp(160, function () {
+            item.removeClass('is-open');
+        });
+    } else {
+        item.addClass('is-open');
+        sub.stop(true, true).slideDown(160);
+    }
 });
 </script>

@@ -3,7 +3,7 @@
 // GestActivos - AJAX: Tabla + modales de Equipos
 // ============================================================
 require_once __DIR__ . '/../../../bootstrap.php';
-Auth::requerir();
+Auth::requerirPermiso('maestros');
 
 $db  = Database::getInstance();
 $q   = trim($_POST['query'] ?? '');
@@ -80,6 +80,12 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
                    data-toggle="modal" data-target="#imgModal">
                     <i id="imgIcon" class="fa fa-image"></i>
                 </a>
+                <?php if ($activo === 1 && $estadoEquipo === 1 && (string)($_SESSION['transacciones'] ?? '0') === '1'): ?>
+                <a href="<?= BASE_URL ?>/asignarequipo.php?idequipo=<?= (int)$r['idequipo'] ?>"
+                   title="Asignar este equipo a un empleado">
+                    <i class="fa fa-user-plus"></i>
+                </a>
+                <?php endif; ?>
                 <?php if ($activo === 1): ?>
                 <a href="#" onclick="return editEquipo(event)"
                    data-toggle="modal" data-target="#editModal">
@@ -159,18 +165,60 @@ function delEquipo(e) {
         <button class="close" data-dismiss="modal"><span>&times;</span></button>
       </div>
       <div class="modal-body">
-        <div class="form-group"><label>Marca</label>
-          <select name="idmarca" class="form-control" required>
+        <div class="form-group">
+          <div class="catalogo-contextual-encabezado">
+            <label for="nuevoEquipoMarca">Marca</label>
+            <button type="button" class="btn btn-link btn-xs js-catalogo-toggle" data-target="#altaMarcaEquipo">
+              <i class="fa fa-plus"></i> Nueva marca
+            </button>
+          </div>
+          <select name="idmarca" id="nuevoEquipoMarca" class="form-control" data-catalogo-select="marca" required>
             <?php foreach ($marcas as $m): ?>
             <option value="<?= $m['idmarca'] ?>"><?= htmlspecialchars($m['nombreMarca']) ?></option>
             <?php endforeach; ?>
-          </select></div>
-        <div class="form-group"><label>Modelo</label>
-          <select name="idmodelo" class="form-control" required>
+          </select>
+          <div id="altaMarcaEquipo" class="catalogo-contextual-panel"
+               data-tipo="marca" data-select="#nuevoEquipoMarca"
+               data-endpoint="<?= BASE_URL ?>/app/ajax/maestros/catalogos_contextuales.php"
+               data-csrf="<?= htmlspecialchars(Auth::csrfToken(), ENT_QUOTES) ?>">
+            <div class="input-group">
+              <input type="text" class="form-control js-catalogo-nombre" maxlength="50" placeholder="Nombre de la nueva marca" autocomplete="off">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-primary js-catalogo-guardar"><i class="fa fa-check"></i> Guardar</button>
+                <button type="button" class="btn btn-default js-catalogo-cancelar" title="Cancelar"><i class="fa fa-times"></i></button>
+              </span>
+            </div>
+            <small class="catalogo-contextual-ayuda">Se agregará al catálogo y quedará seleccionada.</small>
+            <span class="catalogo-contextual-error" aria-live="polite"></span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="catalogo-contextual-encabezado">
+            <label for="nuevoEquipoModelo">Modelo</label>
+            <button type="button" class="btn btn-link btn-xs js-catalogo-toggle" data-target="#altaModeloEquipo">
+              <i class="fa fa-plus"></i> Nuevo modelo
+            </button>
+          </div>
+          <select name="idmodelo" id="nuevoEquipoModelo" class="form-control" data-catalogo-select="modelo" required>
             <?php foreach ($modelos as $mo): ?>
             <option value="<?= $mo['idmodelo'] ?>"><?= htmlspecialchars($mo['nombreModelo']) ?></option>
             <?php endforeach; ?>
-          </select></div>
+          </select>
+          <div id="altaModeloEquipo" class="catalogo-contextual-panel"
+               data-tipo="modelo" data-select="#nuevoEquipoModelo"
+               data-endpoint="<?= BASE_URL ?>/app/ajax/maestros/catalogos_contextuales.php"
+               data-csrf="<?= htmlspecialchars(Auth::csrfToken(), ENT_QUOTES) ?>">
+            <div class="input-group">
+              <input type="text" class="form-control js-catalogo-nombre" maxlength="50" placeholder="Nombre del nuevo modelo" autocomplete="off">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-primary js-catalogo-guardar"><i class="fa fa-check"></i> Guardar</button>
+                <button type="button" class="btn btn-default js-catalogo-cancelar" title="Cancelar"><i class="fa fa-times"></i></button>
+              </span>
+            </div>
+            <small class="catalogo-contextual-ayuda">Se agregará al catálogo y quedará seleccionado.</small>
+            <span class="catalogo-contextual-error" aria-live="polite"></span>
+          </div>
+        </div>
         <div class="form-group"><label>Número de serie</label><input type="text" name="numero_serie" class="form-control" maxlength="100" placeholder="Identificador del fabricante"></div>
         <div class="form-group"><label>Tipo de equipo</label><select name="tipo_equipo" class="form-control" required>
           <option value="Laptop">Laptop</option><option value="Computadora de escritorio">Computadora de escritorio</option>
@@ -205,13 +253,13 @@ function delEquipo(e) {
       </div>
       <div class="modal-body">
         <div class="form-group"><label>Marca</label>
-          <select name="marcaAct" id="marcaAct" class="form-control" required>
+          <select name="marcaAct" id="marcaAct" class="form-control" data-catalogo-select="marca" required>
             <?php foreach ($marcasTodas as $m): ?>
             <option value="<?= $m['idmarca'] ?>"><?= htmlspecialchars($m['nombreMarca']) ?><?= (int)$m['activo'] === 0 ? ' (inactiva)' : '' ?></option>
             <?php endforeach; ?>
           </select></div>
         <div class="form-group"><label>Modelo</label>
-          <select name="modeloAct" id="modeloAct" class="form-control" required>
+          <select name="modeloAct" id="modeloAct" class="form-control" data-catalogo-select="modelo" required>
             <?php foreach ($modelosTodos as $mo): ?>
             <option value="<?= $mo['idmodelo'] ?>"><?= htmlspecialchars($mo['nombreModelo']) ?><?= (int)$mo['activo'] === 0 ? ' (inactivo)' : '' ?></option>
             <?php endforeach; ?>

@@ -1,64 +1,81 @@
 <?php
-// ============================================================
-// GestActivos - Reportes: Asignaciones (SOLO LECTURA)
-// ============================================================
-require_once __DIR__ . "/../../../bootstrap.php";
-Auth::requerir();
+// GestActivos - Vista previa del reporte de asignaciones.
+require_once __DIR__ . '/../../../bootstrap.php';
+Auth::requerirPermiso('reportes');
 
 $db = Database::getInstance();
+$puedeVerActas = (string)Auth::get('transacciones') === '1';
+$filtro = is_string($_POST['query'] ?? null) ? trim($_POST['query']) : '';
 
 $sql = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion, asg.fecha_devolucion,
+               asg.condicion_entrega, asg.condicion_devolucion,
+               asg.estado_equipo_devolucion, asg.firma, asg.firma_devolucion,
                CONCAT(em.nombre,' ',em.apellidos) AS empleado,
-               CONCAT(COALESCE(eq.codigo_activo, CONCAT('EQ-', eq.idequipo)), ' - ', ma.nombreMarca, ' ', mo.nombreModelo) AS equipo,
-               ar.descripcionarea AS area,
-               ca.descripcioncargo AS cargo
+               CONCAT(COALESCE(eq.codigo_activo, CONCAT('EQ-', eq.idequipo)), ' - ', ma.nombreMarca, ' ', mo.nombreModelo) AS equipo
         FROM asignacion asg
-        INNER JOIN empleados em ON asg.idempleado = em.idempleado
-        INNER JOIN equipo eq    ON asg.idequipo   = eq.idequipo
-        INNER JOIN marca ma     ON eq.idmarca_equipo  = ma.idmarca
-        INNER JOIN modelo mo    ON eq.idmodelo_equipo = mo.idmodelo
-        LEFT  JOIN areas ar     ON em.idarea  = ar.idarea
-        LEFT  JOIN cargos ca    ON em.idcargo = ca.idcargo";
-
+        INNER JOIN empleados em ON asg.idempleado=em.idempleado
+        INNER JOIN equipo eq ON asg.idequipo=eq.idequipo
+        INNER JOIN marca ma ON eq.idmarca_equipo=ma.idmarca
+        INNER JOIN modelo mo ON eq.idmodelo_equipo=mo.idmodelo
+        LEFT JOIN areas ar ON em.idarea=ar.idarea";
 $params = [];
-if (isset($_POST['query']) && trim($_POST['query']) != '') {
-    $f      = trim($_POST['query']);
-    $sql   .= " WHERE CONCAT(em.nombre,' ',em.apellidos) LIKE ?
+if ($filtro !== '') {
+    $sql .= " WHERE CONCAT(em.nombre,' ',em.apellidos) LIKE ?
               OR CONCAT(ma.nombreMarca,' ',mo.nombreModelo) LIKE ?
-              OR ar.descripcionarea LIKE ?";
-    $params = ["%$f%", "%$f%", "%$f%"];
+              OR eq.codigo_activo LIKE ? OR ar.descripcionarea LIKE ?";
+    $like = "%$filtro%";
+    $params = [$like, $like, $like, $like];
 }
-$sql .= " ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC";
-
+$sql .= ' ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC';
 $resultado = $db->consulta($sql, $params);
+$estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja'];
 ?>
 
-<?php if (count($resultado) > 0): ?>
+<?php if ($resultado): ?>
+<div class="table-responsive">
 <table class="table table-bordered table-striped" id="tablaAsgRep">
     <thead style="background-color:#D3E9F1">
         <tr>
-            <th>#</th><th>Empleado</th><th>Equipo</th><th>Área</th><th>Cargo</th>
-            <th>Asignado</th><th>Devuelto</th><th>Estado</th>
+            <th>#</th><th>Empleado</th><th>Equipo</th><th>Asignado</th>
+            <th>Entrega</th><th>Devuelto</th><th>Devolución</th><th>Resultado</th><th>Estado</th>
+            <?php if ($puedeVerActas): ?><th>Actas</th><?php endif; ?>
         </tr>
     </thead>
     <tbody>
         <?php foreach ($resultado as $r): ?>
         <tr class="<?= (int)$r['activa'] === 0 ? 'text-muted' : '' ?>">
-            <td><?= $r['idasignacion'] ?></td>
+            <td><?= (int)$r['idasignacion'] ?></td>
             <td><?= htmlspecialchars($r['empleado']) ?></td>
             <td><?= htmlspecialchars($r['equipo']) ?></td>
-            <td><?= htmlspecialchars($r['area'] ?? '') ?></td>
-            <td><?= htmlspecialchars($r['cargo'] ?? '') ?></td>
             <td><?= $r['fecha_asignacion'] ? date('d/m/Y', strtotime($r['fecha_asignacion'])) : '—' ?></td>
+            <td><?= htmlspecialchars($r['condicion_entrega'] ?: 'Bueno') ?></td>
             <td><?= $r['fecha_devolucion'] ? date('d/m/Y', strtotime($r['fecha_devolucion'])) : '—' ?></td>
-            <td><?= (int)$r['activa'] === 1 ? '<span class="label label-success">Activa</span>' : '<span class="label label-default">Devuelta</span>' ?></td>
+            <td><?= htmlspecialchars($r['condicion_devolucion'] ?: '—') ?></td>
+            <td><?= htmlspecialchars($estadosEquipo[(int)$r['estado_equipo_devolucion']] ?? '—') ?></td>
+            <td><?= (int)$r['activa'] === 1
+                ? '<span class="label label-success">Activa</span>'
+                : '<span class="label label-default">Devuelta</span>' ?></td>
+            <?php if ($puedeVerActas): ?>
+            <td class="acciones-actas">
+                <?php if (!empty($r['firma'])): ?>
+                <a href="<?= BASE_URL ?>/reportes/acta_asignacion.php?idasignacion=<?= (int)$r['idasignacion'] ?>"
+                   target="_blank" title="Acta de entrega"><span class="fa fa-file-circle-check"></span></a>
+                <?php endif; ?>
+                <?php if (!empty($r['firma_devolucion'])): ?>
+                <a href="<?= BASE_URL ?>/reportes/acta_devolucion.php?idasignacion=<?= (int)$r['idasignacion'] ?>"
+                   target="_blank" title="Acta de devolución"><span class="fa fa-file-export"></span></a>
+                <?php endif; ?>
+                <?php if (empty($r['firma']) && empty($r['firma_devolucion'])): ?>—<?php endif; ?>
+            </td>
+            <?php endif; ?>
         </tr>
         <?php endforeach; ?>
     </tbody>
 </table>
+</div>
 <script>
-$(document).ready(function(){ $("#tablaAsgRep").DataTable({ dom: 'lrtip', order: [[0, 'desc']] }); });
+$(function () { $('#tablaAsgRep').DataTable({ dom: 'lrtip', order: [[0, 'desc']] }); });
 </script>
 <?php else: ?>
-<p class="lead"><em>No hay registros</em></p>
+<p class="lead"><em>No hay registros.</em></p>
 <?php endif; ?>

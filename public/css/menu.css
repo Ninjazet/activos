@@ -360,3 +360,31 @@ body {
 @media (max-width: 700px) {
     #topbar-user span { display: none; }
 }
+/* Fase 2: navegación principal y estado de submenús */
+#sidemenu #menu-items .item > a.active,
+#sidemenu #menu-items .subitem a.active {
+    background: rgba(111, 66, 193, 0.34);
+    color: var(--sidebar-text-strong);
+    box-shadow: inset 3px 0 0 var(--accent-light);
+}
+
+#sidemenu #menu-items .item.has-submenu > a::after {
+    content: '\f105';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    margin-left: auto;
+    font-size: 12px;
+    transition: transform 0.18s ease;
+}
+
+#sidemenu #menu-items .item.has-submenu.is-open > a::after {
+    transform: rotate(90deg);
+}
+
+#sidemenu #menu-items .item.is-open > .subitem {
+    display: block;
+}
+
+#sidemenu.menu-collapsed .item.has-submenu > a::after {
+    display: none;
+}

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../bootstrap.php';
-Auth::requerir();
+Auth::requerirPermiso('maestros');
 $db  = Database::getInstance();
 $q   = trim($_POST['query'] ?? '');
 $sql = "SELECT idcargo, descripcioncargo, activo FROM cargos";

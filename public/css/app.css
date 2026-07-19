@@ -334,3 +334,127 @@
     box-shadow: 0 6px 18px rgba(111,66,193,.38);
     background: linear-gradient(135deg, #7c4fcc, #6f42c1);
 }
+/* Fase 2: alta rápida de catálogos dentro de los formularios */
+.catalogo-contextual-encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.catalogo-contextual-encabezado label { margin: 0; }
+
+.js-catalogo-toggle {
+    padding: 2px 0;
+    color: #5b21b6;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none !important;
+}
+
+.js-catalogo-toggle:hover,
+.js-catalogo-toggle:focus { color: #3b2660; }
+
+.catalogo-contextual-panel {
+    display: none;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid #ddd6fe;
+    border-radius: 10px;
+    background: #faf9ff;
+}
+
+.catalogo-contextual-panel .input-group .form-control { border-color: #d8d1eb; }
+.catalogo-contextual-panel .input-group-btn .btn { height: 34px; }
+
+.catalogo-contextual-ayuda {
+    display: block;
+    margin-top: 6px;
+    color: #77758a;
+    font-size: 11px;
+}
+
+.catalogo-contextual-error {
+    display: block;
+    min-height: 16px;
+    margin-top: 4px;
+    color: #b42318;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Fase 3: checklist, firmas y acciones de asignación */
+.checklist-entrega {
+    margin-top: 16px;
+    padding: 14px 16px 4px;
+    border: 1px solid #ddd6fe;
+    border-radius: 12px;
+    background: #faf9ff;
+}
+
+.checklist-entrega legend {
+    width: auto;
+    margin: 0 0 10px;
+    padding: 0 8px;
+    border: 0;
+    color: #4c1d95;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.checklist-accesorios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.checklist-accesorios label {
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid #e2dcef;
+    border-radius: 9px;
+    background: #fff;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.checklist-accesorios input { margin-right: 5px; }
+
+.firma-lienzo {
+    width: 100%;
+    overflow: hidden;
+    border: 2px solid #d8d8e8;
+    border-radius: 9px;
+    background: #fff;
+}
+
+.firma-lienzo canvas {
+    display: block;
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+    margin: 0 auto;
+}
+
+.firma-aviso {
+    min-height: 20px;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+.table td a .fa-laptop-file,
+.table td a .fa-user-plus { color: #0f766e; }
+.table td a .fa-rotate-left { color: #c56b08; }
+.table td a .fa-file-signature { color: #22648e; }
+.table td a .fa-file-circle-check { color: #1a7c3e; }
+.table td a .fa-file-export { color: #7c3aed; }
+
+.table td a:has(.fa-laptop-file),
+.table td a:has(.fa-user-plus) { background: #ccfbf1; }
+.table td a:has(.fa-rotate-left) { background: #fff7ed; }
+.table td a:has(.fa-file-signature) { background: #e0f2fe; }
+.table td a:has(.fa-file-circle-check) { background: #dcfce7; }
+.table td a:has(.fa-file-export) { background: #ede9fe; }
+
+.acciones-actas { white-space: nowrap; }

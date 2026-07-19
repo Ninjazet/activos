@@ -10,6 +10,7 @@ if (ob_get_level()) {
 
 $filtro = trim($_REQUEST['buscar'] ?? '');
 $sql = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion, asg.fecha_devolucion,
+               asg.condicion_entrega, asg.condicion_devolucion, asg.estado_equipo_devolucion,
                CONCAT(em.nombre,' ',em.apellidos) AS empleado,
                CONCAT(COALESCE(eq.codigo_activo, CONCAT('EQ-',eq.idequipo)), ' - ', ma.nombreMarca, ' ', mo.nombreModelo) AS equipo,
                ar.descripcionarea AS area, ca.descripcioncargo AS cargo
@@ -32,14 +33,15 @@ $sql .= " ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC";
 $rows = $db->consulta($sql, $params);
 
 $columns = [
-    ['label' => '#',         'width' => 12, 'align' => 'C'],
-    ['label' => 'Empleado',  'width' => 48, 'align' => 'L'],
-    ['label' => 'Equipo',    'width' => 58, 'align' => 'L'],
-    ['label' => 'Area',      'width' => 30, 'align' => 'L'],
-    ['label' => 'Cargo',     'width' => 35, 'align' => 'L'],
-    ['label' => 'Asignado',  'width' => 25, 'align' => 'C'],
-    ['label' => 'Devuelto',  'width' => 25, 'align' => 'C'],
-    ['label' => 'Estado',    'width' => 22, 'align' => 'C'],
+    ['label' => '#',          'width' => 10, 'align' => 'C'],
+    ['label' => 'Empleado',   'width' => 43, 'align' => 'L'],
+    ['label' => 'Equipo',     'width' => 54, 'align' => 'L'],
+    ['label' => 'Asignado',   'width' => 22, 'align' => 'C'],
+    ['label' => 'Entrega',    'width' => 24, 'align' => 'C'],
+    ['label' => 'Devuelto',   'width' => 22, 'align' => 'C'],
+    ['label' => 'Devolución', 'width' => 28, 'align' => 'C'],
+    ['label' => 'Resultado',  'width' => 30, 'align' => 'C'],
+    ['label' => 'Estado',     'width' => 22, 'align' => 'C'],
 ];
 
 $pdf = new GestActivosPDF('L', 'mm', 'Letter', true, 'UTF-8', false);
@@ -57,15 +59,17 @@ $pdf->SetSubject('Historial de asignaciones');
 $pdf->setCellPaddings(1.1, 0.8, 1.1, 0.8);
 $pdf->AddPage();
 
+$estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja'];
 foreach ($rows as $index => $row) {
     $pdf->tableRow([
         $row['idasignacion'],
         $row['empleado'],
         $row['equipo'],
-        $row['area'] ?: '-',
-        $row['cargo'] ?: '-',
         $row['fecha_asignacion'] ? date('d/m/Y', strtotime($row['fecha_asignacion'])) : '-',
+        $row['condicion_entrega'] ?: 'Bueno',
         $row['fecha_devolucion'] ? date('d/m/Y', strtotime($row['fecha_devolucion'])) : '-',
+        $row['condicion_devolucion'] ?: '-',
+        $estadosEquipo[(int)$row['estado_equipo_devolucion']] ?? '-',
         (int)$row['activa'] === 1 ? 'Activa' : 'Devuelta',
     ], $index);
 }
