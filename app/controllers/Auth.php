@@ -136,32 +136,16 @@ class Auth {
     }
 
     // ------------------------------------------------------------------
-    // Contraseñas — hash seguro con migración transparente desde texto plano
+    // Contraseñas — hash seguro y renovación automática
     // ------------------------------------------------------------------
 
     public static function hashPassword(string $plano): string {
         return password_hash($plano, PASSWORD_DEFAULT);
     }
 
-    // Devuelve true si $plano coincide con lo guardado en BD.
-    // Si lo guardado todavía es texto plano (cuentas antiguas), lo verifica
-    // por igualdad y AUTOMÁTICAMENTE lo re-guarda como hash mediante
-    // $rehashCallback — así no hay que forzar un reseteo masivo de claves.
-    public static function verificarPassword(string $plano, string $guardado, ?callable $rehashCallback = null): bool {
-        $pareceHash = (strpos($guardado, '$2y$') === 0 || strpos($guardado, '$2a$') === 0 || strpos($guardado, '$argon2') === 0);
-
-        if ($pareceHash) {
-            return password_verify($plano, $guardado);
-        }
-
-        // Cuenta legacy con contraseña en texto plano
-        if (hash_equals($guardado, $plano)) {
-            if ($rehashCallback) {
-                $rehashCallback(self::hashPassword($plano));
-            }
-            return true;
-        }
-        return false;
+    // Solo acepta contraseñas almacenadas con password_hash().
+    public static function verificarPassword(string $plano, string $guardado): bool {
+        return password_verify($plano, $guardado);
     }
 
     // ------------------------------------------------------------------

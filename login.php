@@ -37,15 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [$usuario]
             );
 
-            // 4. Verificar contraseña (con migración transparente a hash)
-            $passwordOk = $reg && Auth::verificarPassword($password, $reg['pass'],
-                function (string $nuevoHash) use ($db, $reg) {
-                    // Contraseña aún en texto plano: la re-guardamos como hash en este mismo login
-                    $db->ejecutar("UPDATE usuarios SET pass=? WHERE idusuario=?", [$nuevoHash, $reg['idusuario']]);
-                }
-            );
+            // 4. Verificar la contraseña contra el hash almacenado.
+            $passwordOk = $reg && Auth::verificarPassword($password, $reg['pass']);
 
             if ($passwordOk) {
+                // Renueva automáticamente el hash si PHP recomienda un algoritmo más reciente.
+                if (password_needs_rehash($reg['pass'], PASSWORD_DEFAULT)) {
+                    $db->ejecutar(
+                        "UPDATE usuarios SET pass=? WHERE idusuario=?",
+                        [Auth::hashPassword($password), $reg['idusuario']]
+                    );
+                }
+
                 // 5. Login correcto: regenerar ID de sesión para prevenir session fixation
                 session_regenerate_id(true);
 
