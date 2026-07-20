@@ -3,7 +3,7 @@
 // GestActivos - Reportes: Equipos (SOLO LECTURA)
 // ============================================================
 require_once __DIR__ . "/../../../bootstrap.php";
-Auth::requerir();
+Auth::requerirPermiso('reportes');
 
 $db = Database::getInstance();
 $q  = trim($_POST['query'] ?? '');

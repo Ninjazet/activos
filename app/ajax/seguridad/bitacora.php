@@ -4,7 +4,7 @@
 // Registra cada acción de escritura y cada intento de login.
 // ============================================================
 require_once __DIR__ . '/../../../bootstrap.php';
-Auth::requerir();
+Auth::requerirPermiso('seguridad');
 
 $db = Database::getInstance();
 $q  = trim($_POST['query'] ?? '');

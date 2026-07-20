@@ -4,7 +4,7 @@
 // Este módulo nunca debe permitir crear, editar ni eliminar.
 // ============================================================
 require_once __DIR__ . "/../../../bootstrap.php";
-Auth::requerir();
+Auth::requerirPermiso('consultas');
 
 $db = Database::getInstance();
 $q  = trim($_POST['query'] ?? '');

@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Guía técnica del sistema GestActivos: arquitectura, módulos, base de datos, flujos y mantenimiento.">
+  <title>Documentación técnica · GestActivos</title>
+  <style>
+    :root {
+      --navy: #0f172a;
+      --navy-2: #111d33;
+      --purple: #6d3fd1;
+      --purple-soft: #f2edff;
+      --blue: #2563eb;
+      --green: #059669;
+      --amber: #b45309;
+      --red: #dc2626;
+      --ink: #172033;
+      --muted: #64748b;
+      --line: #dfe5ef;
+      --paper: #ffffff;
+      --canvas: #f5f7fb;
+      --code: #0b1220;
+      --sidebar: 280px;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font: 15px/1.65 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--blue); }
+    code, pre { font-family: "Cascadia Code", Consolas, monospace; }
+    code {
+      padding: .12rem .35rem;
+      border-radius: 5px;
+      color: #4c1d95;
+      background: #f3f0ff;
+      font-size: .91em;
+    }
+    pre {
+      overflow: auto;
+      margin: 14px 0;
+      padding: 18px;
+      border-radius: 10px;
+      color: #dbeafe;
+      background: var(--code);
+      line-height: 1.55;
+      font-size: 13px;
+      white-space: pre;
+    }
+    pre code { padding: 0; color: inherit; background: transparent; }
+    h1, h2, h3, h4 { line-height: 1.25; color: var(--navy); }
+    h1 { margin: 10px 0 12px; font-size: clamp(2rem, 4vw, 3.35rem); letter-spacing: -.04em; }
+    h2 { margin: 0 0 18px; font-size: 1.75rem; letter-spacing: -.025em; }
+    h3 { margin: 26px 0 10px; font-size: 1.18rem; }
+    h4 { margin: 18px 0 7px; font-size: 1rem; }
+    p { margin: 9px 0 14px; }
+    ul, ol { padding-left: 1.35rem; }
+    li + li { margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+    th, td { padding: 10px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: #334155; background: #f1f5f9; }
+    tbody tr:nth-child(even) { background: #fafbfe; }
+
+    .layout { min-height: 100vh; }
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 10;
+      width: var(--sidebar);
+      overflow-y: auto;
+      padding: 24px 18px;
+      color: #cbd5e1;
+      background: linear-gradient(180deg, var(--navy) 0%, #101a2d 100%);
+      border-right: 1px solid #24324a;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+    .brand img { width: 46px; height: 46px; object-fit: contain; border-radius: 10px; background: white; padding: 3px; }
+    .brand strong { display: block; color: white; font-size: 17px; }
+    .brand small { color: #94a3b8; }
+    .search {
+      width: 100%;
+      margin-bottom: 17px;
+      padding: 10px 12px;
+      color: white;
+      background: #1b2940;
+      border: 1px solid #334155;
+      border-radius: 9px;
+      outline: none;
+    }
+    .search:focus { border-color: #a78bfa; box-shadow: 0 0 0 3px rgb(167 139 250 / .14); }
+    .nav-label { margin: 15px 9px 6px; color: #64748b; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    nav a {
+      display: block;
+      padding: 7px 9px;
+      border-radius: 7px;
+      color: #b9c5d6;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    nav a:hover, nav a.active { color: white; background: #26344d; }
+    .sidebar-foot { margin: 22px 8px 0; padding-top: 14px; border-top: 1px solid #334155; color: #718096; font-size: 11px; }
+
+    main { margin-left: var(--sidebar); }
+    .hero {
+      padding: 64px clamp(26px, 6vw, 84px) 54px;
+      color: white;
+      background: radial-gradient(circle at 85% 20%, rgb(167 139 250 / .38), transparent 28%), linear-gradient(135deg, #24114d, #6d3fd1 66%, #8b5fd4);
+    }
+    .hero h1, .hero p { color: white; }
+    .hero p { max-width: 780px; margin-bottom: 20px; color: #ede9fe; font-size: 17px; }
+    .eyebrow { font-weight: 800; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: #ddd6fe; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+    .badge { padding: 5px 10px; border: 1px solid rgb(255 255 255 / .22); border-radius: 999px; background: rgb(255 255 255 / .09); font-size: 12px; }
+    .content { max-width: 1180px; margin: 0 auto; padding: 34px clamp(20px, 5vw, 70px) 80px; }
+    section {
+      margin-bottom: 24px;
+      padding: clamp(24px, 4vw, 40px);
+      background: var(--paper);
+      border: 1px solid #e5eaf2;
+      border-radius: var(--radius);
+      box-shadow: 0 7px 25px rgb(15 23 42 / .045);
+    }
+    section.search-hidden { display: none; }
+    .section-number { display: inline-block; margin-bottom: 7px; color: var(--purple); font-weight: 800; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; }
+    .lead { color: #475569; font-size: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcff; }
+    .card h3, .card h4 { margin-top: 0; }
+    .callout { margin: 16px 0; padding: 14px 16px; border-left: 4px solid var(--blue); border-radius: 7px; background: #eff6ff; }
+    .callout strong { color: #1e3a8a; }
+    .callout.warning { border-color: #f59e0b; background: #fffbeb; }
+    .callout.warning strong { color: #92400e; }
+    .callout.danger { border-color: #ef4444; background: #fef2f2; }
+    .callout.danger strong { color: #991b1b; }
+    .callout.success { border-color: #10b981; background: #ecfdf5; }
+    .callout.success strong { color: #065f46; }
+    .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; margin: 16px 0; counter-reset: flow; }
+    .flow > div { position: relative; padding: 14px 12px; border: 1px solid #d8cff3; border-radius: 10px; background: var(--purple-soft); font-size: 13px; }
+    .flow > div::before { counter-increment: flow; content: counter(flow); display: block; width: 23px; height: 23px; margin-bottom: 7px; border-radius: 50%; color: white; background: var(--purple); text-align: center; line-height: 23px; font-weight: 800; font-size: 11px; }
+    .state { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .dot.green { background: #10b981; }
+    .dot.blue { background: #3b82f6; }
+    .dot.amber { background: #f59e0b; }
+    .dot.red { background: #ef4444; }
+    .dot.gray { background: #64748b; }
+    .file { color: #0f4c81; font-weight: 650; }
+    .route { word-break: break-word; }
+    .footer { padding: 24px; color: #64748b; text-align: center; font-size: 12px; }
+    .print-button { position: fixed; right: 22px; bottom: 22px; z-index: 9; padding: 11px 15px; color: white; background: var(--purple); border: 0; border-radius: 9px; box-shadow: 0 7px 20px rgb(76 29 149 / .25); cursor: pointer; }
+
+    @media (max-width: 980px) {
+      :root { --sidebar: 0px; }
+      .sidebar { position: static; width: auto; max-height: none; }
+      .sidebar nav { columns: 2; }
+      main { margin-left: 0; }
+      .flow { grid-template-columns: 1fr 1fr; }
+      .grid.three { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .sidebar nav { columns: 1; }
+      .grid, .grid.three, .flow { grid-template-columns: 1fr; }
+      .hero { padding: 40px 22px; }
+      .content { padding: 20px 12px 50px; }
+      section { padding: 22px 17px; }
+      table { display: block; overflow-x: auto; }
+      .print-button { position: static; margin: 0 0 20px 20px; }
+    }
+    @media print {
+      body { color: #111827; background: white; font-size: 11px; }
+      .sidebar, .print-button { display: none !important; }
+      main { margin: 0; }
+      .hero { padding: 24px 30px; background: #39206c !important; print-color-adjust: exact; }
+      .content { max-width: none; padding: 14px; }
+      section { break-inside: avoid; margin-bottom: 12px; padding: 18px; box-shadow: none; }
+      pre { white-space: pre-wrap; word-break: break-word; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="public/icons/logo.png" alt="Logo de GestActivos">
+        <div><strong>GestActivos</strong><small>Guía para desarrolladores</small></div>
+      </div>
+      <input id="docSearch" class="search" type="search" placeholder="Buscar en la guía…" aria-label="Buscar en la documentación">
+      <nav aria-label="Contenido de la guía">
+        <div class="nav-label">Introducción</div>
+        <a href="#proposito">1. Propósito</a>
+        <a href="#inicio-rapido">2. Inicio rápido</a>
+        <a href="#arquitectura">3. Arquitectura</a>
+        <a href="#estructura">4. Estructura</a>
+        <a href="#orden-lectura">5. Orden de lectura</a>
+        <div class="nav-label">Referencia</div>
+        <a href="#nucleo">6. Núcleo y funciones</a>
+        <a href="#flujos-http">7. Flujos HTTP</a>
+        <a href="#permisos">8. Permisos</a>
+        <a href="#base-datos">9. Base de datos</a>
+        <a href="#modulos">10. Módulos</a>
+        <a href="#asignaciones">11. Asignaciones y firmas</a>
+        <a href="#frontend">12. Frontend y AJAX</a>
+        <a href="#reportes">13. Reportes y actas</a>
+        <a href="#rutas">14. Mapa de rutas</a>
+        <div class="nav-label">Mantenimiento</div>
+        <a href="#cambios">15. Cómo modificar</a>
+        <a href="#pruebas">16. Cómo probar</a>
+        <a href="#invariantes">17. Reglas críticas</a>
+        <a href="#pendientes">18. Deuda técnica</a>
+        <a href="#glosario">19. Glosario</a>
+      </nav>
+      <div class="sidebar-foot">Documento generado para la versión local ubicada en <code>C:\xampp\htdocs\activos</code>.</div>
+    </aside>
+
+    <main>
+      <header class="hero">
+        <div class="eyebrow">Referencia técnica · 19 de julio de 2026</div>
+        <h1>Cómo funciona GestActivos</h1>
+        <p>Una guía práctica para que otro programador pueda instalar, recorrer, mantener y ampliar el sistema sin tener que deducir cada flujo desde cero.</p>
+        <div class="badges">
+          <span class="badge">PHP 8 + PDO</span>
+          <span class="badge">MariaDB / MySQL</span>
+          <span class="badge">Bootstrap 3</span>
+          <span class="badge">jQuery + AJAX</span>
+          <span class="badge">TCPDF</span>
+          <span class="badge">XAMPP</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <section id="proposito" data-title="propósito alcance resumen sistema">
+          <span class="section-number">01 · Propósito</span>
+          <h2>Qué resuelve el sistema</h2>
+          <p class="lead">GestActivos administra empleados, equipos, catálogos, usuarios, permisos y el ciclo completo de entrega y devolución de activos.</p>
+          <div class="grid three">
+            <div class="card"><h3>Inventario</h3><p>Registra cada equipo con código interno, serie, tipo, datos de compra, garantía y estado operativo.</p></div>
+            <div class="card"><h3>Custodia</h3><p>Relaciona un equipo con un empleado, deja constancia de las condiciones de entrega y cierra la asignación al devolverlo.</p></div>
+            <div class="card"><h3>Control</h3><p>Limita cada módulo mediante permisos, registra acciones relevantes en bitácora y produce consultas, reportes y actas PDF.</p></div>
+          </div>
+          <div class="callout"><strong>Alcance de esta guía.</strong> Describe el código que existe actualmente. Cuando el README antiguo contradiga este documento, verifique el código: el proyecto actual usa la ruta <code>/activos</code> y contraseñas con hash.</div>
+        </section>
+
+        <section id="inicio-rapido" data-title="instalar ejecutar xampp inicio rápido configuración">
+          <span class="section-number">02 · Inicio rápido</span>
+          <h2>Levantar el proyecto localmente</h2>
+          <ol>
+            <li>Coloque el proyecto en <code>C:\xampp\htdocs\activos</code>.</li>
+            <li>Inicie Apache y MySQL/MariaDB desde XAMPP.</li>
+            <li>Compruebe en <span class="file">config/database.php</span> que la base sea <code>gestactivos</code>, el host <code>localhost</code> y que las credenciales coincidan con su servidor.</li>
+            <li>Importe el respaldo actual de la base. No ejecute las migraciones históricas sobre una base ya actualizada sin revisar antes su contenido.</li>
+            <li>Abra <code>http://localhost:8080/activos/</code> si Apache usa el puerto 8080, o <code>http://localhost/activos/</code> si usa el puerto 80.</li>
+            <li>Inicie sesión con un usuario existente de la base. No hay credenciales universales codificadas en la aplicación.</li>
+          </ol>
+          <div class="grid">
+            <div class="card"><h3>Configuración principal</h3><ul><li><span class="file">config/app.php</span>: nombre, versión, URL base, zona horaria y carpetas de imágenes.</li><li><span class="file">config/database.php</span>: conexión PDO.</li></ul></div>
+            <div class="card"><h3>Requisitos de escritura</h3><p>El usuario de Apache debe poder escribir en las carpetas configuradas para fotografías y firmas. Los archivos subidos se guardan con nombres aleatorios.</p></div>
+          </div>
+        </section>
+
+        <section id="arquitectura" data-title="arquitectura mvc flujo capas patrón">
+          <span class="section-number">03 · Arquitectura</span>
+          <h2>Modelo mental del proyecto</h2>
+          <p>No utiliza un framework MVC. Es una aplicación PHP modular donde cada página actúa como controlador de entrada, las clases comunes concentran infraestructura y los archivos AJAX devuelven HTML parcial o JSON.</p>
+          <div class="flow" aria-label="Flujo general de una solicitud">
+            <div><strong>Navegador</strong><br>GET, formulario POST o petición AJAX.</div>
+            <div><strong>Página PHP</strong><br>Carga bootstrap, valida sesión y permiso.</div>
+            <div><strong>Controlador</strong><br>Valida CSRF y datos; aplica reglas.</div>
+            <div><strong>Database/PDO</strong><br>Consulta o modifica MariaDB, con transacción si corresponde.</div>
+            <div><strong>Respuesta</strong><br>Vista completa, fragmento HTML, JSON, redirección o PDF.</div>
+          </div>
+          <h3>Las cuatro capas que sí existen</h3>
+          <table>
+            <thead><tr><th>Capa</th><th>Ubicación</th><th>Responsabilidad</th></tr></thead>
+            <tbody>
+              <tr><td>Arranque e infraestructura</td><td><span class="file">bootstrap.php</span>, <span class="file">config/</span>, <span class="file">app/core/</span></td><td>Constantes, conexión, sesión, autenticación, CSRF, cargas y utilidades.</td></tr>
+              <tr><td>Controladores</td><td><span class="file">app/controllers/</span></td><td>Procesan altas, cambios, activaciones, inactivaciones y reglas de negocio.</td></tr>
+              <tr><td>Vistas y fragmentos</td><td>Archivos raíz, <span class="file">app/pages/</span>, <span class="file">app/ajax/</span></td><td>Construyen páginas, formularios, tablas, modales y respuestas AJAX.</td></tr>
+              <tr><td>Documentos</td><td><span class="file">reportes/</span>, <span class="file">public/lib/tcpdf/</span></td><td>Consultas imprimibles, exportaciones y actas con firma.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout warning"><strong>Importante.</strong> No asuma que el nombre “controlador” implica separación completa de HTML y lógica. Antes de modificar una función, siga la ruta desde la página principal hasta su controlador y su archivo AJAX.</div>
+        </section>
+
+        <section id="estructura" data-title="directorios carpetas archivos árbol estructura">
+          <span class="section-number">04 · Estructura</span>
+          <h2>Mapa de carpetas</h2>
+          <pre><code>activos/
+├── index.php                    Panel de inicio y métricas
+├── login.php                    Autenticación
+├── bootstrap.php                Carga configuración y clases comunes
+├── config/
+│   ├── app.php                  Constantes, rutas y zona horaria
+│   └── database.php             Credenciales de MariaDB/MySQL
+├── app/
+│   ├── core/                    Database, Auth, Upload y utilidades
+│   ├── controllers/             Escritura y reglas de cada módulo
+│   ├── pages/                   Formularios y vistas parciales
+│   └── ajax/                    Tablas, búsquedas y acciones asíncronas
+├── reportes/                    Consultas, descargas y actas PDF
+├── public/
+│   ├── css/                     app.css y login.css
+│   ├── js/                      Carga AJAX y catálogos contextuales
+│   ├── icons/                   Logo e iconos locales
+│   ├── img/                     Fotografías y firmas
+│   └── lib/tcpdf/               Biblioteca PDF incluida en el proyecto
+├── database/                    Respaldo actual, migraciones y datos demo
+└── documentacion_tecnica.html   Este documento</code></pre>
+          <p>Los módulos siguen normalmente el patrón: <code>modulo.php</code> abre la pantalla, <code>app/pages/modulo/...</code> contiene formulario o vista, <code>app/controllers/ModuloController.php</code> escribe y <code>app/ajax/modulo/...</code> lista o busca.</p>
+        </section>
+
+        <section id="orden-lectura" data-title="leer código orden recorrido nuevo programador">
+          <span class="section-number">05 · Orden de lectura</span>
+          <h2>Cómo entender el código sin perderse</h2>
+          <ol>
+            <li><strong>Empiece por <span class="file">bootstrap.php</span>.</strong> Así sabrá qué constantes y clases están disponibles en cada solicitud.</li>
+            <li><strong>Lea <span class="file">app/core/Auth.php</span> y <span class="file">app/core/Database.php</span>.</strong> Son las dependencias transversales.</li>
+            <li><strong>Revise <span class="file">login.php</span> y <span class="file">index.php</span>.</strong> Muestran el inicio de sesión, la estructura de sesión y el uso de permisos.</li>
+            <li><strong>Siga un módulo sencillo.</strong> Empleados o equipos muestran bien el patrón de formulario → controlador → tabla AJAX.</li>
+            <li><strong>Deje asignaciones para el final.</strong> Es el flujo más delicado porque coordina empleado, equipo, firmas, fechas, estados y transacciones.</li>
+            <li><strong>Lea los reportes después del flujo principal.</strong> En su mayoría consultan los mismos datos y los presentan mediante TCPDF.</li>
+          </ol>
+          <div class="callout success"><strong>Técnica recomendada.</strong> Busque el nombre del campo de base de datos que desea cambiar. Eso revela todas las pantallas, validaciones, consultas y reportes que dependen de él.</div>
+        </section>
+
+        <section id="nucleo" data-title="funciones clases database auth upload csrf flash bitácora">
+          <span class="section-number">06 · Núcleo y funciones</span>
+          <h2>Clases que usa todo el sistema</h2>
+          <h3><span class="file">app/core/Database.php</span></h3>
+          <p>Implementa una única conexión PDO mediante el patrón singleton. Los controladores deben enviar parámetros a consultas preparadas; no deben concatenar valores del usuario en SQL.</p>
+          <table>
+            <thead><tr><th>Método</th><th>Uso</th></tr></thead>
+            <tbody>
+              <tr><td><code>Database::getInstance()</code></td><td>Obtiene la conexión compartida.</td></tr>
+              <tr><td><code>consulta($sql, $params)</code></td><td>Ejecuta SELECT y devuelve el statement.</td></tr>
+              <tr><td><code>fila($sql, $params)</code></td><td>Devuelve una sola fila asociativa.</td></tr>
+              <tr><td><code>contar($sql, $params)</code></td><td>Devuelve un valor de conteo.</td></tr>
+              <tr><td><code>ejecutar($sql, $params)</code></td><td>Ejecuta INSERT, UPDATE u otra escritura.</td></tr>
+              <tr><td><code>transaccion($callback)</code></td><td>Confirma si el callback termina y revierte si lanza una excepción.</td></tr>
+            </tbody>
+          </table>
+          <pre><code>&lt;?php
+$db = Database::getInstance();
+$empleado = $db-&gt;fila(
+    'SELECT * FROM empleados WHERE idempleado = :id',
+    ['id' =&gt; $idEmpleado]
+);</code></pre>
+
+          <h3><span class="file">app/core/Auth.php</span></h3>
+          <table>
+            <thead><tr><th>Función</th><th>Qué garantiza</th></tr></thead>
+            <tbody>
+              <tr><td><code>Auth::iniciar()</code></td><td>Inicia la sesión con sus parámetros de seguridad.</td></tr>
+              <tr><td><code>Auth::requerir()</code></td><td>Redirige al login si no existe una sesión válida.</td></tr>
+              <tr><td><code>Auth::requerirPermiso('reportes')</code></td><td>Bloquea la ruta cuando el permiso no está habilitado.</td></tr>
+              <tr><td><code>Auth::requerirPermisoActas()</code></td><td>Permite abrir actas a usuarios con <code>actas</code> o con <code>transacciones</code>.</td></tr>
+              <tr><td><code>Auth::csrfField()</code></td><td>Imprime el input oculto que debe llevar cada formulario POST.</td></tr>
+              <tr><td><code>Auth::verificarCsrf()</code></td><td>Rechaza POST sin token válido.</td></tr>
+              <tr><td><code>Auth::flash()</code> / <code>obtenerFlash()</code></td><td>Transporta mensajes entre una escritura y la redirección siguiente.</td></tr>
+              <tr><td><code>Auth::hashPassword()</code> / <code>verificarPassword()</code></td><td>Genera y comprueba hashes seguros; nunca se guarda la contraseña legible.</td></tr>
+              <tr><td><code>Auth::bitacora()</code></td><td>Registra usuario, acción, módulo, detalle, IP y fecha.</td></tr>
+            </tbody>
+          </table>
+          <p>El login limita intentos fallidos a 5 dentro de 15 minutos, regenera el ID de sesión y actualiza hashes antiguos cuando PHP recomienda un rehash.</p>
+
+          <h3><span class="file">app/core/Upload.php</span></h3>
+          <p>Valida que el archivo sea una imagen real, limita el tamaño a 5 MB, admite JPG/PNG/GIF/WEBP y genera un nombre aleatorio. Toda carga nueva debe reutilizar esta clase en lugar de confiar en la extensión proporcionada por el navegador.</p>
+        </section>
+
+        <section id="flujos-http" data-title="get post ajax json redirect http flujo solicitud">
+          <span class="section-number">07 · Flujos HTTP</span>
+          <h2>Tipos de solicitud que verá en el proyecto</h2>
+          <div class="grid">
+            <div class="card"><h3>Página completa</h3><p>Incluye <span class="file">bootstrap.php</span>, exige permiso y carga encabezado, menú lateral, contenido y scripts. Ejemplo: empleados, equipos y panel principal.</p></div>
+            <div class="card"><h3>Formulario POST</h3><p>El controlador valida sesión, permiso, CSRF, campos y reglas; escribe, registra bitácora, crea un mensaje flash y redirige.</p></div>
+            <div class="card"><h3>AJAX HTML</h3><p>Recibe búsqueda o identificador y devuelve una tabla o formulario que jQuery coloca en <code>#datos</code>.</p></div>
+            <div class="card"><h3>AJAX JSON</h3><p>Los catálogos contextuales responden un objeto con éxito, mensaje e identificador para actualizar un selector sin recargar.</p></div>
+            <div class="card"><h3>PDF</h3><p>Una ruta de reportes consulta datos y entrega el binario con las cabeceras apropiadas; no debe haber salida antes de TCPDF.</p></div>
+            <div class="card"><h3>Firma</h3><p>El canvas produce una Data URI. PHP comprueba formato, tamaño, MIME y dimensiones antes de guardar la imagen y actualizar la asignación.</p></div>
+          </div>
+          <h3>Plantilla segura para una escritura</h3>
+          <pre><code>&lt;?php
+require_once __DIR__ . '/../../bootstrap.php';
+Auth::requerirPermiso('datosmaestros');
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    exit('Método no permitido');
+}
+
+Auth::verificarCsrf();
+// 1. Normalizar y validar entrada.
+// 2. Consultar conflictos y dependencias.
+// 3. Ejecutar la escritura, en transacción si cambia varias tablas.
+// 4. Registrar Auth::bitacora(...).
+// 5. Crear flash y redirigir.</code></pre>
+        </section>
+
+        <section id="permisos" data-title="roles permisos acceso seguridad datos maestros transacciones consultas reportes actas">
+          <span class="section-number">08 · Permisos</span>
+          <h2>Control de acceso</h2>
+          <p>No existen roles fijos. Cada usuario tiene una fila en <code>permisos</code> con banderas independientes.</p>
+          <table>
+            <thead><tr><th>Permiso</th><th>Habilita</th><th>Ejemplos</th></tr></thead>
+            <tbody>
+              <tr><td><code>datosmaestros</code></td><td>Inventario, empleados y catálogos.</td><td>Crear/editar/inactivar equipos, empleados, áreas, cargos, marcas y modelos.</td></tr>
+              <tr><td><code>transacciones</code></td><td>Operación de custodia.</td><td>Asignar, editar una asignación abierta, firmar entrega y devolver equipo.</td></tr>
+              <tr><td><code>consultas</code></td><td>Vistas de consulta.</td><td>Consultar inventario, empleados y asignaciones sin alterar datos.</td></tr>
+              <tr><td><code>reportes</code></td><td>Listados y descargas.</td><td>Reportes PDF de empleados, equipos y asignaciones.</td></tr>
+              <tr><td><code>actas</code></td><td>Consulta documental.</td><td>Abrir actas ya creadas sin poder ejecutar transacciones.</td></tr>
+              <tr><td><code>seguridad</code></td><td>Administración del sistema.</td><td>Usuarios, permisos y bitácora.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout"><strong>Regla especial de actas.</strong> Los GET de actas aceptan <code>actas</code> o <code>transacciones</code>. Los POST que guardan firmas o cierran devoluciones requieren <code>transacciones</code>.</div>
+          <div class="callout danger"><strong>No basta con ocultar el menú.</strong> Cada archivo invocable directamente —página, controlador, AJAX o descarga— debe validar el permiso por sí mismo.</div>
+        </section>
+
+        <section id="base-datos" data-title="mysql mariadb tablas relaciones esquema campos estados">
+          <span class="section-number">09 · Base de datos</span>
+          <h2>Tablas y relaciones principales</h2>
+          <table>
+            <thead><tr><th>Tabla</th><th>Propósito</th><th>Relaciones relevantes</th></tr></thead>
+            <tbody>
+              <tr><td><code>empleados</code></td><td>Datos personales, correo, foto y bandera <code>activo</code>.</td><td>Apunta a <code>cargos</code>, <code>areas</code> y <code>sexo</code>; recibe asignaciones y usuarios.</td></tr>
+              <tr><td><code>equipo</code></td><td>Activo físico, compra, garantía, serie, código y estado.</td><td>Apunta a <code>marca</code> y <code>modelo</code>; recibe asignaciones.</td></tr>
+              <tr><td><code>asignacion</code></td><td>Historial de entrega y devolución.</td><td>Relaciona empleado, equipo y usuario de devolución; conserva firmas y checklist.</td></tr>
+              <tr><td><code>usuarios</code></td><td>Credencial vinculada a un empleado.</td><td>Uno a uno lógico con <code>permisos</code>; genera entradas de bitácora.</td></tr>
+              <tr><td><code>permisos</code></td><td>Banderas de autorización por usuario.</td><td>Se carga en sesión al iniciar sesión.</td></tr>
+              <tr><td><code>bitacora</code></td><td>Auditoría de acciones.</td><td>Referencia al usuario que ejecutó la acción.</td></tr>
+              <tr><td><code>areas</code>, <code>cargos</code>, <code>marca</code>, <code>modelo</code>, <code>sexo</code></td><td>Catálogos reutilizables.</td><td>Son dependencias de empleados o equipos.</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Estados del equipo</h3>
+          <table>
+            <thead><tr><th>Código</th><th>Estado</th><th>Uso</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><span class="state"><span class="dot green"></span>Disponible</span></td><td>Puede asignarse.</td></tr>
+              <tr><td>2</td><td><span class="state"><span class="dot blue"></span>Asignado</span></td><td>Tiene una asignación activa; no puede asignarse otra vez.</td></tr>
+              <tr><td>3</td><td><span class="state"><span class="dot amber"></span>En mantenimiento</span></td><td>No está disponible; también se usa al devolverlo con daño o no funcional.</td></tr>
+              <tr><td>4</td><td><span class="state"><span class="dot red"></span>Perdido o robado</span></td><td>No puede asignarse.</td></tr>
+              <tr><td>5</td><td><span class="state"><span class="dot gray"></span>Dado de baja</span></td><td>Fuera del inventario operativo; normalmente <code>activo = 0</code>.</td></tr>
+            </tbody>
+          </table>
+          <p><code>equipo.activo</code> controla la baja lógica del registro y <code>equipo.estado_equipo</code> describe su situación operativa. Son conceptos distintos y deben mantenerse coherentes.</p>
+
+          <h3>Campos clave de <code>asignacion</code></h3>
+          <ul>
+            <li><code>activa = 1</code> significa que el empleado todavía conserva el equipo; <code>activa = 0</code> es historial cerrado.</li>
+            <li><code>fecha_asignacion</code> abre el ciclo y <code>fecha_devolucion</code> queda NULL hasta el cierre.</li>
+            <li>Los campos de entrega conservan condición, accesorios, observaciones, firma y fecha de firma.</li>
+            <li>Los campos de devolución conservan condición, observaciones, firma, usuario y fecha.</li>
+            <li><code>requiere_firma_entrega</code> permite exigir firma en asignaciones nuevas sin bloquear registros históricos.</li>
+          </ul>
+          <div class="callout warning"><strong>No borre el historial.</strong> Empleados, equipos, catálogos y asignaciones usan inactivación o cierre lógico. Un DELETE físico rompería auditoría, reportes y relaciones históricas.</div>
+        </section>
+
+        <section id="modulos" data-title="módulos empleados equipos usuarios catálogos bitácora panel">
+          <span class="section-number">10 · Módulos</span>
+          <h2>Comportamiento de cada área</h2>
+          <h3>Panel de inicio</h3>
+          <p><span class="file">index.php</span> calcula equipos registrados y disponibles, asignaciones activas, empleados activos, alertas, movimientos y accesos rápidos según permisos. La sección detallada de estados de equipo existe pero está temporalmente deshabilitada mediante <code>$mostrarEstadoEquipos = false</code>.</p>
+
+          <h3>Empleados</h3>
+          <ul>
+            <li>Valida correo y fotografía; relaciona cargo, área y sexo.</li>
+            <li>La “eliminación” establece <code>activo = 0</code>.</li>
+            <li>No permite inactivar a un empleado con asignaciones abiertas.</li>
+            <li>Tampoco permite inactivarlo si conserva un usuario activo.</li>
+            <li>Un empleado inactivo se puede reactivar sin recrear su historial.</li>
+          </ul>
+
+          <h3>Equipos</h3>
+          <ul>
+            <li>Después del INSERT genera el código único <code>EQ-0001</code> usando el identificador recién creado.</li>
+            <li>Valida serie, tipo, estado, fechas y costo antes de escribir.</li>
+            <li>Si existe asignación abierta, el estado se fuerza a Asignado.</li>
+            <li>Un equipo no puede darse de baja mientras tenga una asignación activa.</li>
+            <li>La baja lógica coloca el estado en Dado de baja; la reactivación lo devuelve a Disponible.</li>
+          </ul>
+
+          <h3>Usuarios y permisos</h3>
+          <ul>
+            <li>La creación de usuario y su fila de permisos ocurre en una transacción.</li>
+            <li>La contraseña se almacena con <code>password_hash()</code>; al editar, dejarla vacía conserva el hash existente.</li>
+            <li>No se permite inactivar al usuario con el que se está trabajando.</li>
+            <li>No se reactiva un usuario si su empleado está inactivo.</li>
+            <li>El permiso de transacciones implica acceso a actas; <code>actas</code> permite solo consulta documental.</li>
+          </ul>
+
+          <h3>Catálogos</h3>
+          <p>Áreas, cargos, marcas y modelos usan baja lógica. Los formularios de empleados/equipos también pueden crear ciertos catálogos de forma contextual y agregar la nueva opción al selector sin abandonar la operación.</p>
+
+          <h3>Bitácora</h3>
+          <p>Registra quién hizo qué, en qué módulo, con qué detalle, desde qué IP y cuándo. Al agregar una operación relevante, agregue también su llamada a <code>Auth::bitacora()</code>.</p>
+        </section>
+
+        <section id="asignaciones" data-title="asignación entrega devolución firma canvas checklist transacción">
+          <span class="section-number">11 · Asignaciones y firmas</span>
+          <h2>El flujo de negocio más importante</h2>
+          <h3>Crear una asignación</h3>
+          <div class="flow">
+            <div>Comprueba empleado activo.</div>
+            <div>Bloquea y comprueba equipo activo y Disponible.</div>
+            <div>Evita otra asignación abierta para el mismo equipo.</div>
+            <div>Inserta asignación activa con checklist y firma requerida.</div>
+            <div>Cambia el equipo a Asignado y confirma.</div>
+          </div>
+          <p>Las verificaciones y el cambio de estado deben permanecer en la misma transacción. El bloqueo <code>FOR UPDATE</code> evita que dos usuarios asignen simultáneamente el mismo equipo.</p>
+
+          <h3>Firmar la entrega</h3>
+          <ol>
+            <li>El empleado firma en un canvas del navegador.</li>
+            <li>JavaScript envía una Data URI PNG/JPEG.</li>
+            <li>PHP comprueba formato, tamaño máximo de 2 MB, decodificación estricta, MIME y dimensiones.</li>
+            <li>Se genera un nombre seguro y se escribe con bloqueo.</li>
+            <li>La base guarda el nombre y la fecha. Una firma existente no se sobrescribe.</li>
+          </ol>
+
+          <h3>Devolver el equipo</h3>
+          <div class="flow">
+            <div>Exige asignación activa.</div>
+            <div>Si es nueva, exige firma de entrega previa.</div>
+            <div>Recibe condición, observaciones y firma de devolución.</div>
+            <div>Cierra asignación, fecha y usuario de devolución.</div>
+            <div>Equipo queda Disponible o En mantenimiento.</div>
+          </div>
+          <table>
+            <thead><tr><th>Condición de devolución</th><th>Estado resultante del equipo</th></tr></thead>
+            <tbody>
+              <tr><td>Bueno</td><td>Disponible (1)</td></tr>
+              <tr><td>Con daño</td><td>En mantenimiento (3)</td></tr>
+              <tr><td>No funcional</td><td>En mantenimiento (3)</td></tr>
+            </tbody>
+          </table>
+          <div class="callout danger"><strong>“Eliminar asignación” no existe.</strong> Cerrar la custodia siempre significa devolver equipo: completar datos de devolución, guardar la firma, marcar <code>activa = 0</code> y conservar la fila para siempre.</div>
+          <div class="callout warning"><strong>Archivos históricos.</strong> <code>requiere_firma_entrega = 0</code> permite devolver asignaciones antiguas sin firma previa. Las nuevas deben crearse con el indicador activo.</div>
+        </section>
+
+        <section id="frontend" data-title="frontend javascript jquery ajax datatables bootstrap toastr css">
+          <span class="section-number">12 · Frontend y AJAX</span>
+          <h2>Cómo se construye la interfaz</h2>
+          <p><span class="file">app/pages/head.php</span> carga Bootstrap 3, Font Awesome, Inter, DataTables, Toastr y jQuery. La mayor parte llega desde CDN, de modo que algunas mejoras visuales o tablas pueden degradarse sin conexión a Internet.</p>
+          <table>
+            <thead><tr><th>Archivo</th><th>Responsabilidad</th></tr></thead>
+            <tbody>
+              <tr><td><span class="file">public/css/app.css</span></td><td>Estilos generales, navegación, panel, tarjetas, tablas, formularios y adaptación responsive.</td></tr>
+              <tr><td><span class="file">public/css/login.css</span></td><td>Pantalla de autenticación.</td></tr>
+              <tr><td><span class="file">public/js/ajax-loader.js</span></td><td>Envía búsquedas POST, espera 300 ms al escribir y coloca la respuesta HTML en <code>#datos</code>.</td></tr>
+              <tr><td><span class="file">public/js/catalogos-contextuales.js</span></td><td>Crea o reactiva catálogos desde un modal y actualiza el <code>&lt;select&gt;</code> correspondiente.</td></tr>
+            </tbody>
+          </table>
+          <h3>Contrato de un endpoint AJAX</h3>
+          <ul>
+            <li>Debe cargar bootstrap y validar sesión y permiso aunque la página padre ya los haya validado.</li>
+            <li>Debe validar CSRF si escribe. Una búsqueda de solo lectura puede omitirlo.</li>
+            <li>Debe escapar datos impresos con <code>htmlspecialchars()</code>.</li>
+            <li>Si devuelve JSON, debe fijar <code>Content-Type: application/json</code> y una estructura estable.</li>
+            <li>Si devuelve HTML, no debe incluir nuevamente toda la cabecera de la aplicación.</li>
+          </ul>
+        </section>
+
+        <section id="reportes" data-title="reportes pdf tcpdf actas layout descargar">
+          <span class="section-number">13 · Reportes y actas</span>
+          <h2>Generación de PDF</h2>
+          <p>Los reportes de empleados, equipos y asignaciones consultan la misma base y generan documentos con TCPDF. <span class="file">reportes/pdf_layout.php</span> centraliza encabezado, logotipo local, tipografía, pie y elementos visuales comunes.</p>
+          <ul>
+            <li>Use <span class="file">public/icons/logo_pdf.jpg</span> para los PDF; no dependa de recursos del sistema operativo ni de URLs externas.</li>
+            <li>No imprima espacios, HTML ni mensajes antes de llamar a la salida de TCPDF; cualquier salida previa puede corromper el archivo.</li>
+            <li>Las actas se diferencian de los listados: representan una asignación específica e incorporan condiciones y firmas.</li>
+            <li>GET de un acta es consulta; POST de una firma es una transacción y requiere validación CSRF.</li>
+          </ul>
+          <div class="callout"><strong>Para cambiar el diseño.</strong> Modifique primero <span class="file">reportes/pdf_layout.php</span> si el cambio debe afectar todos los documentos. Toque un descargador individual solo cuando el contenido sea exclusivo de ese reporte.</div>
+        </section>
+
+        <section id="rutas" data-title="rutas endpoints archivos mapa urls">
+          <span class="section-number">14 · Mapa de rutas</span>
+          <h2>Dónde comienza cada función</h2>
+          <table>
+            <thead><tr><th>Función</th><th>Entrada principal</th><th>Archivos relacionados</th></tr></thead>
+            <tbody>
+              <tr><td>Inicio de sesión</td><td class="route"><span class="file">login.php</span></td><td>Auth, Database, login.css.</td></tr>
+              <tr><td>Panel</td><td class="route"><span class="file">index.php</span></td><td>Consultas de métricas y alertas, app.css.</td></tr>
+              <tr><td>Empleados</td><td class="route"><span class="file">empleados.php</span></td><td>Controller de empleados, páginas y AJAX de empleados.</td></tr>
+              <tr><td>Equipos</td><td class="route"><span class="file">equipos.php</span></td><td>Controller de equipos, formularios y AJAX de inventario.</td></tr>
+              <tr><td>Asignar equipo</td><td class="route"><span class="file">asignarequipo.php</span></td><td><span class="file">app/ajax/transacciones/asignarequipo.php</span> y controlador de asignación.</td></tr>
+              <tr><td>Acta de entrega</td><td class="route"><span class="file">reportes/acta_asignacion.php</span></td><td>Asignación, firma, TCPDF y layout común.</td></tr>
+              <tr><td>Acta de devolución</td><td class="route"><span class="file">reportes/acta_devolucion.php</span></td><td>Cierre de asignación, estado del equipo y firma.</td></tr>
+              <tr><td>Consultas</td><td class="route"><span class="file">consultas/</span> o páginas raíz equivalentes</td><td>AJAX de consultas y permiso <code>consultas</code>.</td></tr>
+              <tr><td>Reportes</td><td class="route"><span class="file">reportes/</span></td><td>Descargadores, <code>pdf_layout.php</code> y permiso <code>reportes</code>.</td></tr>
+              <tr><td>Usuarios/permisos</td><td class="route">Páginas de seguridad</td><td>Controladores y AJAX de seguridad; permiso <code>seguridad</code>.</td></tr>
+            </tbody>
+          </table>
+          <p>Los nombres exactos de algunas páginas auxiliares pueden variar, pero el método fiable es buscar el enlace en el menú lateral y luego seguir sus <code>include</code>, <code>require</code>, acción del formulario y URL AJAX.</p>
+        </section>
+
+        <section id="cambios" data-title="cómo cambiar modificar agregar campo módulo migración guía">
+          <span class="section-number">15 · Cómo modificar</span>
+          <h2>Procedimientos seguros para cambios comunes</h2>
+          <h3>Agregar un campo a un módulo</h3>
+          <ol>
+            <li>Cree una migración SQL pequeña, repetible cuando sea posible, y respalde la base.</li>
+            <li>Agregue el campo al formulario de alta y edición.</li>
+            <li>Normalice y valide el valor en el controlador; no confíe solo en validación HTML.</li>
+            <li>Inclúyalo en INSERT y UPDATE mediante parámetros preparados.</li>
+            <li>Actualice tabla AJAX, consultas, reportes PDF y actas que deban mostrarlo.</li>
+            <li>Pruebe valor normal, vacío, demasiado largo, duplicado y manipulado.</li>
+          </ol>
+
+          <h3>Agregar un módulo</h3>
+          <ol>
+            <li>Defina tabla y relaciones.</li>
+            <li>Elija un permiso existente o agregue uno a base, sesión, formulario de permisos y todas las rutas.</li>
+            <li>Cree entrada de página, controlador, formulario y tabla AJAX siguiendo un módulo parecido.</li>
+            <li>Use baja lógica si el registro puede aparecer en el historial.</li>
+            <li>Agregue bitácora en altas, cambios, activaciones e inactivaciones.</li>
+            <li>Agregue el enlace al menú únicamente para usuarios autorizados.</li>
+          </ol>
+
+          <h3>Cambiar una regla de asignación</h3>
+          <p>Revise conjuntamente el controlador de asignación, el AJAX del formulario, las dos actas, las consultas, los reportes y los estados de equipo. Una regla aplicada solo en JavaScript puede evadirse; una regla aplicada solo al crear puede romper la devolución.</p>
+
+          <h3>Cambiar el diseño</h3>
+          <ul>
+            <li>Interfaz general: <span class="file">public/css/app.css</span>.</li>
+            <li>Login: <span class="file">public/css/login.css</span>.</li>
+            <li>Encabezado y dependencias: <span class="file">app/pages/head.php</span>.</li>
+            <li>PDF comunes: <span class="file">reportes/pdf_layout.php</span>.</li>
+            <li>No edite archivos dentro de TCPDF salvo que esté actualizando conscientemente la biblioteca.</li>
+          </ul>
+
+          <h3>Checklist antes de guardar código</h3>
+          <ul>
+            <li>¿La ruta exige sesión y el permiso correcto?</li>
+            <li>¿Cada POST verifica CSRF?</li>
+            <li>¿La entrada fue validada en servidor?</li>
+            <li>¿SQL usa parámetros preparados?</li>
+            <li>¿Varias escrituras dependientes están en una transacción?</li>
+            <li>¿La salida HTML está escapada?</li>
+            <li>¿La operación queda en bitácora?</li>
+            <li>¿Se preserva el historial?</li>
+          </ul>
+        </section>
+
+        <section id="pruebas" data-title="pruebas qa validar checklist casos manuales">
+          <span class="section-number">16 · Cómo probar</span>
+          <h2>Recorrido funcional recomendado</h2>
+          <p>El proyecto no contiene actualmente una suite automatizada completa. Cada cambio debe acompañarse al menos de validación sintáctica y un recorrido manual con datos de prueba.</p>
+          <ol>
+            <li><strong>PHP:</strong> ejecute <code>php -l archivo.php</code> en cada archivo modificado.</li>
+            <li><strong>Sesión:</strong> pruebe usuario activo, credenciales incorrectas, cierre de sesión y acceso directo sin autenticar.</li>
+            <li><strong>Permisos:</strong> pruebe la URL directa con un usuario que no tenga el permiso, no solo la visibilidad del menú.</li>
+            <li><strong>Catálogos:</strong> cree, edite, inactive, reactive y cree desde un formulario contextual.</li>
+            <li><strong>Empleado:</strong> cree uno con correo, edítelo, vincule usuario y verifique que las dependencias impidan inactivarlo.</li>
+            <li><strong>Equipo:</strong> cree uno y compruebe código EQ, serie, estados, garantía, baja y reactivación.</li>
+            <li><strong>Asignación:</strong> asigne solo un equipo Disponible a un empleado activo; intente duplicarlo y confirme el rechazo.</li>
+            <li><strong>Firmas:</strong> firme entrega, compruebe que no se sobrescriba y abra el acta con permiso <code>actas</code>.</li>
+            <li><strong>Devolución:</strong> compruebe que una asignación nueva sin firma no cierre; luego firme y devuelva en cada condición.</li>
+            <li><strong>Historial:</strong> confirme que la fila cerrada sigue visible y que el equipo termina Disponible o En mantenimiento.</li>
+            <li><strong>PDF:</strong> abra y descargue los tres reportes y ambas actas; revise logo, saltos de página y caracteres españoles.</li>
+            <li><strong>Bitácora:</strong> confirme que las acciones ejecutadas aparezcan con usuario y detalle correctos.</li>
+          </ol>
+          <div class="callout success"><strong>Datos aislados.</strong> Use registros claramente identificados como prueba y una copia de base separada cuando evalúe migraciones o reglas destructivas.</div>
+        </section>
+
+        <section id="invariantes" data-title="reglas críticas invariantes seguridad integridad no romper">
+          <span class="section-number">17 · Reglas críticas</span>
+          <h2>Lo que un cambio nunca debe romper</h2>
+          <ul>
+            <li>Un equipo solo puede tener una asignación activa.</li>
+            <li>Solo un equipo activo y Disponible puede asignarse.</li>
+            <li>Asignación activa y equipo Asignado deben coincidir.</li>
+            <li>La devolución cierra el registro; nunca lo elimina.</li>
+            <li>Las nuevas asignaciones necesitan firma de entrega antes de devolución.</li>
+            <li>Una firma registrada no se reemplaza silenciosamente.</li>
+            <li>Un empleado con asignación abierta no se inactiva.</li>
+            <li>Un equipo con asignación abierta no se da de baja.</li>
+            <li>Un usuario no se reactiva si su empleado está inactivo.</li>
+            <li>Contraseñas, tokens CSRF y datos de sesión nunca se imprimen ni se guardan en bitácora.</li>
+            <li>Cada endpoint valida autorización; la interfaz visual no es una barrera de seguridad.</li>
+            <li>Los cambios coordinados en más de una tabla se confirman o revierten juntos.</li>
+          </ul>
+        </section>
+
+        <section id="pendientes" data-title="pendientes deuda técnica riesgos mejoras conocidos">
+          <span class="section-number">18 · Deuda técnica</span>
+          <h2>Detalles pendientes detectados</h2>
+          <p>Estos puntos no impiden el funcionamiento probado, pero conviene resolverlos antes de exponer la aplicación fuera de una red controlada.</p>
+          <table>
+            <thead><tr><th>Prioridad</th><th>Hallazgo</th><th>Acción sugerida</th></tr></thead>
+            <tbody>
+              <tr><td>Alta</td><td>Las firmas se guardan bajo una carpeta pública.</td><td>Mientras existan, servirlas mediante una ruta autorizada o moverlas fuera del web root.</td></tr>
+              <tr><td>Media</td><td>Credenciales de base codificadas en <span class="file">config/database.php</span>.</td><td>Mover secretos a variables de entorno y mantener valores locales fuera del repositorio.</td></tr>
+              <tr><td>Media</td><td>Conexión configurada con <code>utf8</code>.</td><td>Migrar de forma controlada a <code>utf8mb4</code> para cobertura Unicode completa.</td></tr>
+              <tr><td>Media</td><td>Dependencias principales cargadas desde CDN.</td><td>Versionar copias locales o aplicar integridad y una política de disponibilidad.</td></tr>
+              <tr><td>Media</td><td>La base actual contiene claves foráneas duplicadas sobre <code>asignacion.idequipo</code>.</td><td>Confirmar nombres con <code>SHOW CREATE TABLE</code> y retirar solo la restricción redundante.</td></tr>
+              <tr><td>Media</td><td>No existe suite automatizada de regresión.</td><td>Empezar con pruebas de permisos, estados y ciclo asignación/devolución.</td></tr>
+              <tr><td>Baja</td><td>El README antiguo menciona otra ruta y contraseñas en texto plano.</td><td>Actualizarlo o dirigir explícitamente a este documento.</td></tr>
+              <tr><td>Baja</td><td><code>Auth::guardarPagina(string $archivo)</code> recibe un argumento que no utiliza.</td><td>Eliminar el parámetro o implementar el comportamiento esperado tras revisar llamadas.</td></tr>
+            </tbody>
+          </table>
+          <div class="callout warning"><strong>No corrija todo en un solo cambio.</strong> Cada punto debe abordarse por separado, con respaldo, revisión de impacto y pruebas de regresión.</div>
+        </section>
+
+        <section id="glosario" data-title="glosario términos definiciones activo asignación acta csrf">
+          <span class="section-number">19 · Glosario</span>
+          <h2>Términos del proyecto</h2>
+          <div class="grid">
+            <div class="card"><h3>Activo</h3><p>Equipo físico administrado por la organización. No debe confundirse con la bandera <code>activo</code> de una fila.</p></div>
+            <div class="card"><h3>Asignación</h3><p>Periodo durante el cual un empleado tiene bajo su custodia un equipo.</p></div>
+            <div class="card"><h3>Acta</h3><p>Documento PDF de una entrega o devolución específica, con condiciones y firma.</p></div>
+            <div class="card"><h3>Baja lógica</h3><p>Cambiar una bandera para excluir un registro de la operación sin borrar su historial.</p></div>
+            <div class="card"><h3>CSRF</h3><p>Token de sesión que demuestra que un POST fue originado desde un formulario legítimo de la aplicación.</p></div>
+            <div class="card"><h3>Catálogo contextual</h3><p>Área, cargo, marca o modelo creado desde otro formulario sin abandonar el registro principal.</p></div>
+            <div class="card"><h3>Flash</h3><p>Mensaje guardado temporalmente en sesión y mostrado después de una redirección.</p></div>
+            <div class="card"><h3>Invariante</h3><p>Regla que debe ser cierta antes y después de cualquier operación, como “un equipo no tiene dos asignaciones activas”.</p></div>
+          </div>
+          <div class="callout success"><strong>Punto de partida para el siguiente programador.</strong> Antes de cambiar código, haga una copia de base, cree un usuario de pruebas con permisos limitados y recorra una asignación completa. Ese recorrido muestra casi todas las decisiones importantes del sistema.</div>
+        </section>
+
+        <div class="footer">GestActivos · Documentación técnica autocontenida · Actualice la fecha y las secciones afectadas cada vez que cambie una regla de negocio.</div>
+      </div>
+      <button class="print-button" type="button" onclick="window.print()">Imprimir / guardar PDF</button>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const search = document.getElementById('docSearch');
+      const sections = Array.from(document.querySelectorAll('main section'));
+      const links = Array.from(document.querySelectorAll('nav a'));
+
+      function normalize(value) {
+        return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      }
+
+      search.addEventListener('input', function () {
+        const query = normalize(search.value.trim());
+        sections.forEach(function (section) {
+          const content = normalize((section.dataset.title || '') + ' ' + section.textContent);
+          section.classList.toggle('search-hidden', query !== '' && !content.includes(query));
+        });
+      });
+
+      const observer = new IntersectionObserver(function (entries) {
+        const visible = entries.filter(function (entry) { return entry.isIntersecting; });
+        if (!visible.length) return;
+        const id = visible[0].target.id;
+        links.forEach(function (link) {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }, { rootMargin: '-10% 0px -75% 0px' });
+
+      sections.forEach(function (section) { observer.observe(section); });
+    }());
+  </script>
+</body>
+</html>
