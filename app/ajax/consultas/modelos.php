@@ -29,7 +29,7 @@ $resultado = $db->consulta($sql, $params);
         <tr class="<?= (int)$r['activo'] === 0 ? 'text-muted' : '' ?>">
             <td><?= $r['idmodelo'] ?></td>
             <td><?= htmlspecialchars($r['nombreModelo']) ?></td>
-            <td><?= (int)$r['activo'] === 1 ? '<span class="label label-success">Activo</span>' : '<span class="label label-default">Inactivo</span>' ?></td>
+            <td><?= (int)$r['activo'] === 1 ? '<span class="badge app-badge-success">Activo</span>' : '<span class="badge app-badge-muted">Inactivo</span>' ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>

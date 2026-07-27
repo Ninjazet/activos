@@ -98,7 +98,7 @@
     }
 
     $(document).on('click', '.js-catalogo-toggle', function () {
-        var $panel = $($(this).data('target'));
+        var $panel = $($(this).attr('data-catalogo-target'));
         $('.catalogo-contextual-panel:visible').not($panel).slideUp(120);
         $panel.slideToggle(140, function () {
             if ($panel.is(':visible')) {

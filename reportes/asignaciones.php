@@ -5,7 +5,7 @@ Auth::guardarPagina(__FILE__);
 $pageTitle = 'Reporte de Asignaciones';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 ?>
-<script src="<?= BASE_URL ?>/public/js/ajax-loader.js"></script>
+<script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
 <script>
 $(document).ready(function(){ ajaxLoad('<?= BASE_URL ?>/app/ajax/reportes/asignaciones.php'); });
 $(document).on('keyup','#buscar',function(){ ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/reportes/asignaciones.php',$(this).val()); });
@@ -17,8 +17,8 @@ function descargarPDF() {
 <div class="wrapper">
   <div class="container-fluid">
     <div class="page-header clearfix">
-      <h2 class="pull-left">Reporte de Asignaciones</h2>
-      <button type="button" class="btn btn-success pull-right" onclick="descargarPDF()">
+      <h2>Reporte de Asignaciones</h2>
+      <button type="button" class="btn btn-success" onclick="descargarPDF()">
         <i class="fa fa-file-pdf"></i> Descargar PDF
       </button>
     </div>

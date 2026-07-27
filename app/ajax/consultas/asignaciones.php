@@ -59,8 +59,8 @@ $estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4
             <td><?= htmlspecialchars($r['condicion_devolucion'] ?: '—') ?></td>
             <td><?= htmlspecialchars($resultadoEquipo) ?></td>
             <td><?= (int)$r['activa'] === 1
-                ? '<span class="label label-success">Activa</span>'
-                : '<span class="label label-default">Devuelta</span>' ?></td>
+                ? '<span class="badge app-badge-success">Activa</span>'
+                : '<span class="badge app-badge-muted">Devuelta</span>' ?></td>
             <?php if ($puedeVerActas): ?>
             <td class="acciones-actas">
                 <?php if (!empty($r['firma'])): ?>

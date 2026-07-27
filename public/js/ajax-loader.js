@@ -69,14 +69,14 @@ function prepararContenidoAjax($contenedor) {
             $modal.attr('aria-labelledby', tituloId);
         }
         $modal.attr('aria-hidden', 'true');
-        $modal.find('.close').attr('aria-label', 'Cerrar').find('span').attr('aria-hidden', 'true');
+        $modal.find('.btn-close').attr('aria-label', 'Cerrar');
     });
 
-    $contenedor.find('.form-group > label:not([for])').each(function (indice) {
+    $contenedor.find('.form-group > label:not([for]), .mb-3 > label:not([for])').each(function (indice) {
         var $label = $(this);
         var $control = $label.siblings('input:not([type="hidden"]), select, textarea').first();
         if (!$control.length) {
-            $control = $label.closest('.form-group').find('input:not([type="hidden"]), select, textarea').first();
+            $control = $label.closest('.form-group, .mb-3').find('input:not([type="hidden"]), select, textarea').first();
         }
         if (!$control.length) { return; }
         var controlId = $control.attr('id') || ('form-control-' + indice + '-' + Date.now());
@@ -86,9 +86,15 @@ function prepararContenidoAjax($contenedor) {
 
     $contenedor.find('p.lead').addClass('app-empty-state');
 
-    $contenedor.find('.modal').on('shown.bs.modal', function () {
-        var $focusTarget = $(this).find('[autofocus], input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])').filter(':visible').first();
-        ($focusTarget.length ? $focusTarget : $(this).find('.close').first()).trigger('focus');
+    $contenedor.find('.modal').each(function () {
+        this.addEventListener('shown.bs.modal', function () {
+            var $modal = $(this);
+            var $focusTarget = $modal
+                .find('[autofocus], input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])')
+                .filter(':visible')
+                .first();
+            ($focusTarget.length ? $focusTarget : $modal.find('.btn-close').first()).trigger('focus');
+        });
     });
 }
 

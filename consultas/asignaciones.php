@@ -5,7 +5,7 @@ Auth::guardarPagina(__FILE__);
 $pageTitle = 'Consulta Asignaciones';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 ?>
-<script src="<?= BASE_URL ?>/public/js/ajax-loader.js"></script>
+<script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
 <script>
 $(document).ready(function(){ ajaxLoad('<?= BASE_URL ?>/app/ajax/consultas/asignaciones.php'); });
 $(document).on('keyup','#buscar',function(){ ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/consultas/asignaciones.php',$(this).val()); });

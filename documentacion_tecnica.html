@@ -228,7 +228,7 @@
         <div class="badges">
           <span class="badge">PHP 8 + PDO</span>
           <span class="badge">MariaDB / MySQL</span>
-          <span class="badge">Bootstrap 3</span>
+          <span class="badge">Bootstrap 5.3</span>
           <span class="badge">jQuery + AJAX</span>
           <span class="badge">TCPDF</span>
           <span class="badge">XAMPP</span>
@@ -547,7 +547,7 @@ Auth::verificarCsrf();
         <section id="frontend" data-title="frontend javascript jquery ajax datatables bootstrap toastr css">
           <span class="section-number">12 · Frontend y AJAX</span>
           <h2>Cómo se construye la interfaz</h2>
-          <p><span class="file">app/pages/head.php</span> carga Bootstrap 3, Font Awesome, Inter, DataTables, Toastr y jQuery. La mayor parte llega desde CDN, de modo que algunas mejoras visuales o tablas pueden degradarse sin conexión a Internet.</p>
+          <p><span class="file">app/views/layouts/head.php</span> carga Bootstrap 5.3, Font Awesome, Inter, DataTables, Toastr y jQuery. Bootstrap ya no depende de jQuery; el proyecto lo conserva porque DataTables y los módulos AJAX actuales todavía lo utilizan. La mayor parte llega desde CDN, de modo que algunas mejoras visuales o tablas pueden degradarse sin conexión a Internet.</p>
           <table>
             <thead><tr><th>Archivo</th><th>Responsabilidad</th></tr></thead>
             <tbody>

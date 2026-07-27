@@ -151,14 +151,14 @@ $(document).on('input', '#buscar', function () {
             </div>
             <div class="page-header-actions">
                 <button type="button" class="btn btn-primary"
-                        data-toggle="modal" data-target="#newModal">
+                        data-bs-toggle="modal" data-bs-target="#newModal">
                     <i class="fa fa-user-plus" aria-hidden="true"></i>
                     <span>Agregar empleado</span>
                 </button>
             </div>
         </div>
         <div class="page-toolbar" role="search">
-            <label for="buscar" class="sr-only">Buscar empleados</label>
+            <label for="buscar" class="visually-hidden">Buscar empleados</label>
             <input type="search" id="buscar" class="form-control"
                    placeholder="Buscar por nombre, teléfono, correo o área"
                    autocomplete="off" aria-controls="tablaEmp">

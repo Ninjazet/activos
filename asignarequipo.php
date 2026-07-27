@@ -177,7 +177,7 @@ $pageTitle = 'Asignar Equipos';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 Auth::imprimirFlash();
 ?>
-<script src="<?= BASE_URL ?>/public/js/ajax-loader.js"></script>
+<script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
 <script>
 const asignacionUrlAjax = '<?= BASE_URL ?>/app/ajax/transacciones/asignarequipo.php';
 const preseleccionAsignacion = {
@@ -197,9 +197,9 @@ $(document).on('input', '#buscar', function () {
         <div class="row">
             <div class="col-md-12">
                 <div class="page-header clearfix">
-                    <h2 class="pull-left">Asignaciones activas</h2>
+                    <h2>Asignaciones activas</h2>
                     <div class="page-header-actions">
-                        <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newModal">
+                        <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newModal">
                             <i class="fa fa-laptop-file" aria-hidden="true"></i> Nueva asignación
                         </a>
                     </div>
@@ -210,7 +210,7 @@ $(document).on('input', '#buscar', function () {
                     <li><span class="assignment-step">3</span><span><strong>Recibir devolución</strong><small>Condición final, accesorios y firma de IT</small></span></li>
                 </ol>
                 <div class="form-group">
-                    <label for="buscar" class="sr-only">Buscar por empleado, equipo, código o asignación</label>
+                    <label for="buscar" class="visually-hidden">Buscar por empleado, equipo, código o asignación</label>
                     <input type="search" name="buscar" id="buscar" class="form-control" placeholder="Buscar empleado, equipo o código..." autocomplete="off"><br>
                     <div id="datos"></div>
                 </div>

@@ -171,14 +171,14 @@ $(document).on('input','#buscar',function(){ ajaxLoadDebounced('<?= BASE_URL ?>/
         <p>Consulta y administra la identificación, compra y estado del inventario.</p>
       </div>
       <div class="page-header-actions">
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newModal">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newModal">
           <i class="fa fa-plus" aria-hidden="true"></i>
           <span>Agregar equipo</span>
         </button>
       </div>
     </div>
     <div class="page-toolbar" role="search">
-      <label for="buscar" class="sr-only">Buscar equipos</label>
+      <label for="buscar" class="visually-hidden">Buscar equipos</label>
       <input type="search" id="buscar" class="form-control"
              placeholder="Buscar por código, serie, tipo, marca o modelo"
              autocomplete="off" aria-controls="tablaEquipo">

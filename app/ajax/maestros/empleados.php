@@ -91,10 +91,10 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
             <td><?= htmlspecialchars($r['correo'] ?? '') ?></td>
             <td><?= htmlspecialchars($r['descripcionarea'] ?? '') ?></td>
             <td><?= htmlspecialchars($r['descripcioncargo'] ?? '') ?></td>
-            <td><?= $activo === 1 ? '<span class="label label-success">Activo</span>' : '<span class="label label-default">Inactivo</span>' ?></td>
+            <td><?= $activo === 1 ? '<span class="badge app-badge-success">Activo</span>' : '<span class="badge app-badge-muted">Inactivo</span>' ?></td>
             <td class="table-actions">
                 <a href="#" onclick="return modalImg('<?= htmlspecialchars($imgUrl, ENT_QUOTES) ?>')"
-                   data-toggle="modal" data-target="#imgModal" title="Ver foto del empleado" aria-label="Ver foto del empleado">
+                   data-bs-toggle="modal" data-bs-target="#imgModal" title="Ver foto del empleado" aria-label="Ver foto del empleado">
                     <i class="fa fa-image img-icon" aria-hidden="true"></i>
                 </a>
                 <?php if ($activo === 1 && (string)($_SESSION['transacciones'] ?? '0') === '1'): ?>
@@ -105,7 +105,7 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
                 <?php endif; ?>
                 <?php if ($activo === 1): ?>
                 <a href="#" onclick="return editEmp(event)"
-                   data-toggle="modal" data-target="#editModal" title="Editar empleado" aria-label="Editar empleado">
+                   data-bs-toggle="modal" data-bs-target="#editModal" title="Editar empleado" aria-label="Editar empleado">
                     <i class="fa fa-edit" aria-hidden="true"></i>
                 </a>
                 <?php endif; ?>
@@ -113,7 +113,7 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
 <a href="#" onclick="return delEmp(event)"
    title="<?= $activo === 1 ? 'Dar de baja' : 'Reactivar' ?>"
    aria-label="<?= $activo === 1 ? 'Dar de baja al empleado' : 'Reactivar al empleado' ?>"
-   data-toggle="modal" data-target="#delModal">
+   data-bs-toggle="modal" data-bs-target="#delModal">
     <i class="fa fa-<?= $activo === 1 ? 'trash' : 'undo' ?>" aria-hidden="true"></i>
 </a>
 
@@ -186,13 +186,13 @@ function delEmp(e) {
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header">
       <h5 class="modal-title" id="tituloFotoEmp">Foto del empleado</h5>
-      <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
     </div>
     <div class="modal-body text-center">
       <img id="empFoto" class="app-image-view" src="" alt="Vista ampliada del empleado">
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
     </div>
   </div></div>
 </div>
@@ -205,7 +205,7 @@ function delEmp(e) {
       <?= Auth::csrfField() ?>
       <div class="modal-header">
         <h5 class="modal-title" id="tituloNuevoEmp">Nuevo empleado</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
         <div class="app-form-sections">
@@ -245,11 +245,11 @@ function delEmp(e) {
         <div class="form-group">
           <div class="catalogo-contextual-encabezado">
             <label for="nuevoEmpleadoArea">Área</label>
-            <button type="button" class="btn btn-link btn-xs js-catalogo-toggle" data-target="#altaAreaEmpleado">
+            <button type="button" class="btn btn-link btn-sm js-catalogo-toggle" data-catalogo-target="#altaAreaEmpleado">
               <i class="fa fa-plus"></i> Nueva área
             </button>
           </div>
-          <select name="idarea" id="nuevoEmpleadoArea" class="form-control" data-catalogo-select="area" required>
+          <select name="idarea" id="nuevoEmpleadoArea" class="form-select" data-catalogo-select="area" required>
             <?php foreach ($areas as $a): ?>
             <option value="<?= $a['idarea'] ?>"><?= htmlspecialchars($a['descripcionarea']) ?></option>
             <?php endforeach; ?>
@@ -260,10 +260,8 @@ function delEmp(e) {
                data-csrf="<?= htmlspecialchars(Auth::csrfToken(), ENT_QUOTES) ?>">
             <div class="input-group">
               <input type="text" class="form-control js-catalogo-nombre" maxlength="100" placeholder="Nombre de la nueva área" autocomplete="off">
-              <span class="input-group-btn">
-                <button type="button" class="btn btn-primary js-catalogo-guardar"><i class="fa fa-check"></i> Guardar</button>
-                <button type="button" class="btn btn-default js-catalogo-cancelar" title="Cancelar"><i class="fa fa-times"></i></button>
-              </span>
+              <button type="button" class="btn btn-primary js-catalogo-guardar"><i class="fa fa-check"></i> Guardar</button>
+              <button type="button" class="btn btn-secondary js-catalogo-cancelar" title="Cancelar"><i class="fa fa-times"></i></button>
             </div>
             <small class="catalogo-contextual-ayuda">Se agregará al catálogo y quedará seleccionada.</small>
             <span class="catalogo-contextual-error" aria-live="polite"></span>
@@ -272,11 +270,11 @@ function delEmp(e) {
         <div class="form-group">
           <div class="catalogo-contextual-encabezado">
             <label for="nuevoEmpleadoCargo">Cargo</label>
-            <button type="button" class="btn btn-link btn-xs js-catalogo-toggle" data-target="#altaCargoEmpleado">
+            <button type="button" class="btn btn-link btn-sm js-catalogo-toggle" data-catalogo-target="#altaCargoEmpleado">
               <i class="fa fa-plus"></i> Nuevo cargo
             </button>
           </div>
-          <select name="idcargo" id="nuevoEmpleadoCargo" class="form-control" data-catalogo-select="cargo" required>
+          <select name="idcargo" id="nuevoEmpleadoCargo" class="form-select" data-catalogo-select="cargo" required>
             <?php foreach ($cargos as $c): ?>
             <option value="<?= $c['idcargo'] ?>"><?= htmlspecialchars($c['descripcioncargo']) ?></option>
             <?php endforeach; ?>
@@ -287,17 +285,15 @@ function delEmp(e) {
                data-csrf="<?= htmlspecialchars(Auth::csrfToken(), ENT_QUOTES) ?>">
             <div class="input-group">
               <input type="text" class="form-control js-catalogo-nombre" maxlength="100" placeholder="Nombre del nuevo cargo" autocomplete="off">
-              <span class="input-group-btn">
-                <button type="button" class="btn btn-primary js-catalogo-guardar"><i class="fa fa-check"></i> Guardar</button>
-                <button type="button" class="btn btn-default js-catalogo-cancelar" title="Cancelar"><i class="fa fa-times"></i></button>
-              </span>
+              <button type="button" class="btn btn-primary js-catalogo-guardar"><i class="fa fa-check"></i> Guardar</button>
+              <button type="button" class="btn btn-secondary js-catalogo-cancelar" title="Cancelar"><i class="fa fa-times"></i></button>
             </div>
             <small class="catalogo-contextual-ayuda">Se agregará al catálogo y quedará seleccionado.</small>
             <span class="catalogo-contextual-error" aria-live="polite"></span>
           </div>
         </div>
         <div class="form-group"><label for="sexoNuevo">Sexo</label>
-          <select name="idsexo" id="sexoNuevo" class="form-control">
+          <select name="idsexo" id="sexoNuevo" class="form-select">
             <option value="1">Masculino</option>
             <option value="2">Femenino</option>
           </select></div>
@@ -316,7 +312,7 @@ function delEmp(e) {
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-success" name="add" value="1">
           <i class="fa fa-save" aria-hidden="true"></i> Guardar
         </button>
@@ -334,7 +330,7 @@ function delEmp(e) {
       <?= Auth::csrfField() ?>
       <div class="modal-header">
         <h5 class="modal-title" id="tituloEditarEmp">Editar empleado</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
         <div class="app-form-sections">
@@ -370,19 +366,19 @@ function delEmp(e) {
           </div>
           <div class="form-grid">
         <div class="form-group"><label for="areaAct">Área</label>
-          <select name="areaAct" id="areaAct" class="form-control" data-catalogo-select="area">
+          <select name="areaAct" id="areaAct" class="form-select" data-catalogo-select="area">
             <?php foreach ($areasTodas as $a): ?>
             <option value="<?= $a['idarea'] ?>"><?= htmlspecialchars($a['descripcionarea']) ?><?= (int)$a['activo'] === 0 ? ' (inactiva)' : '' ?></option>
             <?php endforeach; ?>
           </select></div>
         <div class="form-group"><label for="cargoAct">Cargo</label>
-          <select name="cargoAct" id="cargoAct" class="form-control" data-catalogo-select="cargo">
+          <select name="cargoAct" id="cargoAct" class="form-select" data-catalogo-select="cargo">
             <?php foreach ($cargosTodos as $c): ?>
             <option value="<?= $c['idcargo'] ?>"><?= htmlspecialchars($c['descripcioncargo']) ?><?= (int)$c['activo'] === 0 ? ' (inactivo)' : '' ?></option>
             <?php endforeach; ?>
           </select></div>
         <div class="form-group"><label for="sexoAct">Sexo</label>
-          <select name="sexoAct" id="sexoAct" class="form-control">
+          <select name="sexoAct" id="sexoAct" class="form-select">
             <option value="1">Masculino</option>
             <option value="2">Femenino</option>
           </select></div>
@@ -401,7 +397,7 @@ function delEmp(e) {
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-primary" name="edit" value="1">
           <i class="fa fa-save" aria-hidden="true"></i> Actualizar
         </button>
@@ -419,14 +415,14 @@ function delEmp(e) {
       <?= Auth::csrfField() ?>
       <div class="modal-header">
         <h5 class="modal-title" id="tituloEstadoEmp">Cambiar estado del empleado</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
         <p><strong><span id="lblEmpDel"></span></strong></p>
         <p id="textoEstadoEmp">Confirma el cambio de estado del empleado.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-danger" id="btnEstadoEmp" name="del" value="1">Confirmar</button>
       </div>
     </form>

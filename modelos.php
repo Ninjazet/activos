@@ -59,7 +59,7 @@ $pageTitle = 'Modelos';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 Auth::imprimirFlash();
 ?>
-<script src="<?= BASE_URL ?>/public/js/ajax-loader.js"></script>
+<script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
 <script>
 $(document).ready(function(){ ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/modelos.php'); });
 $(document).on('keyup','#buscar',function(){ ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/maestros/modelos.php',$(this).val()); });
@@ -67,8 +67,8 @@ $(document).on('keyup','#buscar',function(){ ajaxLoadDebounced('<?= BASE_URL ?>/
 <div class="wrapper">
   <div class="container-fluid">
     <div class="page-header clearfix">
-      <h2 class="pull-left">Modelos</h2>
-      <a href="#" class="btn btn-primary pull-right" data-toggle="modal" data-target="#newModal">+ Agregar</a>
+      <h2>Modelos</h2>
+      <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newModal">+ Agregar</a>
     </div>
     <div class="form-group">
       <input type="text" id="buscar" class="form-control" placeholder="Buscar...">

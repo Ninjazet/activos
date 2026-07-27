@@ -132,7 +132,7 @@ require BASE_PATH . '/app/views/layouts/encabezado.php';
 Auth::imprimirFlash();
 ?>
 
-<script src="<?= BASE_URL ?>/public/js/ajax-loader.js"></script>
+<script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
 <script>
 $(document).ready(function () { ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/usuarios.php'); });
 $(document).on('input', '#buscar', function () {
@@ -143,15 +143,15 @@ $(document).on('input', '#buscar', function () {
 <div class="wrapper">
     <div class="container-fluid">
         <div class="page-header clearfix">
-            <h2 class="pull-left">Usuarios y permisos</h2>
+            <h2>Usuarios y permisos</h2>
             <div class="page-header-actions">
-                <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newModal">
+                <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newModal">
                     <i class="fa fa-user-plus" aria-hidden="true"></i> Crear usuario
                 </a>
             </div>
         </div>
         <div class="form-group">
-            <label for="buscar" class="sr-only">Buscar por usuario, empleado o identificador</label>
+            <label for="buscar" class="visually-hidden">Buscar por usuario, empleado o identificador</label>
             <input type="search" id="buscar" class="form-control" placeholder="Buscar usuario o empleado..." autocomplete="off">
             <br><div id="datos"></div>
         </div>

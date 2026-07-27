@@ -37,7 +37,7 @@ $colores = [
 <p class="text-muted" style="font-size:12px; margin-bottom:6px;">
     Mostrando los últimos <?= count($resultado) ?> registros. Usa el buscador para filtrar.
 </p>
-<table class="table table-bordered table-striped table-condensed" id="tablaBitacora">
+<table class="table table-bordered table-striped table-sm" id="tablaBitacora">
     <thead style="background-color:#D3E9F1">
         <tr>
             <th>#</th>

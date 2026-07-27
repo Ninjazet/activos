@@ -42,7 +42,7 @@ $resultado = $db->consulta($sql, $params);
             <td><?= htmlspecialchars($r['direccion'] ?? '') ?></td>
             <td><?= htmlspecialchars($r['descripcionarea'] ?? '') ?></td>
             <td><?= htmlspecialchars($r['descripcioncargo'] ?? '') ?></td>
-            <td><?= (int)$r['activo'] === 1 ? '<span class="label label-success">Activo</span>' : '<span class="label label-default">Inactivo</span>' ?></td>
+            <td><?= (int)$r['activo'] === 1 ? '<span class="badge app-badge-success">Activo</span>' : '<span class="badge app-badge-muted">Inactivo</span>' ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>

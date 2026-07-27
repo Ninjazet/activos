@@ -101,18 +101,18 @@ $abrirModalNuevo = $empleadoPreseleccionable || $equipoPreseleccionable;
             <td><?= (int)$r['idasignacion'] ?></td>
             <td><?= htmlspecialchars($r['empleado']) ?></td>
             <td><?= htmlspecialchars($r['equipo']) ?></td>
-            <td><span class="label label-info"><?= htmlspecialchars($r['condicion_entrega']) ?></span></td>
+            <td><span class="badge app-badge-info"><?= htmlspecialchars($r['condicion_entrega']) ?></span></td>
             <td><?= htmlspecialchars($textoAccesorios) ?></td>
             <td><?= $r['fecha_asignacion'] ? date('d/m/Y', strtotime($r['fecha_asignacion'])) : '—' ?></td>
             <td>
                 <?= !empty($r['firma'])
-                    ? '<span class="label label-success"><i class="fa fa-check" aria-hidden="true"></i> Firmada</span>'
-                    : '<span class="label label-warning"><i class="fa fa-clock" aria-hidden="true"></i> Pendiente</span>' ?>
+                    ? '<span class="badge app-badge-success"><i class="fa fa-check" aria-hidden="true"></i> Firmada</span>'
+                    : '<span class="badge app-badge-warning"><i class="fa fa-clock" aria-hidden="true"></i> Pendiente</span>' ?>
             </td>
             <td class="table-actions assignment-actions">
                 <?php if (empty($r['firma'])): ?>
                 <a href="#" title="Editar asignación y checklist" aria-label="Editar asignación y checklist" onclick="return modalEdit(event);"
-                   data-toggle="modal" data-target="#editModal"><span class="fa fa-edit" aria-hidden="true"></span></a>
+                   data-bs-toggle="modal" data-bs-target="#editModal"><span class="fa fa-edit" aria-hidden="true"></span></a>
                 <?php endif; ?>
                 <?php if ((int)$r['requiere_firma_entrega'] === 1 && empty($r['firma'])): ?>
                 <button type="button" class="table-action-disabled" disabled
@@ -122,7 +122,7 @@ $abrirModalNuevo = $empleadoPreseleccionable || $equipoPreseleccionable;
                 </button>
                 <?php else: ?>
                 <a href="#" title="Devolver equipo" aria-label="Registrar devolución del equipo" onclick="return modalDevolver(event);"
-                   data-toggle="modal" data-target="#devolucionModal">
+                   data-bs-toggle="modal" data-bs-target="#devolucionModal">
                     <span class="fa fa-rotate-left" aria-hidden="true"></span>
                 </a>
                 <?php endif; ?>
@@ -133,7 +133,7 @@ $abrirModalNuevo = $empleadoPreseleccionable || $equipoPreseleccionable;
                 </a>
                 <?php else: ?>
                 <a href="#" title="Firmar acta de entrega" aria-label="Firmar acta de entrega" onclick="return modalFirmarEntrega(event);"
-                   data-toggle="modal" data-target="#firmarModal">
+                   data-bs-toggle="modal" data-bs-target="#firmarModal">
                     <span class="fa fa-file-signature" aria-hidden="true"></span>
                 </a>
                 <?php endif; ?>
@@ -260,12 +260,12 @@ $(function () {
       <?= Auth::csrfField() ?>
       <div class="modal-header">
         <h5 class="modal-title" id="newAssignmentTitle">Nueva asignación</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
         <div class="form-group">
           <label for="empleado">Empleado</label>
-          <select name="empleado" id="empleado" class="form-control" required>
+          <select name="empleado" id="empleado" class="form-select" required>
             <option value="0">-- Seleccione un empleado --</option>
             <?php foreach ($emps as $e): ?>
             <option value="<?= (int)$e['idempleado'] ?>" <?= $empleadoPreseleccionable && (int)$e['idempleado'] === $preseleccionarEmpleado ? 'selected' : '' ?>>
@@ -276,7 +276,7 @@ $(function () {
         </div>
         <div class="form-group">
           <label for="equipo">Equipo disponible</label>
-          <select name="equipo" id="equipo" class="form-control" required>
+          <select name="equipo" id="equipo" class="form-select" required>
             <option value="0">-- Seleccione un equipo --</option>
             <?php foreach ($eqsDisponibles as $eq): ?>
             <option value="<?= (int)$eq['idequipo'] ?>" <?= $equipoPreseleccionable && (int)$eq['idequipo'] === $preseleccionarEquipo ? 'selected' : '' ?>>
@@ -289,7 +289,7 @@ $(function () {
         <?php $prefijoEntrega = 'nueva'; require __DIR__ . '/parcial_checklist_entrega.php'; ?>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-success" name="add"><i class="fa fa-check"></i> Crear asignación</button>
       </div>
     </form>
@@ -304,13 +304,13 @@ $(function () {
       <input type="hidden" name="idasignacion" id="idasignacion">
       <div class="modal-header">
         <h5 class="modal-title" id="editAssignmentTitle">Editar asignación</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
         <div class="alert alert-info" style="padding:9px 12px;">Solo pueden editarse asignaciones que todavía no tienen acta firmada.</div>
         <div class="form-group">
           <label for="empleadoAct">Empleado</label>
-          <select name="empleado" id="empleadoAct" class="form-control" required>
+          <select name="empleado" id="empleadoAct" class="form-select" required>
             <option value="0">-- Seleccione un empleado --</option>
             <?php foreach ($emps as $e): ?>
             <option value="<?= (int)$e['idempleado'] ?>"><?= htmlspecialchars($e['nombre'] . ' ' . $e['apellidos']) ?></option>
@@ -319,7 +319,7 @@ $(function () {
         </div>
         <div class="form-group">
           <label for="equipoAct">Equipo</label>
-          <select name="equipo" id="equipoAct" class="form-control" required>
+          <select name="equipo" id="equipoAct" class="form-select" required>
             <option value="0">-- Seleccione un equipo --</option>
             <?php foreach ($eqsTodos as $eq): ?>
             <option value="<?= (int)$eq['idequipo'] ?>">
@@ -331,7 +331,7 @@ $(function () {
         <?php $prefijoEntrega = 'editar'; require __DIR__ . '/parcial_checklist_entrega.php'; ?>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-primary" name="edit">Actualizar</button>
       </div>
     </form>
@@ -347,20 +347,20 @@ $(function () {
       <input type="hidden" name="firma" id="firmaEntregaInput">
       <div class="modal-header">
         <h5 class="modal-title" id="signAssignmentTitle">Firmar acta de entrega</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
         <p><strong>Empleado:</strong> <span id="lblEmpleadoFirma"></span></p>
         <p><strong>Equipo:</strong> <span id="lblEquipoFirma"></span></p>
         <p class="text-muted" id="firmaEntregaAyuda">El empleado confirma el equipo, condición y accesorios registrados. Puede firmar con mouse, pantalla táctil o teclas de flecha.</p>
         <div class="firma-lienzo"><canvas id="canvasFirmaEntrega" width="440" height="160" tabindex="0" role="application" aria-label="Lienzo para la firma de entrega. Use el mouse, la pantalla táctil o las teclas de flecha" aria-describedby="firmaEntregaAyuda"></canvas></div>
-        <button type="button" class="btn btn-sm btn-default" id="btnLimpiarFirmaEntrega" style="margin-top:6px;">
+        <button type="button" class="btn btn-sm btn-secondary" id="btnLimpiarFirmaEntrega" style="margin-top:6px;">
           <i class="fa fa-eraser"></i> Limpiar firma
         </button>
         <div id="avisoFirmaEntrega" class="text-danger firma-aviso" role="status" aria-live="polite"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-success"><i class="fa fa-file-pdf"></i> Firmar y generar acta</button>
       </div>
     </form>
@@ -376,15 +376,15 @@ $(function () {
       <input type="hidden" name="firma_devolucion" id="firmaDevolucionInput">
       <div class="modal-header">
         <h5 class="modal-title" id="returnAssignmentTitle">Recibir y devolver equipo</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
         <p><strong>Empleado:</strong> <span id="lblEmpleadoDevolucion"></span></p>
         <p><strong>Equipo:</strong> <span id="lblEquipoDevolucion"></span></p>
-        <div class="well well-sm"><strong>Entregado originalmente:</strong> <span id="lblChecklistEntrega"></span></div>
+        <div class="assignment-summary"><strong>Entregado originalmente:</strong> <span id="lblChecklistEntrega"></span></div>
         <div class="form-group">
           <label for="condicionDevolucion">Condición física al recibir</label>
-          <select name="condicion_devolucion" id="condicionDevolucion" class="form-control" required>
+          <select name="condicion_devolucion" id="condicionDevolucion" class="form-select" required>
             <option value="Bueno">Bueno - volverá a Disponible</option>
             <option value="Con daño">Con daño - pasará a En mantenimiento</option>
             <option value="No funcional">No funcional - pasará a En mantenimiento</option>
@@ -407,13 +407,13 @@ $(function () {
         </div>
         <p class="text-muted" id="firmaDevolucionAyuda">Firma del responsable de IT que recibe el equipo. Puede firmar con mouse, pantalla táctil o teclas de flecha.</p>
         <div class="firma-lienzo"><canvas id="canvasFirmaDevolucion" width="440" height="160" tabindex="0" role="application" aria-label="Lienzo para la firma de devolución. Use el mouse, la pantalla táctil o las teclas de flecha" aria-describedby="firmaDevolucionAyuda"></canvas></div>
-        <button type="button" class="btn btn-sm btn-default" id="btnLimpiarFirmaDevolucion" style="margin-top:6px;">
+        <button type="button" class="btn btn-sm btn-secondary" id="btnLimpiarFirmaDevolucion" style="margin-top:6px;">
           <i class="fa fa-eraser"></i> Limpiar firma
         </button>
         <div id="avisoFirmaDevolucion" class="text-danger firma-aviso" role="status" aria-live="polite"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-warning"><i class="fa fa-file-pdf"></i> Confirmar y generar acta</button>
       </div>
     </form>
@@ -555,13 +555,16 @@ $(function () {
         formId: 'formDevolucion', inputId: 'firmaDevolucionInput', avisoId: 'avisoFirmaDevolucion',
         alEnviar: function () {
             setTimeout(function () {
-                $('#devolucionModal').modal('hide');
+                var modalDevolucion = document.getElementById('devolucionModal');
+                bootstrap.Modal.getOrCreateInstance(modalDevolucion).hide();
                 ajaxLoad('<?= BASE_URL ?>/app/ajax/transacciones/asignarequipo.php');
             }, 1400);
         }
     });
     <?php if ($abrirModalNuevo): ?>
-    setTimeout(function () { $('#newModal').modal('show'); }, 80);
+    setTimeout(function () {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('newModal')).show();
+    }, 80);
     <?php endif; ?>
 });
 </script>

@@ -61,7 +61,7 @@ $empleados_todos = $db->consulta(
             <td><?= $registro['idusuario'] ?></td>
             <td><?= htmlspecialchars($registro['username']) ?></td>
             <td><?= htmlspecialchars($registro['Nombre']) ?></td>
-            <td><?= $activo === 1 ? '<span class="label label-success">Activo</span>' : '<span class="label label-default">Inactivo</span>' ?></td>
+            <td><?= $activo === 1 ? '<span class="badge app-badge-success">Activo</span>' : '<span class="badge app-badge-muted">Inactivo</span>' ?></td>
             <?php foreach (['datosmaestros', 'transacciones', 'consultas', 'reportes', 'actas', 'seguridad'] as $permiso): ?>
             <?php $permitido = (int)$registro[$permiso] === 1; ?>
             <td class="permission-cell" data-permission="<?= $permitido ? 1 : 0 ?>" data-order="<?= $permitido ? 1 : 0 ?>">
@@ -74,12 +74,12 @@ $empleados_todos = $db->consulta(
             <?php endforeach; ?>
             <td class="table-actions">
                 <a href='#' title='Editar usuario' aria-label='Editar usuario' onclick='return modalEdit(event);'
-                   data-toggle='modal' data-target='#editModal'>
+                   data-bs-toggle='modal' data-bs-target='#editModal'>
                     <span class="fa fa-edit" aria-hidden="true"></span></a>
                 <a href='#' title='<?= $activo === 1 ? 'Desactivar' : 'Reactivar' ?>'
                    aria-label='<?= $activo === 1 ? 'Desactivar usuario' : 'Reactivar usuario' ?>'
                    onclick='return modalDelete(event);'
-                   data-toggle='modal' data-target='#deleteModal'>
+                   data-bs-toggle='modal' data-bs-target='#deleteModal'>
                     <span class='fa fa-<?= $activo === 1 ? 'trash' : 'undo' ?>'
                           aria-hidden="true"></span></a>
             </td>
@@ -108,27 +108,25 @@ $(document).ready(function(){
       <?= Auth::csrfField() ?>
       <div class="modal-header">
                     <h5 class="modal-title" id="newUserModalTitle">Crear usuario</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                    <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     
                     <div class="form-group">
                         <label for="usuario">Nombre de usuario</label>
                         <input type="text" name="usuario" id="usuario" value="" class="form-control" autocomplete="username" required>
-                        <span class="help-block"></span>
+                        <span class="form-text text-danger"></span>
                     </div> 
 
                     <div class="form-group">
                         <label for="pass">Contraseña</label>
                         <input type="password" name="pass" id="pass" value="" class="form-control" autocomplete="new-password" required>
-                        <span class="help-block"></span>
+                        <span class="form-text text-danger"></span>
                     </div> 
 
                     <div class="form-group">
                         <label for="empleado">Empleado vinculado</label>
-                        <select name="empleado" id="empleado" class="form-control" required>
+                        <select name="empleado" id="empleado" class="form-select" required>
                             <option value="0">-- Seleccione un empleado --</option>
                             <?php foreach ($empleados_disponibles as $emp): ?>
                             <option value="<?= $emp['idempleado'] ?>"><?= htmlspecialchars($emp['nomApe']) ?></option>
@@ -154,7 +152,7 @@ $(document).ready(function(){
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-success" name="add"><i class="fa fa-check" aria-hidden="true"></i> Guardar usuario</button>
                 </div>
             </form>                
@@ -173,9 +171,7 @@ $(document).ready(function(){
       <?= Auth::csrfField() ?>
       <div class="modal-header">
                     <h5 class="modal-title" id="editUserModalTitle">Editar usuario y permisos</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                    <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     
@@ -193,7 +189,7 @@ $(document).ready(function(){
 
                     <div class="form-group">
                         <label for="empleadoAct">Empleado vinculado</label>
-                        <select name="empleadoAct" id="empleadoAct" class="form-control" disabled>
+                        <select name="empleadoAct" id="empleadoAct" class="form-select" disabled>
                             <option value="0">-- Seleccione --</option>
                             <?php foreach ($empleados_todos as $emp): ?>
                             <option value="<?= $emp['idempleado'] ?>"><?= htmlspecialchars($emp['nomApe']) ?></option>
@@ -218,7 +214,7 @@ $(document).ready(function(){
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary" name="edit"><i class="fa fa-check" aria-hidden="true"></i> Actualizar usuario</button>
                 </div>
 
@@ -238,7 +234,7 @@ $(document).ready(function(){
       <?= Auth::csrfField() ?>
       <div class="modal-header">
                     <h5 class="modal-title" id="userStatusModalTitle">Cambiar estado del usuario</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="idUsuarioDel" name="idUsuarioDel">
@@ -246,7 +242,7 @@ $(document).ready(function(){
                     <small class="text-muted">Si está activo se desactivará; si está inactivo se reactivará.</small></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <input type="submit" class="btn btn-warning" value="Confirmar" name="del"/>
                 </div>
             </form>

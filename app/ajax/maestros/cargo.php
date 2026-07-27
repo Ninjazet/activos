@@ -22,14 +22,14 @@ $rows = $db->consulta($sql, $params);
     <tr class="<?= (int)$r['activo'] === 0 ? 'text-muted' : '' ?>">
       <td><?= $r['idcargo'] ?></td>
       <td><?= htmlspecialchars($r['descripcioncargo']) ?></td>
-      <td><?= (int)$r['activo'] === 1 ? '<span class="label label-success">Activo</span>' : '<span class="label label-default">Inactivo</span>' ?></td>
+      <td><?= (int)$r['activo'] === 1 ? '<span class="badge app-badge-success">Activo</span>' : '<span class="badge app-badge-muted">Inactivo</span>' ?></td>
       <td>
         <?php if ((int)$r['activo'] === 1): ?>
-        <a href="#" onclick="editItem(event)" data-toggle="modal" data-target="#editModal">
+        <a href="#" onclick="editItem(event)" data-bs-toggle="modal" data-bs-target="#editModal">
           <i class="fa fa-edit"></i></a>
         <?php endif; ?>
         <a href="#" onclick="delItem(event)" title="<?= (int)$r['activo'] === 1 ? 'Dar de baja' : 'Reactivar' ?>"
-           data-toggle="modal" data-target="#delModal">
+           data-bs-toggle="modal" data-bs-target="#delModal">
           <i class="fa fa-<?= (int)$r['activo'] === 1 ? 'trash' : 'undo' ?>"
              style="color:<?= (int)$r['activo'] === 1 ? 'red' : '#28a745' ?>"></i></a>
       </td>
@@ -59,13 +59,13 @@ function delItem(e){
     <form action="<?= BASE_URL ?>/cargo.php" method="post">
       <?= Auth::csrfField() ?>
       <div class="modal-header"><h5 class="modal-title">Nuevo registro</h5>
-        <button class="close" data-dismiss="modal"><span>&times;</span></button></div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
       <div class="modal-body">
         <div class="form-group"><label>Descripción</label>
           <input type="text" name="campo" class="form-control" required></div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <input type="submit" class="btn btn-success" value="Guardar" name="add">
       </div>
     </form>
@@ -78,13 +78,13 @@ function delItem(e){
       <?= Auth::csrfField() ?>
       <input type="hidden" name="id" id="editId">
       <div class="modal-header"><h5 class="modal-title">Editar registro</h5>
-        <button class="close" data-dismiss="modal"><span>&times;</span></button></div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
       <div class="modal-body">
         <div class="form-group"><label>Descripción</label>
           <input type="text" name="campo" id="editCampo" class="form-control" required></div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <input type="submit" class="btn btn-primary" value="Actualizar" name="edit">
       </div>
     </form>
@@ -97,13 +97,13 @@ function delItem(e){
       <?= Auth::csrfField() ?>
       <input type="hidden" name="id" id="delId">
       <div class="modal-header"><h5 class="modal-title">Cambiar estado</h5>
-        <button class="close" data-dismiss="modal"><span>&times;</span></button></div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
       <div class="modal-body">
         <p>¿Cambiar el estado de <strong><span id="lblDel"></span></strong>?<br>
         <small class="text-muted">Si está activo, se dará de baja. Si está inactivo, se reactivará.</small></p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <input type="submit" class="btn btn-warning" value="Confirmar" name="del">
       </div>
     </form>

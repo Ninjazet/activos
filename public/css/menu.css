@@ -405,7 +405,7 @@ body {
     height: 38px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--accent);
+    border: 0;
 }
 
 #topbar-user span {

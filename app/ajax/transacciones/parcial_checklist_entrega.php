@@ -11,7 +11,7 @@ $idObservaciones = $prefijoEntrega . 'ObservacionesEntrega';
   <legend><i class="fa fa-clipboard-check"></i> Checklist de entrega</legend>
   <div class="form-group">
     <label for="<?= $idCondicion ?>">Condición física del equipo</label>
-    <select name="condicion_entrega" id="<?= $idCondicion ?>" class="form-control" required>
+    <select name="condicion_entrega" id="<?= $idCondicion ?>" class="form-select" required>
       <option value="Nuevo">Nuevo</option>
       <option value="Excelente">Excelente</option>
       <option value="Bueno" selected>Bueno</option>
