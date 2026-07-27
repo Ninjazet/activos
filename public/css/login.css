@@ -14,15 +14,7 @@ html, body {
 
 /* Fondo de respaldo del body: evita franjas blancas
    si el contenido llega a superar el 100vh */
-body {
-    background: linear-gradient(
-        to right,
-        #6f42c1 0%,
-        #6f42c1 58.33%,
-        #f4f4f6 58.33%,
-        #e9e9ee 100%
-    );
-}
+body { background: #f2f2f5; }
 
 #auth {
     min-height: 100vh;   /* antes decía 1000vh: eso empujaba el formulario fuera de vista */
@@ -38,12 +30,12 @@ body {
    2. COLUMNA IZQUIERDA (panel morado)
    -------------------------------------------- */
 #auth .col-lg-7 {
-    background: linear-gradient(135deg, #6f42c1, #3b2660);
+    background: #5b2f96;
 }
 
 /* Por si en algún punto se usa la clase .bg-primary de Bootstrap */
 .bg-primary {
-    background: linear-gradient(135deg, #6f42c1, #3b2660) !important;
+    background: #5b2f96 !important;
 }
 
 /* Color de marca (título visible solo en móvil) */
@@ -55,7 +47,7 @@ body {
    3. COLUMNA DERECHA (formulario) — degradado gris claro
    -------------------------------------------- */
 #auth .col-lg-5 {
-    background: linear-gradient(160deg, #ffffff 0%, #f2f2f5 45%, #e8e8ec 100%);
+    background: #f2f2f5;
 }
 
 /* --------------------------------------------
@@ -98,7 +90,7 @@ body {
     }
 
     #auth .col-lg-5 {
-        background: linear-gradient(135deg, #6f42c1, #3b2660);
+        background: #5b2f96;
         color: #fff;
     }
 

@@ -4,19 +4,50 @@
    ============================================ */
 
 :root {
+    /* Sistema visual central. Mantiene el aspecto actual y facilita la migracion a Bootstrap 5. */
+    --color-primary: #6f42c1;
+    --color-primary-hover: #5b21b6;
+    --color-focus: rgba(111, 66, 193, .38);
+    --color-focus-soft: rgba(111, 66, 193, .12);
+    --color-success: #087154;
+    --color-warning: #9a5a08;
+    --color-danger: #b42318;
+    --color-info: #1f5f99;
+    --color-muted: #6b7280;
+    --state-available: #20a779;
+    --state-assigned: #5a72d8;
+    --state-maintenance: #efa43a;
+    --state-lost: #dc5a68;
+    --state-retired: #9292a2;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 2px 8px rgba(15, 23, 42, .06);
+    --shadow-card: 0 2px 14px rgba(15, 23, 42, .07);
+    --shadow-modal: 0 18px 48px rgba(15, 23, 42, .22);
+    --control-height: 40px;
+    --button-height: 40px;
+    --button-padding-x: 16px;
+    --focus-ring: 0 0 0 3px var(--color-focus-soft);
     --sidebar-width: 270px;
     --sidebar-width-collapsed: 80px;
     --sidebar-bg: #0e1726;
     --sidebar-hover: rgba(111, 66, 193, 0.22);
     --sidebar-text: #b5c1d3;
     --sidebar-text-strong: #ffffff;
-    --accent: #6f42c1;
+    --accent: var(--color-primary);
     --accent-dark: #3b2660;
     --accent-light: #a78bdb;
     --content-bg: #f4f5f9;
     --card-bg: #ffffff;
-    --card-shadow: 0 2px 14px rgba(15, 23, 42, 0.07);
-    --radius: 14px;
+    --card-shadow: var(--shadow-card);
+    --radius: var(--radius-lg);
     --font: 'Inter', 'Segoe UI', Arial, sans-serif;
 }
 
@@ -41,7 +72,7 @@ body {
    SIDEBAR
    -------------------------------------------- */
 #sidemenu {
-    background: linear-gradient(180deg, var(--sidebar-bg) 0%, #131f34 100%);
+    background: var(--sidebar-bg);
     color: var(--sidebar-text-strong);
     position: fixed;
     height: 100vh;
@@ -72,7 +103,8 @@ body {
 #sidemenu #header #title {
     box-sizing: border-box;
     overflow: hidden;
-    display: inline-block;
+    display: block;
+    flex: 1;
     padding: 18px 10px;
 }
 
@@ -85,13 +117,23 @@ body {
 }
 
 #sidemenu #header #menu-btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    padding: 10px;
-    width: var(--sidebar-width-collapsed);
+    padding: 0;
+    width: 48px;
+    min-width: 48px;
+    height: 42px;
     box-sizing: border-box;
-    margin-left: auto;
+    margin: 0 8px 0 auto;
     border-radius: 8px;
+    border: 0 !important;
+    color: #fff;
+    background: transparent !important;
+    box-shadow: none !important;
+    appearance: none;
+    -webkit-appearance: none;
     transition: background-color 0.2s;
 }
 
@@ -99,13 +141,7 @@ body {
     background-color: var(--sidebar-hover);
 }
 
-#sidemenu #header #menu-btn .btn-hamburger {
-    background-color: #fff;
-    width: 60%;
-    height: 2px;
-    margin: 5px auto;
-    border-radius: 2px;
-}
+#sidemenu #header #menu-btn i { font-size: 18px; }
 
 /* Perfil de usuario */
 #sidemenu #profile {
@@ -217,7 +253,7 @@ body {
 
 #sidemenu #menu-items .item.separator {
     height: 1px;
-    background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
+    background: rgba(255, 255, 255, 0.12);
     margin: 12px 4px;
     width: auto;
 }
@@ -307,6 +343,7 @@ body {
 #mifoto {
     width: 90px;
     height: 90px;
+    background-color: #fff;
 }
 
 /* --------------------------------------------
@@ -322,6 +359,26 @@ body {
     position: sticky;
     top: 0;
     z-index: 500;
+}
+
+.topbar-start {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+}
+
+#mobile-menu-btn {
+    display: none;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    color: var(--accent);
+    background: #fff;
 }
 
 #topbar-title h1 {
@@ -387,4 +444,91 @@ body {
 
 #sidemenu.menu-collapsed .item.has-submenu > a::after {
     display: none;
+}
+
+/* Accesibilidad y navegación móvil */
+.skip-link {
+    position: fixed;
+    top: 10px;
+    left: 12px;
+    z-index: 3000;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: #fff;
+    background: #1e1e2d;
+    transform: translateY(-150%);
+    transition: transform .15s ease;
+}
+
+.skip-link:focus {
+    color: #fff;
+    transform: translateY(0);
+}
+
+#menu-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    border: 0;
+    background: rgba(15, 23, 42, .58);
+}
+
+.app-content:focus { outline: none; }
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex="0"]:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+}
+
+@media (max-width: 991px) {
+    body,
+    body.body-expanded {
+        margin-left: 0;
+    }
+
+    body.sidebar-open { overflow: hidden; }
+
+    #sidemenu,
+    #sidemenu.menu-expanded,
+    #sidemenu.menu-collapsed {
+        width: min(86vw, 300px);
+        max-width: 300px;
+        transform: translateX(-105%);
+        transition: transform .24s ease;
+    }
+
+    #sidemenu.mobile-open { transform: translateX(0); }
+
+    body.sidebar-open #menu-overlay { display: block !important; }
+    body.sidebar-open #mobile-menu-btn { visibility: hidden; }
+
+    #mobile-menu-btn { display: inline-flex; }
+
+    #topbar {
+        min-height: 72px;
+        padding: 13px 18px;
+    }
+
+    #topbar-title h1 { font-size: 18px; }
+    #topbar-title span { font-size: 11px; }
+}
+
+@media (max-width: 520px) {
+    #topbar { padding: 11px 13px; }
+    #topbar-user img { width: 34px; height: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
 }

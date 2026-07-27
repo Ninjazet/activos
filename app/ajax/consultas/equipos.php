@@ -31,7 +31,7 @@ $resultado = $db->consulta($sql, $params);
     <?php foreach ($resultado as $r): ?>
         <?php $img = $r['imagen'] ? (BASE_URL . '/' . $r['imagen']) : (BASE_URL . '/public/icons/equipo.png'); ?>
         <tr class="<?= (int)$r['activo'] === 0 ? 'text-muted' : '' ?>">
-            <td><img src="<?= htmlspecialchars($img, ENT_QUOTES) ?>" style="width:36px;height:36px;object-fit:cover;"></td>
+            <td><img src="<?= htmlspecialchars($img, ENT_QUOTES) ?>" alt="Foto del equipo <?= htmlspecialchars($r['codigo_activo'] ?? ('EQ-' . $r['idequipo']), ENT_QUOTES) ?>" style="width:36px;height:36px;object-fit:cover;"></td>
             <td><?= htmlspecialchars($r['codigo_activo'] ?? ('EQ-' . $r['idequipo'])) ?></td>
             <td><?= htmlspecialchars($r['tipo_equipo'] ?? 'Otro') ?></td>
             <td><?= htmlspecialchars($r['numero_serie'] ?: '—') ?></td>

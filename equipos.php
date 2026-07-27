@@ -157,22 +157,33 @@ $pageTitle = 'Equipos';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 Auth::imprimirFlash();
 ?>
-<script src="<?= BASE_URL ?>/public/js/ajax-loader.js"></script>
-<script src="<?= BASE_URL ?>/public/js/catalogos-contextuales.js"></script>
+<script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/public/js/catalogos-contextuales.js?v=<?= @filemtime(BASE_PATH . '/public/js/catalogos-contextuales.js') ?: APP_VERSION ?>"></script>
 <script>
 $(document).ready(function(){ ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/equipos.php'); });
-$(document).on('keyup','#buscar',function(){ ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/maestros/equipos.php',$(this).val()); });
+$(document).on('input','#buscar',function(){ ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/maestros/equipos.php',$(this).val()); });
 </script>
 <div class="wrapper">
   <div class="container-fluid">
-    <div class="page-header clearfix">
-      <h2 class="pull-left">Equipos</h2>
-      <a href="#" class="btn btn-primary pull-right" data-toggle="modal" data-target="#newModal">+ Agregar</a>
+    <div class="page-header">
+      <div class="module-header-copy">
+        <h2>Equipos</h2>
+        <p>Consulta y administra la identificación, compra y estado del inventario.</p>
+      </div>
+      <div class="page-header-actions">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newModal">
+          <i class="fa fa-plus" aria-hidden="true"></i>
+          <span>Agregar equipo</span>
+        </button>
+      </div>
     </div>
-    <div class="form-group">
-      <input type="text" id="buscar" class="form-control" placeholder="Buscar...">
-      <br><div id="datos"></div>
+    <div class="page-toolbar" role="search">
+      <label for="buscar" class="sr-only">Buscar equipos</label>
+      <input type="search" id="buscar" class="form-control"
+             placeholder="Buscar por código, serie, tipo, marca o modelo"
+             autocomplete="off" aria-controls="tablaEquipo">
     </div>
+    <div id="datos" aria-live="polite"></div>
   </div>
 </div>
 <?php require BASE_PATH . '/app/views/layouts/footer.php'; ?>

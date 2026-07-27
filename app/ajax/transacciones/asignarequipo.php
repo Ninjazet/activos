@@ -71,11 +71,15 @@ $abrirModalNuevo = $empleadoPreseleccionable || $equipoPreseleccionable;
 ?>
 
 <?php if ($resultado): ?>
+<p class="responsive-table-note assignment-mobile-note" id="assignmentMobileHelp">
+    <i class="fa fa-hand-pointer" aria-hidden="true"></i>
+    Toca una fila para mostrar sus opciones.
+</p>
 <table class="table table-bordered table-striped" id="datosE">
     <thead>
         <tr>
             <th>ID</th><th>Empleado</th><th>Equipo</th><th>Condición entrega</th>
-            <th>Accesorios</th><th>Asignado desde</th><th>Acción</th>
+            <th>Accesorios</th><th>Asignado desde</th><th>Acta de entrega</th><th>Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -101,29 +105,36 @@ $abrirModalNuevo = $empleadoPreseleccionable || $equipoPreseleccionable;
             <td><?= htmlspecialchars($textoAccesorios) ?></td>
             <td><?= $r['fecha_asignacion'] ? date('d/m/Y', strtotime($r['fecha_asignacion'])) : '—' ?></td>
             <td>
+                <?= !empty($r['firma'])
+                    ? '<span class="label label-success"><i class="fa fa-check" aria-hidden="true"></i> Firmada</span>'
+                    : '<span class="label label-warning"><i class="fa fa-clock" aria-hidden="true"></i> Pendiente</span>' ?>
+            </td>
+            <td class="table-actions assignment-actions">
                 <?php if (empty($r['firma'])): ?>
-                <a href="#" title="Editar asignación y checklist" onclick="return modalEdit(event);"
-                   data-toggle="modal" data-target="#editModal"><span class="fa fa-edit"></span></a>
+                <a href="#" title="Editar asignación y checklist" aria-label="Editar asignación y checklist" onclick="return modalEdit(event);"
+                   data-toggle="modal" data-target="#editModal"><span class="fa fa-edit" aria-hidden="true"></span></a>
                 <?php endif; ?>
                 <?php if ((int)$r['requiere_firma_entrega'] === 1 && empty($r['firma'])): ?>
-                <span title="Debe firmar el acta de entrega antes de devolver este equipo">
-                    <span class="fa fa-rotate-left" style="color:#9ca3af"></span>
-                </span>
+                <button type="button" class="table-action-disabled" disabled
+                        title="Debe firmar el acta de entrega antes de devolver este equipo"
+                        aria-label="Devolución bloqueada: primero debe firmar el acta de entrega">
+                    <span class="fa fa-rotate-left" aria-hidden="true"></span>
+                </button>
                 <?php else: ?>
-                <a href="#" title="Devolver equipo" onclick="return modalDevolver(event);"
+                <a href="#" title="Devolver equipo" aria-label="Registrar devolución del equipo" onclick="return modalDevolver(event);"
                    data-toggle="modal" data-target="#devolucionModal">
-                    <span class="fa fa-rotate-left" style="color:#c56b08"></span>
+                    <span class="fa fa-rotate-left" aria-hidden="true"></span>
                 </a>
                 <?php endif; ?>
                 <?php if (!empty($r['firma'])): ?>
                 <a href="<?= BASE_URL ?>/reportes/acta_asignacion.php?idasignacion=<?= (int)$r['idasignacion'] ?>"
-                   target="_blank" title="Ver acta de entrega firmada">
-                    <span class="fa fa-file-circle-check" style="color:#1a7c3e"></span>
+                   target="_blank" rel="noopener" title="Ver acta de entrega firmada" aria-label="Abrir acta de entrega firmada">
+                    <span class="fa fa-file-circle-check" aria-hidden="true"></span>
                 </a>
                 <?php else: ?>
-                <a href="#" title="Firmar acta de entrega" onclick="return modalFirmarEntrega(event);"
+                <a href="#" title="Firmar acta de entrega" aria-label="Firmar acta de entrega" onclick="return modalFirmarEntrega(event);"
                    data-toggle="modal" data-target="#firmarModal">
-                    <span class="fa fa-file-signature" style="color:#22648e"></span>
+                    <span class="fa fa-file-signature" aria-hidden="true"></span>
                 </a>
                 <?php endif; ?>
             </td>
@@ -132,8 +143,110 @@ $abrirModalNuevo = $empleadoPreseleccionable || $equipoPreseleccionable;
     </tbody>
 </table>
 <script>
+var tablaAsignacionesActivas = null;
+
+function obtenerFilaAsignacion(evento) {
+    var fila = $(evento.target).closest('tr');
+    if (fila.hasClass('child') || fila.hasClass('assignment-mobile-child')) {
+        fila = fila.prevAll('tr').not('.child, .assignment-mobile-child').first();
+    }
+    return fila;
+}
+
+function crearAccionesAsignacionMovil(fila) {
+    var acciones = $(fila).find('.assignment-actions').first().clone();
+    var botones = $('<div class="assignment-mobile-actions-buttons"></div>');
+
+    acciones.find('a, button').each(function () {
+        var control = $(this);
+        var etiqueta = control.attr('aria-label') || control.attr('title') || 'Acción';
+        control.append($('<span class="assignment-mobile-action-label"></span>').text(etiqueta));
+        botones.append(control);
+    });
+
+    return $('<div class="assignment-mobile-actions-panel"></div>')
+        .append('<strong class="assignment-mobile-actions-title">Opciones de la asignación</strong>')
+        .append(botones);
+}
+
 $(function () {
-    $('#datosE').DataTable({ dom: 'lrtip', order: [[0, 'desc']] });
+    var consultaMovil = window.matchMedia('(max-width: 767px)');
+    tablaAsignacionesActivas = $('#datosE').DataTable({
+        dom: 'lrtip',
+        order: [[0, 'desc']],
+        columnDefs: [
+            { targets: 7, orderable: false }
+        ]
+    });
+
+    function aplicarModoAsignacionMovil() {
+        var filas = $('#datosE tbody tr').not('.child, .assignment-mobile-child');
+
+        if (consultaMovil.matches) {
+            filas.attr({
+                tabindex: '0',
+                'aria-describedby': 'assignmentMobileHelp'
+            }).each(function () {
+                $(this).attr(
+                    'aria-expanded',
+                    tablaAsignacionesActivas.row(this).child.isShown() ? 'true' : 'false'
+                );
+            });
+            return;
+        }
+
+        tablaAsignacionesActivas.rows().every(function () {
+            if (this.child.isShown()) {
+                this.child.hide();
+            }
+            $(this.node()).removeClass('assignment-mobile-open');
+        });
+        filas.removeAttr('tabindex aria-expanded aria-describedby');
+    }
+
+    function alternarOpcionesMoviles(fila) {
+        if (!consultaMovil.matches) { return; }
+
+        var registro = tablaAsignacionesActivas.row(fila);
+        if (registro.child.isShown()) {
+            registro.child.hide();
+            $(fila).removeClass('assignment-mobile-open').attr('aria-expanded', 'false');
+            return;
+        }
+
+        tablaAsignacionesActivas.rows().every(function () {
+            if (this.child.isShown()) {
+                this.child.hide();
+                $(this.node()).removeClass('assignment-mobile-open').attr('aria-expanded', 'false');
+            }
+        });
+
+        registro.child(crearAccionesAsignacionMovil(fila), 'assignment-mobile-child').show();
+        $(fila).addClass('assignment-mobile-open').attr('aria-expanded', 'true');
+    }
+
+    $('#datosE tbody')
+        .off('.assignmentMobile')
+        .on('click.assignmentMobile', 'tr:not(.child):not(.assignment-mobile-child)', function (evento) {
+            if ($(evento.target).closest('a, button, input, select, textarea, label').length) { return; }
+            alternarOpcionesMoviles(this);
+        })
+        .on('keydown.assignmentMobile', 'tr:not(.child):not(.assignment-mobile-child)', function (evento) {
+            if (evento.key !== 'Enter' && evento.key !== ' ') { return; }
+            evento.preventDefault();
+            alternarOpcionesMoviles(this);
+        });
+
+    tablaAsignacionesActivas.on('draw.dt.assignmentMobile', aplicarModoAsignacionMovil);
+    $(window)
+        .off('resize.assignmentMobile')
+        .on('resize.assignmentMobile', function () {
+            aplicarModoAsignacionMovil();
+            tablaAsignacionesActivas.columns.adjust();
+        });
+
+    aplicarModoAsignacionMovil();
+    tablaAsignacionesActivas.columns.adjust();
 });
 </script>
 <?php else: ?>
@@ -141,13 +254,13 @@ $(function () {
 <?php endif; ?>
 
 <!-- MODAL NUEVA ASIGNACIÓN -->
-<div class="modal fade" id="newModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document"><div class="modal-content">
+<div class="modal fade" id="newModal" tabindex="-1" role="dialog" aria-labelledby="newAssignmentTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document"><div class="modal-content">
     <form action="<?= BASE_URL ?>/asignarequipo.php" method="post">
       <?= Auth::csrfField() ?>
       <div class="modal-header">
-        <h5 class="modal-title">Nueva Asignación</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <h5 class="modal-title" id="newAssignmentTitle">Nueva asignación</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -184,14 +297,14 @@ $(function () {
 </div>
 
 <!-- MODAL EDITAR ASIGNACIÓN NO FIRMADA -->
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document"><div class="modal-content">
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editAssignmentTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document"><div class="modal-content">
     <form action="<?= BASE_URL ?>/asignarequipo.php" method="post">
       <?= Auth::csrfField() ?>
       <input type="hidden" name="idasignacion" id="idasignacion">
       <div class="modal-header">
-        <h5 class="modal-title">Editar Asignación</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <h5 class="modal-title" id="editAssignmentTitle">Editar asignación</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
         <div class="alert alert-info" style="padding:9px 12px;">Solo pueden editarse asignaciones que todavía no tienen acta firmada.</div>
@@ -226,25 +339,25 @@ $(function () {
 </div>
 
 <!-- MODAL FIRMAR ENTREGA -->
-<div class="modal fade" id="firmarModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="firmarModal" tabindex="-1" role="dialog" aria-labelledby="signAssignmentTitle" aria-hidden="true">
   <div class="modal-dialog" role="document"><div class="modal-content">
     <form id="formFirmaEntrega" method="post" action="<?= BASE_URL ?>/reportes/acta_asignacion.php" target="_blank">
       <?= Auth::csrfField() ?>
       <input type="hidden" name="idasignacion" id="idasignacionFirma">
       <input type="hidden" name="firma" id="firmaEntregaInput">
       <div class="modal-header">
-        <h5 class="modal-title">Firmar Acta de Entrega</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <h5 class="modal-title" id="signAssignmentTitle">Firmar acta de entrega</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
         <p><strong>Empleado:</strong> <span id="lblEmpleadoFirma"></span></p>
         <p><strong>Equipo:</strong> <span id="lblEquipoFirma"></span></p>
-        <p class="text-muted">El empleado confirma el equipo, condición y accesorios registrados.</p>
-        <div class="firma-lienzo"><canvas id="canvasFirmaEntrega" width="440" height="160"></canvas></div>
+        <p class="text-muted" id="firmaEntregaAyuda">El empleado confirma el equipo, condición y accesorios registrados. Puede firmar con mouse, pantalla táctil o teclas de flecha.</p>
+        <div class="firma-lienzo"><canvas id="canvasFirmaEntrega" width="440" height="160" tabindex="0" role="application" aria-label="Lienzo para la firma de entrega. Use el mouse, la pantalla táctil o las teclas de flecha" aria-describedby="firmaEntregaAyuda"></canvas></div>
         <button type="button" class="btn btn-sm btn-default" id="btnLimpiarFirmaEntrega" style="margin-top:6px;">
           <i class="fa fa-eraser"></i> Limpiar firma
         </button>
-        <div id="avisoFirmaEntrega" class="text-danger firma-aviso"></div>
+        <div id="avisoFirmaEntrega" class="text-danger firma-aviso" role="status" aria-live="polite"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -255,15 +368,15 @@ $(function () {
 </div>
 
 <!-- MODAL DEVOLUCIÓN -->
-<div class="modal fade" id="devolucionModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document"><div class="modal-content">
+<div class="modal fade" id="devolucionModal" tabindex="-1" role="dialog" aria-labelledby="returnAssignmentTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document"><div class="modal-content">
     <form id="formDevolucion" method="post" action="<?= BASE_URL ?>/reportes/acta_devolucion.php" target="_blank">
       <?= Auth::csrfField() ?>
       <input type="hidden" name="idasignacion" id="idasignacionDevolucion">
       <input type="hidden" name="firma_devolucion" id="firmaDevolucionInput">
       <div class="modal-header">
-        <h5 class="modal-title">Recibir y Devolver Equipo</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <h5 class="modal-title" id="returnAssignmentTitle">Recibir y devolver equipo</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
         <p><strong>Empleado:</strong> <span id="lblEmpleadoDevolucion"></span></p>
@@ -292,12 +405,12 @@ $(function () {
           <label for="observacionesDevolucion">Observaciones de devolución</label>
           <textarea name="observaciones_devolucion" id="observacionesDevolucion" class="form-control" rows="3" maxlength="500" placeholder="Daños, accesorios faltantes o comentarios de recepción"></textarea>
         </div>
-        <p class="text-muted">Firma del responsable de IT que recibe el equipo:</p>
-        <div class="firma-lienzo"><canvas id="canvasFirmaDevolucion" width="440" height="160"></canvas></div>
+        <p class="text-muted" id="firmaDevolucionAyuda">Firma del responsable de IT que recibe el equipo. Puede firmar con mouse, pantalla táctil o teclas de flecha.</p>
+        <div class="firma-lienzo"><canvas id="canvasFirmaDevolucion" width="440" height="160" tabindex="0" role="application" aria-label="Lienzo para la firma de devolución. Use el mouse, la pantalla táctil o las teclas de flecha" aria-describedby="firmaDevolucionAyuda"></canvas></div>
         <button type="button" class="btn btn-sm btn-default" id="btnLimpiarFirmaDevolucion" style="margin-top:6px;">
           <i class="fa fa-eraser"></i> Limpiar firma
         </button>
-        <div id="avisoFirmaDevolucion" class="text-danger firma-aviso"></div>
+        <div id="avisoFirmaDevolucion" class="text-danger firma-aviso" role="status" aria-live="polite"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -309,7 +422,7 @@ $(function () {
 
 <script>
 function modalEdit(evento) {
-    var fila = $(evento.target).closest('tr');
+    var fila = obtenerFilaAsignacion(evento);
     $('#idasignacion').val(fila.find('td').eq(0).text());
     $('#empleadoAct').val(String(fila.data('idempleado')));
     $('#equipoAct').val(String(fila.data('idequipo')));
@@ -321,7 +434,7 @@ function modalEdit(evento) {
 }
 
 function modalFirmarEntrega(evento) {
-    var fila = $(evento.target).closest('tr');
+    var fila = obtenerFilaAsignacion(evento);
     $('#idasignacionFirma').val(fila.find('td').eq(0).text());
     $('#lblEmpleadoFirma').text(fila.find('td').eq(1).text());
     $('#lblEquipoFirma').text(fila.find('td').eq(2).text());
@@ -329,7 +442,7 @@ function modalFirmarEntrega(evento) {
 }
 
 function modalDevolver(evento) {
-    var fila = $(evento.target).closest('tr');
+    var fila = obtenerFilaAsignacion(evento);
     var accesorios = [];
     if (fila.data('entrega-cargador') == 1) { accesorios.push('Cargador'); }
     if (fila.data('entrega-maletin') == 1) { accesorios.push('Maletín'); }
@@ -353,6 +466,7 @@ function limpiarFirmaCanvas(canvasId, avisoId) {
     canvas._firmaContexto.fillStyle = '#ffffff';
     canvas._firmaContexto.fillRect(0, 0, canvas.width, canvas.height);
     canvas._firmaConTrazo = false;
+    canvas._firmaCursor = { x: canvas.width / 2, y: canvas.height / 2 };
     $('#' + avisoId).text('');
 }
 
@@ -373,12 +487,22 @@ function configurarFirmaCanvas(config) {
             y: (evento.clientY - rect.top) * (canvas.height / rect.height)
         };
     }
+    function trazarHasta(punto) {
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#1e1e2d';
+        ctx.lineTo(punto.x, punto.y);
+        ctx.stroke();
+        canvas._firmaCursor = punto;
+        canvas._firmaConTrazo = true;
+    }
     canvas.onpointerdown = function (evento) {
         evento.preventDefault();
         dibujando = true;
         canvas._firmaConTrazo = true;
         canvas.setPointerCapture(evento.pointerId);
         var punto = posicion(evento);
+        canvas._firmaCursor = punto;
         ctx.beginPath();
         ctx.moveTo(punto.x, punto.y);
     };
@@ -386,13 +510,26 @@ function configurarFirmaCanvas(config) {
         if (!dibujando) { return; }
         evento.preventDefault();
         var punto = posicion(evento);
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#1e1e2d';
-        ctx.lineTo(punto.x, punto.y);
-        ctx.stroke();
+        trazarHasta(punto);
     };
     canvas.onpointerup = canvas.onpointercancel = function () { dibujando = false; };
+    canvas.onkeydown = function (evento) {
+        var movimientos = {
+            ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+            ArrowUp: [0, -1], ArrowDown: [0, 1]
+        };
+        if (!movimientos[evento.key]) { return; }
+        evento.preventDefault();
+        var paso = evento.shiftKey ? 8 : 3;
+        var actual = canvas._firmaCursor || { x: canvas.width / 2, y: canvas.height / 2 };
+        var siguiente = {
+            x: Math.max(0, Math.min(canvas.width, actual.x + movimientos[evento.key][0] * paso)),
+            y: Math.max(0, Math.min(canvas.height, actual.y + movimientos[evento.key][1] * paso))
+        };
+        ctx.beginPath();
+        ctx.moveTo(actual.x, actual.y);
+        trazarHasta(siguiente);
+    };
 
     $('#' + config.limpiarId).off('click.firma').on('click.firma', function () {
         limpiarFirmaCanvas(config.canvasId, config.avisoId);

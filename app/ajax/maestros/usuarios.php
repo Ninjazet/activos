@@ -4,7 +4,7 @@ Auth::requerirPermiso('seguridad');
 
 $db = Database::getInstance();
 
-$sql = "SELECT us.idusuario, username, us.estado,
+$sql = "SELECT us.idusuario, us.idempleado, username, us.estado,
                CONCAT(nombre, ' ', apellidos) AS Nombre,
                datosmaestros, transacciones, consultas, reportes, actas, seguridad
         FROM usuarios us
@@ -57,26 +57,31 @@ $empleados_todos = $db->consulta(
     <tbody>
         <?php foreach ($resultado as $registro): ?>
         <?php $activo = (int)$registro['estado']; ?>
-        <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>">
+        <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>" data-idempleado="<?= (int)$registro['idempleado'] ?>">
             <td><?= $registro['idusuario'] ?></td>
             <td><?= htmlspecialchars($registro['username']) ?></td>
             <td><?= htmlspecialchars($registro['Nombre']) ?></td>
             <td><?= $activo === 1 ? '<span class="label label-success">Activo</span>' : '<span class="label label-default">Inactivo</span>' ?></td>
-            <td><?= $registro['datosmaestros'] ?></td>
-            <td><?= $registro['transacciones'] ?></td>
-            <td><?= $registro['consultas'] ?></td>
-            <td><?= $registro['reportes'] ?></td>
-            <td><?= $registro['actas'] ?></td>
-            <td><?= $registro['seguridad'] ?></td>
-            <td>
-                <a href='#' title='Editar' onclick='return modalEdit(event);'
+            <?php foreach (['datosmaestros', 'transacciones', 'consultas', 'reportes', 'actas', 'seguridad'] as $permiso): ?>
+            <?php $permitido = (int)$registro[$permiso] === 1; ?>
+            <td class="permission-cell" data-permission="<?= $permitido ? 1 : 0 ?>" data-order="<?= $permitido ? 1 : 0 ?>">
+                <span class="permission-indicator <?= $permitido ? 'is-granted' : 'is-denied' ?>"
+                      role="img" aria-label="<?= $permitido ? 'Permitido' : 'Sin permiso' ?>"
+                      title="<?= $permitido ? 'Permitido' : 'Sin permiso' ?>">
+                    <i class="fa <?= $permitido ? 'fa-check' : 'fa-minus' ?>" aria-hidden="true"></i>
+                </span>
+            </td>
+            <?php endforeach; ?>
+            <td class="table-actions">
+                <a href='#' title='Editar usuario' aria-label='Editar usuario' onclick='return modalEdit(event);'
                    data-toggle='modal' data-target='#editModal'>
-                    <span class="fa fa-edit"></span></a>
+                    <span class="fa fa-edit" aria-hidden="true"></span></a>
                 <a href='#' title='<?= $activo === 1 ? 'Desactivar' : 'Reactivar' ?>'
+                   aria-label='<?= $activo === 1 ? 'Desactivar usuario' : 'Reactivar usuario' ?>'
                    onclick='return modalDelete(event);'
                    data-toggle='modal' data-target='#deleteModal'>
                     <span class='fa fa-<?= $activo === 1 ? 'trash' : 'undo' ?>'
-                          style="color:<?= $activo === 1 ? '#e81414' : '#28a745' ?>"></span></a>
+                          aria-hidden="true"></span></a>
             </td>
         </tr>
         <?php endforeach; ?>
@@ -90,41 +95,39 @@ $empleados_todos = $db->consulta(
 <script>
 $(document).ready(function(){
     $("#datosE").DataTable({ dom: 'lrtip', order: [[0, 'desc']] });
-    var hide = [5,6,7,8,9,10];
-    hide.forEach(function(i){ $("#datosE th:nth-child("+i+"), #datosE td:nth-child("+i+")").hide(); });
 });
 </script>
 
 <!-- MODAL NUEVO REGISTRO -->
 
-<div class="modal fade" id="newModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="newModal" tabindex="-1" role="dialog" aria-labelledby="newUserModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <form action="<?= BASE_URL ?>/usuarios.php" method="post" onsubmit="return validaCampos('1');">
                 
       <?= Auth::csrfField() ?>
       <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Agregando Usuario</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <h5 class="modal-title" id="newUserModalTitle">Crear usuario</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     
                     <div class="form-group">
-                        <label>Ingrese nombre de usuario:</label>
-                        <input type="text" name="usuario" id="usuario" value="" class="form-control">
+                        <label for="usuario">Nombre de usuario</label>
+                        <input type="text" name="usuario" id="usuario" value="" class="form-control" autocomplete="username" required>
                         <span class="help-block"></span>
                     </div> 
 
                     <div class="form-group">
-                        <label>Ingrese password:</label>
-                        <input type="password" name="pass" id="pass" value="" class="form-control">
+                        <label for="pass">Contraseña</label>
+                        <input type="password" name="pass" id="pass" value="" class="form-control" autocomplete="new-password" required>
                         <span class="help-block"></span>
                     </div> 
 
                     <div class="form-group">
-                        <label>Seleccione empleado:</label>
+                        <label for="empleado">Empleado vinculado</label>
                         <select name="empleado" id="empleado" class="form-control" required>
                             <option value="0">-- Seleccione un empleado --</option>
                             <?php foreach ($empleados_disponibles as $emp): ?>
@@ -135,41 +138,24 @@ $(document).ready(function(){
                     </div> 
 
                   
-                    <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="maestros" id="maestros"/>
-                    <label class="custom-control-label" for="maestros">Datos Maestros</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="transacciones" id="transacciones"/>
-                    <label class="custom-control-label" for="transacciones">Transacciones</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="consultas" id="consultas"/>
-                    <label class="custom-control-label" for="consultas">Consultas</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="reportes" id="reportes"/>
-                    <label class="custom-control-label" for="reportes">Reportes</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="actas" id="actas"/>
-                    <label class="custom-control-label" for="actas">Actas firmadas</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" name="seguridad" id="seguridad"/>
-                    <label class="custom-control-label" for="seguridad">Seguridad</label>
-                    </div>
+                    <fieldset class="permission-fieldset">
+                        <legend>Permisos de acceso</legend>
+                        <p class="permission-help">Selecciona solamente los módulos que necesita esta cuenta.</p>
+                        <div class="permission-grid">
+                            <label class="permission-option" for="maestros"><input type="checkbox" name="maestros" id="maestros"><span><strong>Datos maestros</strong><small>Inventario, personal y catálogos</small></span></label>
+                            <label class="permission-option" for="transacciones"><input type="checkbox" name="transacciones" id="transacciones"><span><strong>Transacciones</strong><small>Asignar y devolver; incluye acceso a actas</small></span></label>
+                            <label class="permission-option" for="consultas"><input type="checkbox" name="consultas" id="consultas"><span><strong>Consultas</strong><small>Consultar información operativa</small></span></label>
+                            <label class="permission-option" for="reportes"><input type="checkbox" name="reportes" id="reportes"><span><strong>Reportes</strong><small>Visualizar y descargar reportes</small></span></label>
+                            <label class="permission-option" for="actas"><input type="checkbox" name="actas" id="actas"><span><strong>Actas firmadas</strong><small>Consultar documentos de entrega y devolución</small></span></label>
+                            <label class="permission-option" for="seguridad"><input type="checkbox" name="seguridad" id="seguridad"><span><strong>Seguridad</strong><small>Administrar usuarios y bitácora</small></span></label>
+                        </div>
+                    </fieldset>
                 
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    <input type="submit" class="btn btn-success" value="Guardar" name="add"/>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success" name="add"><i class="fa fa-check" aria-hidden="true"></i> Guardar usuario</button>
                 </div>
             </form>                
         </div>
@@ -179,35 +165,34 @@ $(document).ready(function(){
 
 <!-- MODAL EDITAR REGISTRO -->
 
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <form action="<?= BASE_URL ?>/usuarios.php" method="post" onsubmit="return validaCampos('2');">
                 
       <?= Auth::csrfField() ?>
       <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Actualizando Usuario</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <h5 class="modal-title" id="editUserModalTitle">Editar usuario y permisos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     
-                    <label>Id Usuario:</label>
                     <input type="hidden" name="idusuario" id="idusuario">
 
                     <div class="form-group">
-                        <label>Nombre de usuario:</label>
-                        <input type="text" name="usuarioAct" id="usuarioAct" class="form-control" required>
+                        <label for="usuarioAct">Nombre de usuario</label>
+                        <input type="text" name="usuarioAct" id="usuarioAct" class="form-control" autocomplete="username" required>
                     </div>
 
                     <div class="form-group">
-                        <label>Nueva contraseña: <small class="text-muted">(dejar en blanco para no cambiarla)</small></label>
+                        <label for="passAct">Nueva contraseña <small class="text-muted">(opcional)</small></label>
                         <input type="password" name="passAct" id="passAct" value="" class="form-control" autocomplete="new-password">
                     </div>
 
                     <div class="form-group">
-                        <label>Empleado:</label>
+                        <label for="empleadoAct">Empleado vinculado</label>
                         <select name="empleadoAct" id="empleadoAct" class="form-control" disabled>
                             <option value="0">-- Seleccione --</option>
                             <?php foreach ($empleados_todos as $emp): ?>
@@ -217,41 +202,24 @@ $(document).ready(function(){
                         <small class="text-muted">El empleado vinculado no puede cambiarse desde aquí.</small>
                     </div>
                     
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" name="maestrosAct" id="maestrosAct"/>
-                        <label class="custom-control-label" for="maestros">Datos Maestros</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" name="transaccionesAct" id="transaccionesAct"/>
-                        <label class="custom-control-label" for="transacciones">Transacciones</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" name="consultasAct" id="consultasAct"/>
-                        <label class="custom-control-label" for="consultas">Consultas</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" name="reportesAct" id="reportesAct"/>
-                        <label class="custom-control-label" for="reportes">Reportes</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" name="actasAct" id="actasAct"/>
-                        <label class="custom-control-label" for="actasAct">Actas firmadas</label>
-                    </div>
-
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" name="seguridadAct" id="seguridadAct"/>
-                        <label class="custom-control-label" for="seguridadAct">Seguridad</label>
-                    </div>
+                    <fieldset class="permission-fieldset">
+                        <legend>Permisos de acceso</legend>
+                        <p class="permission-help">Los cambios se aplicarán cuando el usuario vuelva a iniciar sesión.</p>
+                        <div class="permission-grid">
+                            <label class="permission-option" for="maestrosAct"><input type="checkbox" name="maestrosAct" id="maestrosAct"><span><strong>Datos maestros</strong><small>Inventario, personal y catálogos</small></span></label>
+                            <label class="permission-option" for="transaccionesAct"><input type="checkbox" name="transaccionesAct" id="transaccionesAct"><span><strong>Transacciones</strong><small>Asignar y devolver; incluye acceso a actas</small></span></label>
+                            <label class="permission-option" for="consultasAct"><input type="checkbox" name="consultasAct" id="consultasAct"><span><strong>Consultas</strong><small>Consultar información operativa</small></span></label>
+                            <label class="permission-option" for="reportesAct"><input type="checkbox" name="reportesAct" id="reportesAct"><span><strong>Reportes</strong><small>Visualizar y descargar reportes</small></span></label>
+                            <label class="permission-option" for="actasAct"><input type="checkbox" name="actasAct" id="actasAct"><span><strong>Actas firmadas</strong><small>Consultar documentos de entrega y devolución</small></span></label>
+                            <label class="permission-option" for="seguridadAct"><input type="checkbox" name="seguridadAct" id="seguridadAct"><span><strong>Seguridad</strong><small>Administrar usuarios y bitácora</small></span></label>
+                        </div>
+                    </fieldset>
 
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    <input type="submit" class="btn btn-primary" value="Actualizar" name="edit"/>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" name="edit"><i class="fa fa-check" aria-hidden="true"></i> Actualizar usuario</button>
                 </div>
 
             </form>                    
@@ -262,15 +230,15 @@ $(document).ready(function(){
 
 <!-- MODAL ELIMINAR REGISTRO -->
 
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="userStatusModalTitle" aria-hidden="true">
     <div class="modal-dialog" role="document">
             <div class="modal-content">
             <form action="<?= BASE_URL ?>/usuarios.php" method="post">
                 
       <?= Auth::csrfField() ?>
       <div class="modal-header">
-                    <h5 class="modal-title">Cambiar estado de Usuario</h5>
-                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h5 class="modal-title" id="userStatusModalTitle">Cambiar estado del usuario</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="idUsuarioDel" name="idUsuarioDel">
@@ -292,11 +260,12 @@ function modalEdit(evento) {
     var tr = $(evento.target).closest('tr');
     $("#idusuario").val(tr.find('td').eq(0).text());
     $("#usuarioAct").val(tr.find('td').eq(1).text());
+    $("#empleadoAct").val(String(tr.data('idempleado')));
     $("#passAct").val(''); // nunca pre-llenar la contraseña
     var perms = [4,5,6,7,8,9];
     var ids   = ['maestrosAct','transaccionesAct','consultasAct','reportesAct','actasAct','seguridadAct'];
     perms.forEach(function(col, i){
-        var val = parseInt(tr.find('td').eq(col).text());
+        var val = parseInt(tr.find('td').eq(col).attr('data-permission'), 10);
         $('#'+ids[i]).prop('checked', val === 1);
     });
 }

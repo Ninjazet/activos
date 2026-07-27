@@ -133,26 +133,37 @@ require BASE_PATH . '/app/views/layouts/encabezado.php';
 Auth::imprimirFlash();
 ?>
 
-<script src="<?= BASE_URL ?>/public/js/ajax-loader.js"></script>
-<script src="<?= BASE_URL ?>/public/js/catalogos-contextuales.js"></script>
+<script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
+<script src="<?= BASE_URL ?>/public/js/catalogos-contextuales.js?v=<?= @filemtime(BASE_PATH . '/public/js/catalogos-contextuales.js') ?: APP_VERSION ?>"></script>
 <script>
 $(document).ready(function () { ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/empleados.php'); });
-$(document).on('keyup', '#buscar', function () {
+$(document).on('input', '#buscar', function () {
     ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/maestros/empleados.php', $(this).val());
 });
 </script>
 
 <div class="wrapper">
     <div class="container-fluid">
-        <div class="page-header clearfix">
-            <h2 class="pull-left">Empleados</h2>
-            <a href="#" class="btn btn-primary pull-right"
-               data-toggle="modal" data-target="#newModal">+ Agregar</a>
+        <div class="page-header">
+            <div class="module-header-copy">
+                <h2>Empleados</h2>
+                <p>Administra los datos, el estado y la asignación del personal.</p>
+            </div>
+            <div class="page-header-actions">
+                <button type="button" class="btn btn-primary"
+                        data-toggle="modal" data-target="#newModal">
+                    <i class="fa fa-user-plus" aria-hidden="true"></i>
+                    <span>Agregar empleado</span>
+                </button>
+            </div>
         </div>
-        <div class="form-group">
-            <input type="text" id="buscar" class="form-control" placeholder="Buscar...">
-            <br><div id="datos"></div>
+        <div class="page-toolbar" role="search">
+            <label for="buscar" class="sr-only">Buscar empleados</label>
+            <input type="search" id="buscar" class="form-control"
+                   placeholder="Buscar por nombre, teléfono, correo o área"
+                   autocomplete="off" aria-controls="tablaEmp">
         </div>
+        <div id="datos" aria-live="polite"></div>
     </div>
 </div>
 

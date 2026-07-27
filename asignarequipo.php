@@ -188,7 +188,7 @@ const preseleccionAsignacion = {
 $(document).ready(function () {
     ajaxLoad(asignacionUrlAjax, '', preseleccionAsignacion);
 });
-$(document).on('keyup', '#buscar', function () {
+$(document).on('input', '#buscar', function () {
     ajaxLoadDebounced(asignacionUrlAjax, $(this).val());
 });
 </script>
@@ -197,12 +197,21 @@ $(document).on('keyup', '#buscar', function () {
         <div class="row">
             <div class="col-md-12">
                 <div class="page-header clearfix">
-                    <h2 class="pull-left">Asignación de Equipos</h2>
-                    <a href="#" class="btn btn-primary pull-right"
-                       data-toggle="modal" data-target="#newModal">+ Nueva Asignación</a>
+                    <h2 class="pull-left">Asignaciones activas</h2>
+                    <div class="page-header-actions">
+                        <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newModal">
+                            <i class="fa fa-laptop-file" aria-hidden="true"></i> Nueva asignación
+                        </a>
+                    </div>
                 </div>
+                <ol class="assignment-flow" aria-label="Flujo de una asignación">
+                    <li><span class="assignment-step">1</span><span><strong>Registrar entrega</strong><small>Empleado, equipo, condición y accesorios</small></span></li>
+                    <li><span class="assignment-step">2</span><span><strong>Firmar el acta</strong><small>La firma confirma la recepción del equipo</small></span></li>
+                    <li><span class="assignment-step">3</span><span><strong>Recibir devolución</strong><small>Condición final, accesorios y firma de IT</small></span></li>
+                </ol>
                 <div class="form-group">
-                    <input type="text" name="buscar" id="buscar" class="form-control" placeholder="Buscar..."><br>
+                    <label for="buscar" class="sr-only">Buscar por empleado, equipo, código o asignación</label>
+                    <input type="search" name="buscar" id="buscar" class="form-control" placeholder="Buscar empleado, equipo o código..." autocomplete="off"><br>
                     <div id="datos"></div>
                 </div>
             </div>

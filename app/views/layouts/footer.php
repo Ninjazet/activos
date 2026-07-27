@@ -3,5 +3,6 @@
 // GestActivos - Layout: cierre de body compartido
 // ============================================================
 ?>
+</main>
 </body>
 </html>

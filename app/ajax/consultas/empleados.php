@@ -41,7 +41,7 @@ $resultado = $db->consulta($sql, $params);
                 : BASE_URL . '/public/img/empleados/avatar1.png';
         ?>
         <tr class="<?= (int)$r['activo'] === 0 ? 'text-muted' : '' ?>">
-            <td><img src="<?= htmlspecialchars($imgUrl, ENT_QUOTES) ?>" style="width:36px;height:36px;border-radius:50%;object-fit:cover;"></td>
+                <td><img src="<?= htmlspecialchars($imgUrl, ENT_QUOTES) ?>" alt="Foto de <?= htmlspecialchars($r['nombre'] . ' ' . $r['apellidos'], ENT_QUOTES) ?>" style="width:36px;height:36px;border-radius:50%;object-fit:cover;"></td>
             <td><?= $r['idempleado'] ?></td>
             <td><?= htmlspecialchars($r['nombre']) ?></td>
             <td><?= htmlspecialchars($r['apellidos']) ?></td>

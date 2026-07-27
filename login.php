@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Iconos de Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <!-- Tu CSS personalizado con estilo Mazer -->
-    <link href="<?= BASE_URL ?>/public/css/login.css" rel="stylesheet">
+    <link href="<?= BASE_URL ?>/public/css/login.css?v=<?= urlencode((string)(@filemtime(BASE_PATH . '/public/css/login.css') ?: APP_VERSION)) ?>" rel="stylesheet">
     <!-- Toastr para notificaciones -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>

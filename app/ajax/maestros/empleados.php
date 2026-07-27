@@ -44,23 +44,31 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
 ?>
 <?php if ($rows): ?>
 
-<div class="clearfix" style="margin-bottom:8px;">
-    <small class="text-muted">
+<div class="table-context-bar">
+    <span>
         <?php if (!$verTodos): ?>
             Solo se muestran empleados activos.
-            <a href="#" onclick="ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/empleados.php', '', { ver_todos: 1 }); return false;">Mostrar todos</a>
         <?php else: ?>
             Mostrando todos (activos e inactivos).
         <?php endif; ?>
-    </small>
+    </span>
+    <?php if (!$verTodos): ?>
+        <a href="#" onclick="ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/empleados.php', '', { ver_todos: 1 }); return false;">
+            Mostrar todos
+        </a>
+    <?php endif; ?>
 </div>
 
-<table class="table table-bordered table-striped" id="tablaEmp">
+<p class="responsive-table-note">
+    <i class="fa fa-circle-info" aria-hidden="true"></i>
+    Pulsa el indicador de la primera celda para consultar las columnas ocultas en pantallas pequeñas.
+</p>
+<table class="table table-bordered table-striped nowrap" id="tablaEmp">
     <thead style="background-color:#D3E9F1">
         <tr>
-            <th>ID</th><th>Nombre</th><th>Apellidos</th><th>Edad</th>
-            <th>Teléfono</th><th>Correo</th><th>Área</th><th>Cargo</th><th>Estado</th>
-            <th>Acción</th>
+            <th data-priority="6">ID</th><th data-priority="1">Nombre</th><th data-priority="2">Apellidos</th><th data-priority="8">Edad</th>
+            <th data-priority="5">Teléfono</th><th data-priority="7">Correo</th><th data-priority="4">Área</th><th data-priority="5">Cargo</th><th data-priority="2">Estado</th>
+            <th data-priority="1">Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -74,7 +82,7 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
         ?>
         <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>"
             data-idarea="<?= (int)$r['idarea'] ?>" data-idcargo="<?= (int)$r['idcargo'] ?>" data-idsexo="<?= (int)$r['idsexo'] ?>"
-            data-direccion="<?= htmlspecialchars($r['direccion'] ?? '', ENT_QUOTES) ?>">
+            data-direccion="<?= htmlspecialchars($r['direccion'] ?? '', ENT_QUOTES) ?>" data-activo="<?= $activo ?>">
             <td><?= $r['idempleado'] ?></td>
             <td><?= htmlspecialchars($r['nombre']) ?></td>
             <td><?= htmlspecialchars($r['apellidos']) ?></td>
@@ -84,29 +92,29 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
             <td><?= htmlspecialchars($r['descripcionarea'] ?? '') ?></td>
             <td><?= htmlspecialchars($r['descripcioncargo'] ?? '') ?></td>
             <td><?= $activo === 1 ? '<span class="label label-success">Activo</span>' : '<span class="label label-default">Inactivo</span>' ?></td>
-            <td>
+            <td class="table-actions">
                 <a href="#" onclick="return modalImg('<?= htmlspecialchars($imgUrl, ENT_QUOTES) ?>')"
-                   data-toggle="modal" data-target="#imgModal">
-                    <i id="imgIcon" class="fa fa-image"></i>
+                   data-toggle="modal" data-target="#imgModal" title="Ver foto del empleado" aria-label="Ver foto del empleado">
+                    <i class="fa fa-image img-icon" aria-hidden="true"></i>
                 </a>
                 <?php if ($activo === 1 && (string)($_SESSION['transacciones'] ?? '0') === '1'): ?>
                 <a href="<?= BASE_URL ?>/asignarequipo.php?idempleado=<?= (int)$r['idempleado'] ?>"
-                   title="Asignar equipo a este empleado">
-                    <i class="fa fa-laptop-file"></i>
+                   title="Asignar equipo a este empleado" aria-label="Asignar equipo a este empleado">
+                    <i class="fa fa-laptop-file" aria-hidden="true"></i>
                 </a>
                 <?php endif; ?>
                 <?php if ($activo === 1): ?>
                 <a href="#" onclick="return editEmp(event)"
-                   data-toggle="modal" data-target="#editModal">
-                    <i class="fa fa-edit"></i>
+                   data-toggle="modal" data-target="#editModal" title="Editar empleado" aria-label="Editar empleado">
+                    <i class="fa fa-edit" aria-hidden="true"></i>
                 </a>
                 <?php endif; ?>
                 
-                <a href="#" onclick="return delEmp(event)"
+<a href="#" onclick="return delEmp(event)"
    title="<?= $activo === 1 ? 'Dar de baja' : 'Reactivar' ?>"
+   aria-label="<?= $activo === 1 ? 'Dar de baja al empleado' : 'Reactivar al empleado' ?>"
    data-toggle="modal" data-target="#delModal">
-    <i class="fa fa-<?= $activo === 1 ? 'trash' : 'undo' ?>"
-       style="color:<?= $activo === 1 ? '#e81414' : '#28a745' ?>"></i>
+    <i class="fa fa-<?= $activo === 1 ? 'trash' : 'undo' ?>" aria-hidden="true"></i>
 </a>
 
             </td>
@@ -117,7 +125,24 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
 
 <script>
 $(document).ready(function(){
-    $('#tablaEmp').DataTable({ dom: 'lrtip', order: [[0, 'desc']] });
+    $('#tablaEmp').DataTable({
+        dom: 'lrtip',
+        order: [[0, 'desc']],
+        autoWidth: false,
+        responsive: {
+            details: {
+                type: 'inline',
+                target: 'td:first-child'
+            }
+        },
+        columnDefs: [
+            { targets: 0, className: 'dtr-control', responsivePriority: 6 },
+            { targets: 1, responsivePriority: 1 },
+            { targets: 2, responsivePriority: 2 },
+            { targets: 8, responsivePriority: 2 },
+            { targets: 9, responsivePriority: 1, orderable: false }
+        ]
+    });
 });
 
 function modalImg(src) {
@@ -138,8 +163,17 @@ function editEmp(e) {
 }
 function delEmp(e) {
     var tr = $(e.target).closest('tr');
+    var activo = String(tr.attr('data-activo')) === '1';
     $('#idEmpDel').val(tr.find('td').eq(0).text());
     $('#lblEmpDel').text(tr.find('td').eq(1).text() + ' ' + tr.find('td').eq(2).text());
+    $('#tituloEstadoEmp').text(activo ? 'Dar de baja al empleado' : 'Reactivar empleado');
+    $('#textoEstadoEmp').text(activo
+        ? 'El empleado quedará inactivo. Esta acción no elimina su historial.'
+        : 'El empleado volverá a estar disponible para las operaciones permitidas.');
+    $('#btnEstadoEmp')
+        .toggleClass('btn-danger', activo)
+        .toggleClass('btn-success', !activo)
+        .text(activo ? 'Dar de baja' : 'Reactivar');
 }
 </script>
 
@@ -148,44 +182,66 @@ function delEmp(e) {
 <?php endif; ?>
 
 <!-- MODAL IMAGEN -->
-<div class="modal fade" id="imgModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="imgModal" tabindex="-1" role="dialog" aria-labelledby="tituloFotoEmp">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header">
-      <h5 class="modal-title">Foto del Empleado</h5>
-      <button class="close" data-dismiss="modal"><span>&times;</span></button>
+      <h5 class="modal-title" id="tituloFotoEmp">Foto del empleado</h5>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
     </div>
     <div class="modal-body text-center">
-      <img id="empFoto" src="" style="max-width:400px;border:3px solid #ddd;border-radius:4px;padding:5px;">
+      <img id="empFoto" class="app-image-view" src="" alt="Vista ampliada del empleado">
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+      <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
     </div>
   </div></div>
 </div>
 
 <!-- MODAL NUEVO -->
-<div class="modal fade" id="newModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog"><div class="modal-content">
+<div class="modal fade" id="newModal" tabindex="-1" role="dialog" aria-labelledby="tituloNuevoEmp">
+  <div class="modal-dialog modal-lg app-modal-wide"><div class="modal-content">
     <form action="<?= BASE_URL ?>/empleados.php" method="post" enctype="multipart/form-data">
       
       <?= Auth::csrfField() ?>
       <div class="modal-header">
-        <h5 class="modal-title">Nuevo Empleado</h5>
-        <button class="close" data-dismiss="modal"><span>&times;</span></button>
+        <h5 class="modal-title" id="tituloNuevoEmp">Nuevo empleado</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
-        <div class="form-group"><label>Nombre</label>
-          <input type="text" name="nombre" class="form-control" required></div>
-        <div class="form-group"><label>Apellidos</label>
-          <input type="text" name="apellidos" class="form-control" required></div>
-        <div class="form-group"><label>Edad</label>
-          <input type="number" name="edad" class="form-control" required></div>
-        <div class="form-group"><label>Teléfono</label>
-          <input type="text" name="telefono" class="form-control"></div>
-        <div class="form-group"><label>Correo</label>
-          <input type="email" name="correo" class="form-control" maxlength="150" placeholder="nombre@empresa.com"></div>
-        <div class="form-group"><label>Dirección</label>
-          <input type="text" name="direccion" class="form-control"></div>
+        <div class="app-form-sections">
+        <section class="form-section" aria-labelledby="nuevoEmpPersonal">
+          <div class="form-section-header">
+            <h6 class="form-section-title" id="nuevoEmpPersonal">Datos personales</h6>
+            <small class="form-section-help">Información básica para identificar al empleado.</small>
+          </div>
+          <div class="form-grid">
+        <div class="form-group"><label for="nombreNuevo">Nombre</label>
+          <input type="text" name="nombre" id="nombreNuevo" class="form-control" required></div>
+        <div class="form-group"><label for="apellidosNuevo">Apellidos</label>
+          <input type="text" name="apellidos" id="apellidosNuevo" class="form-control" required></div>
+        <div class="form-group"><label for="edadNuevo">Edad</label>
+          <input type="number" name="edad" id="edadNuevo" class="form-control" min="15" max="100" required></div>
+          </div>
+        </section>
+        <section class="form-section" aria-labelledby="nuevoEmpContacto">
+          <div class="form-section-header">
+            <h6 class="form-section-title" id="nuevoEmpContacto">Contacto</h6>
+          </div>
+          <div class="form-grid">
+        <div class="form-group"><label for="telefonoNuevo">Teléfono</label>
+          <input type="text" name="telefono" id="telefonoNuevo" class="form-control"></div>
+        <div class="form-group"><label for="correoNuevo">Correo</label>
+          <input type="email" name="correo" id="correoNuevo" class="form-control" maxlength="150" placeholder="nombre@empresa.com"></div>
+        <div class="form-group form-span-2"><label for="direccionNuevo">Dirección</label>
+          <input type="text" name="direccion" id="direccionNuevo" class="form-control"></div>
+          </div>
+        </section>
+        <section class="form-section" aria-labelledby="nuevoEmpLaboral">
+          <div class="form-section-header">
+            <h6 class="form-section-title" id="nuevoEmpLaboral">Datos laborales</h6>
+            <small class="form-section-help">Selecciona el área y cargo; puedes crear opciones sin salir del formulario.</small>
+          </div>
+          <div class="form-grid">
         <div class="form-group">
           <div class="catalogo-contextual-encabezado">
             <label for="nuevoEmpleadoArea">Área</label>
@@ -240,91 +296,138 @@ function delEmp(e) {
             <span class="catalogo-contextual-error" aria-live="polite"></span>
           </div>
         </div>
-        <div class="form-group"><label>Sexo</label>
-          <select name="idsexo" class="form-control">
+        <div class="form-group"><label for="sexoNuevo">Sexo</label>
+          <select name="idsexo" id="sexoNuevo" class="form-control">
             <option value="1">Masculino</option>
             <option value="2">Femenino</option>
           </select></div>
-        <div class="form-group"><label>Foto</label>
-          <input type="file" name="archivo" class="form-control" accept="image/*"></div>
+          </div>
+        </section>
+        <section class="form-section" aria-labelledby="nuevoEmpImagen">
+          <div class="form-section-header">
+            <h6 class="form-section-title" id="nuevoEmpImagen">Imagen</h6>
+            <small class="form-section-help">La carga conserva el comportamiento actual del sistema.</small>
+          </div>
+          <div class="form-grid">
+        <div class="form-group form-span-2"><label for="fotoNuevoEmp">Foto</label>
+          <input type="file" name="archivo" id="fotoNuevoEmp" class="form-control" accept="image/*"></div>
+          </div>
+        </section>
+        </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-        <input type="submit" class="btn btn-success" value="Guardar" name="add">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success" name="add" value="1">
+          <i class="fa fa-save" aria-hidden="true"></i> Guardar
+        </button>
       </div>
     </form>
   </div></div>
 </div>
 
 <!-- MODAL EDITAR -->
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog"><div class="modal-content">
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="tituloEditarEmp">
+  <div class="modal-dialog modal-lg app-modal-wide"><div class="modal-content">
     <form action="<?= BASE_URL ?>/empleados.php" method="post" enctype="multipart/form-data">
       <input type="hidden" name="idempleado" id="idempleado">
       
       <?= Auth::csrfField() ?>
       <div class="modal-header">
-        <h5 class="modal-title">Editar Empleado</h5>
-        <button class="close" data-dismiss="modal"><span>&times;</span></button>
+        <h5 class="modal-title" id="tituloEditarEmp">Editar empleado</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
-        <div class="form-group"><label>Nombre</label>
+        <div class="app-form-sections">
+        <section class="form-section" aria-labelledby="editarEmpPersonal">
+          <div class="form-section-header">
+            <h6 class="form-section-title" id="editarEmpPersonal">Datos personales</h6>
+          </div>
+          <div class="form-grid">
+        <div class="form-group"><label for="nombreAct">Nombre</label>
           <input type="text" name="nombreAct" id="nombreAct" class="form-control" required></div>
-        <div class="form-group"><label>Apellidos</label>
+        <div class="form-group"><label for="apellidosAct">Apellidos</label>
           <input type="text" name="apellidosAct" id="apellidosAct" class="form-control" required></div>
-        <div class="form-group"><label>Edad</label>
-          <input type="number" name="edadAct" id="edadAct" class="form-control" required></div>
-        <div class="form-group"><label>Teléfono</label>
+        <div class="form-group"><label for="edadAct">Edad</label>
+          <input type="number" name="edadAct" id="edadAct" class="form-control" min="15" max="100" required></div>
+          </div>
+        </section>
+        <section class="form-section" aria-labelledby="editarEmpContacto">
+          <div class="form-section-header">
+            <h6 class="form-section-title" id="editarEmpContacto">Contacto</h6>
+          </div>
+          <div class="form-grid">
+        <div class="form-group"><label for="telefonoAct">Teléfono</label>
           <input type="text" name="telefonoAct" id="telefonoAct" class="form-control"></div>
-        <div class="form-group"><label>Correo</label>
+        <div class="form-group"><label for="correoAct">Correo</label>
           <input type="email" name="correoAct" id="correoAct" class="form-control" maxlength="150" placeholder="nombre@empresa.com"></div>
-        <div class="form-group"><label>Dirección</label>
+        <div class="form-group form-span-2"><label for="direccionAct">Dirección</label>
           <input type="text" name="direccionAct" id="direccionAct" class="form-control"></div>
-        <div class="form-group"><label>Área</label>
+          </div>
+        </section>
+        <section class="form-section" aria-labelledby="editarEmpLaboral">
+          <div class="form-section-header">
+            <h6 class="form-section-title" id="editarEmpLaboral">Datos laborales</h6>
+          </div>
+          <div class="form-grid">
+        <div class="form-group"><label for="areaAct">Área</label>
           <select name="areaAct" id="areaAct" class="form-control" data-catalogo-select="area">
             <?php foreach ($areasTodas as $a): ?>
             <option value="<?= $a['idarea'] ?>"><?= htmlspecialchars($a['descripcionarea']) ?><?= (int)$a['activo'] === 0 ? ' (inactiva)' : '' ?></option>
             <?php endforeach; ?>
           </select></div>
-        <div class="form-group"><label>Cargo</label>
+        <div class="form-group"><label for="cargoAct">Cargo</label>
           <select name="cargoAct" id="cargoAct" class="form-control" data-catalogo-select="cargo">
             <?php foreach ($cargosTodos as $c): ?>
             <option value="<?= $c['idcargo'] ?>"><?= htmlspecialchars($c['descripcioncargo']) ?><?= (int)$c['activo'] === 0 ? ' (inactivo)' : '' ?></option>
             <?php endforeach; ?>
           </select></div>
-        <div class="form-group"><label>Sexo</label>
+        <div class="form-group"><label for="sexoAct">Sexo</label>
           <select name="sexoAct" id="sexoAct" class="form-control">
             <option value="1">Masculino</option>
             <option value="2">Femenino</option>
           </select></div>
-        <div class="form-group"><label>Nueva foto (opcional)</label>
-          <input type="file" name="archivoAct" class="form-control" accept="image/*"></div>
+          </div>
+        </section>
+        <section class="form-section" aria-labelledby="editarEmpImagen">
+          <div class="form-section-header">
+            <h6 class="form-section-title" id="editarEmpImagen">Imagen</h6>
+            <small class="form-section-help">Déjalo vacío para conservar la foto actual.</small>
+          </div>
+          <div class="form-grid">
+        <div class="form-group form-span-2"><label for="fotoActEmp">Nueva foto (opcional)</label>
+          <input type="file" name="archivoAct" id="fotoActEmp" class="form-control" accept="image/*"></div>
+          </div>
+        </section>
+        </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-        <input type="submit" class="btn btn-primary" value="Actualizar" name="edit">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary" name="edit" value="1">
+          <i class="fa fa-save" aria-hidden="true"></i> Actualizar
+        </button>
       </div>
     </form>
   </div></div>
 </div>
 
 <!-- MODAL ELIMINAR -->
-<div class="modal fade" id="delModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="delModal" tabindex="-1" role="dialog" aria-labelledby="tituloEstadoEmp">
   <div class="modal-dialog"><div class="modal-content">
     <form action="<?= BASE_URL ?>/empleados.php" method="post">
       <input type="hidden" name="idEmpleadoDel" id="idEmpDel">
       
       <?= Auth::csrfField() ?>
       <div class="modal-header">
-        <h5 class="modal-title">Eliminar Empleado</h5>
-        <button class="close" data-dismiss="modal"><span>&times;</span></button>
+        <h5 class="modal-title" id="tituloEstadoEmp">Cambiar estado del empleado</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
       </div>
       <div class="modal-body">
-        <p>¿Seguro que deseas eliminar a <strong><span id="lblEmpDel"></span></strong>?</p>
+        <p><strong><span id="lblEmpDel"></span></strong></p>
+        <p id="textoEstadoEmp">Confirma el cambio de estado del empleado.</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-        <input type="submit" class="btn btn-danger" value="Eliminar" name="del">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-danger" id="btnEstadoEmp" name="del" value="1">Confirmar</button>
       </div>
     </form>
   </div></div>

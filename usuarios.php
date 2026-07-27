@@ -135,7 +135,7 @@ Auth::imprimirFlash();
 <script src="<?= BASE_URL ?>/public/js/ajax-loader.js"></script>
 <script>
 $(document).ready(function () { ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/usuarios.php'); });
-$(document).on('keyup', '#buscar', function () {
+$(document).on('input', '#buscar', function () {
     ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/maestros/usuarios.php', $(this).val());
 });
 </script>
@@ -143,11 +143,16 @@ $(document).on('keyup', '#buscar', function () {
 <div class="wrapper">
     <div class="container-fluid">
         <div class="page-header clearfix">
-            <h2 class="pull-left">Administrar Usuarios</h2>
-            <a href="#" class="btn btn-primary pull-right" data-toggle="modal" data-target="#newModal">+ Agregar</a>
+            <h2 class="pull-left">Usuarios y permisos</h2>
+            <div class="page-header-actions">
+                <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#newModal">
+                    <i class="fa fa-user-plus" aria-hidden="true"></i> Crear usuario
+                </a>
+            </div>
         </div>
         <div class="form-group">
-            <input type="text" id="buscar" class="form-control" placeholder="Buscar...">
+            <label for="buscar" class="sr-only">Buscar por usuario, empleado o identificador</label>
+            <input type="search" id="buscar" class="form-control" placeholder="Buscar usuario o empleado..." autocomplete="off">
             <br><div id="datos"></div>
         </div>
     </div>

@@ -2,6 +2,8 @@
 // ============================================================
 // GestActivos - Layout: <head> compartido
 // ============================================================
+$menuCssVersion = @filemtime(BASE_PATH . '/public/css/menu.css') ?: APP_VERSION;
+$appCssVersion = @filemtime(BASE_PATH . '/public/css/app.css') ?: APP_VERSION;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -23,6 +25,7 @@
 
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.dataTables.min.css">
 
     <!-- Toastr -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
@@ -35,13 +38,14 @@
 
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
 
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <!-- Estilos del proyecto -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/menu.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/app.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/menu.css?v=<?= urlencode((string)$menuCssVersion) ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/app.css?v=<?= urlencode((string)$appCssVersion) ?>">
 
     <script>
         // Configuración global de toastr (un solo lugar para todo el proyecto)
@@ -54,3 +58,4 @@
     </script>
 </head>
 <body>
+<a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
