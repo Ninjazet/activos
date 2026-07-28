@@ -7,8 +7,6 @@
 require_once BASE_PATH . '/bootstrap.php';
 Auth::requerir();
 
-$db = Database::getInstance();
-
 require BASE_PATH . '/app/views/layouts/head.php';
 require BASE_PATH . '/app/views/layouts/sidebar.php';
 

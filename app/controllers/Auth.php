@@ -52,7 +52,7 @@ class Auth {
     }
 
     // Guarda la página actual en sesión (para redirecciones)
-    public static function guardarPagina(string $archivo): void {
+    public static function guardarPagina(): void {
         $_SESSION['pagina'] = $_SERVER['REQUEST_URI'] ?? (BASE_URL . '/index.php');
     }
 

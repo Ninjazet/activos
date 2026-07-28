@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 Auth::requerirPermiso('maestros');
-Auth::guardarPagina(__FILE__);
+Auth::guardarPagina();
 
 $db = Database::getInstance();
 
@@ -22,6 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (($numeroSerie !== null && strlen($numeroSerie) > 100) || strlen($tipoEquipo) > 50) {
             Auth::flash('error', 'El número de serie o el tipo de equipo exceden el tamaño permitido.');
+            header('Location: ' . BASE_URL . '/equipos.php');
+            exit;
+        }
+        if ($numeroSerie !== null && $db->fila('SELECT idequipo FROM equipo WHERE numero_serie=?', [$numeroSerie])) {
+            Auth::flash('error', 'Ya existe un equipo registrado con ese número de serie.');
             header('Location: ' . BASE_URL . '/equipos.php');
             exit;
         }
@@ -62,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (\RuntimeException $e) {
             Auth::flash('error', $e->getMessage());
         } catch (PDOException $e) {
-            Auth::flash('error', 'No se pudo crear: verifica la marca y el modelo seleccionados.');
+            Auth::flash('error', 'No se pudo crear: verifica la marca, el modelo y que el número de serie no esté repetido.');
         }
     }
 
@@ -81,6 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (($numeroSerie !== null && strlen($numeroSerie) > 100) || strlen($tipoEquipo) > 50) {
             Auth::flash('error', 'El número de serie o el tipo de equipo exceden el tamaño permitido.');
+            header('Location: ' . BASE_URL . '/equipos.php');
+            exit;
+        }
+        if ($numeroSerie !== null && $db->fila('SELECT idequipo FROM equipo WHERE numero_serie=? AND idequipo<>?', [$numeroSerie, $id])) {
+            Auth::flash('error', 'Ya existe otro equipo registrado con ese número de serie.');
             header('Location: ' . BASE_URL . '/equipos.php');
             exit;
         }
@@ -122,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (\RuntimeException $e) {
             Auth::flash('error', $e->getMessage());
         } catch (PDOException $e) {
-            Auth::flash('error', 'No se pudo actualizar: verifica la marca y el modelo seleccionados.');
+            Auth::flash('error', 'No se pudo actualizar: verifica la marca, el modelo y que el número de serie no esté repetido.');
         }
     }
 

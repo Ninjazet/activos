@@ -797,13 +797,6 @@ a.attention-item:hover {
     font-weight: 600;
 }
 
-.page-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 18px;
-}
-
 /* ----- Filtros reutilizables de tablas ----- */
 .app-filter-panel {
     margin-bottom: var(--space-4);
@@ -1150,33 +1143,6 @@ a.attention-item:hover {
     font-size: 13px;
 }
 
-.page-toolbar {
-    padding: var(--space-3);
-    border: 1px solid #ececf3;
-    border-radius: var(--radius-lg);
-    background: #fff;
-    box-shadow: var(--shadow-sm);
-}
-
-.table-context-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    margin-bottom: var(--space-3);
-    padding: 9px var(--space-3);
-    border: 1px solid #ececf3;
-    border-radius: var(--radius-md);
-    color: var(--color-muted);
-    background: #fafafd;
-    font-size: 12px;
-}
-
-.table-context-bar a {
-    color: var(--color-primary-hover);
-    font-weight: 700;
-}
-
 /* Formularios largos reutilizables sobre Bootstrap 5. */
 .app-modal-wide {
     width: min(920px, calc(100% - 30px));
@@ -1270,7 +1236,6 @@ a.attention-item:hover {
     .page-header-actions,
     .page-header-actions .btn { width: 100%; }
 
-    .page-toolbar,
     #buscar { width: 100%; }
 
     .table > thead > tr > th,
@@ -1302,7 +1267,6 @@ a.attention-item:hover {
     .form-grid { grid-template-columns: 1fr; }
     .form-span-2 { grid-column: auto; }
     .form-section { padding: var(--space-3); }
-    .table-context-bar { align-items: flex-start; flex-direction: column; }
 }
 
 @media (max-width: 420px) {

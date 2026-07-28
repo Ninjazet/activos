@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 Auth::requerirPermiso('seguridad');
-Auth::guardarPagina(__FILE__);
+Auth::guardarPagina();
 $db = Database::getInstance();
 $filtroAcciones = array_column(
     $db->consulta("SELECT DISTINCT accion AS valor, accion AS etiqueta FROM bitacora WHERE accion IS NOT NULL AND accion<>'' ORDER BY accion"),

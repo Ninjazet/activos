@@ -7,7 +7,6 @@ Auth::requerirPermiso('maestros');
 
 $db = Database::getInstance();
 $q = TableFilter::text('query');
-$verTodos = ($_POST['ver_todos'] ?? '0') === '1';
 $estadoEmpleadoFiltro = TableFilter::enum('estado_empleado', ['0', '1']);
 $areaFiltro = TableFilter::positiveInt('idarea');
 $cargoFiltro = TableFilter::positiveInt('idcargo');
@@ -26,7 +25,7 @@ $params     = [];
 if ($estadoEmpleadoFiltro !== '') {
     $conditions[] = 'em.activo = ?';
     $params[] = (int)$estadoEmpleadoFiltro;
-} elseif (!$verTodos && !array_key_exists('estado_empleado', $_POST)) {
+} elseif (!array_key_exists('estado_empleado', $_POST)) {
     $conditions[] = "em.activo = 1";
 }
 if ($q !== '') {

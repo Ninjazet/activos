@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
 Auth::requerirPermiso('reportes');
-Auth::guardarPagina(__FILE__);
+Auth::guardarPagina();
 $db = Database::getInstance();
 $filtroAreas = array_column($db->consulta("SELECT idarea AS valor, descripcionarea AS etiqueta FROM areas ORDER BY descripcionarea"), 'etiqueta', 'valor');
 $filtroCargos = array_column($db->consulta("SELECT idcargo AS valor, descripcioncargo AS etiqueta FROM cargos ORDER BY descripcioncargo"), 'etiqueta', 'valor');

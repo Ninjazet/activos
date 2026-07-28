@@ -118,7 +118,12 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
             <td><?= htmlspecialchars($r['factura'] ?: '—') ?></td>
             <td><?= $r['vencimiento_garantia'] ? date('d/m/Y', strtotime($r['vencimiento_garantia'])) : '—' ?></td>
             <td class="table-actions">
-                <?php $img = $r['imagen'] ? (BASE_URL . '/' . $r['imagen']) : (BASE_URL . '/public/icons/equipo.png'); ?>
+                <?php
+                    $archivoImagen = basename($r['imagen'] ?? '');
+                    $img = ($archivoImagen && file_exists(IMG_EQUIPOS . $archivoImagen))
+                        ? BASE_URL . '/public/img/equipos/' . $archivoImagen
+                        : BASE_URL . '/public/icons/equipo.png';
+                ?>
                 <a href="#" onclick="return modalImg('<?= htmlspecialchars($img, ENT_QUOTES) ?>')"
                    data-bs-toggle="modal" data-bs-target="#imgModal" title="Ver imagen del equipo" aria-label="Ver imagen del equipo">
                     <i class="fa fa-image img-icon" aria-hidden="true"></i>

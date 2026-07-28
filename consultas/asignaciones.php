@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
 Auth::requerirPermiso('consultas');
-Auth::guardarPagina(__FILE__);
+Auth::guardarPagina();
 $pageTitle = 'Consulta Asignaciones';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 require_once BASE_PATH . '/app/views/layouts/table_filters.php';

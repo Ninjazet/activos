@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 Auth::requerirPermiso('transacciones');
-Auth::guardarPagina(__FILE__);
+Auth::guardarPagina();
 
 $db = Database::getInstance();
 

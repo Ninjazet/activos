@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
 Auth::requerirPermiso('consultas');
-Auth::guardarPagina(__FILE__);
+Auth::guardarPagina();
 $db = Database::getInstance();
 $filtroMarcas = array_column($db->consulta("SELECT idmarca AS valor, nombreMarca AS etiqueta FROM marca ORDER BY nombreMarca"), 'etiqueta', 'valor');
 $filtroModelos = array_column($db->consulta("SELECT idmodelo AS valor, nombreModelo AS etiqueta FROM modelo ORDER BY nombreModelo"), 'etiqueta', 'valor');

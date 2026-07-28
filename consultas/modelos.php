@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../bootstrap.php';
 Auth::requerirPermiso('consultas');
-Auth::guardarPagina(__FILE__);
+Auth::guardarPagina();
 $pageTitle = 'Consulta Modelos';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 ?>

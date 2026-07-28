@@ -4175,6 +4175,9 @@ class TCPDF {
 	 * @since 5.9.000 (2010-09-28)
 	 */
 	public function getRawCharWidth($char) {
+		// PHP 8.1+ depreca la conversion implicita de indices float a int.
+		// TCPDF 6.3.5 ya trataba esos valores como enteros; se hace explicito.
+		$char = (int) $char;
 		if ($char == 173) {
 			// SHY character will not be printed
 			return (0);

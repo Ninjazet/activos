@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 Auth::requerir();
-Auth::guardarPagina(__FILE__);
+Auth::guardarPagina();
 $db = Database::getInstance();
 
 $resumen = $db->fila(
