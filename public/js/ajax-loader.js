@@ -2,16 +2,22 @@
 // GestActivos - Helper AJAX reutilizable
 // ============================================================
 
+var _ajaxLoadRequest = null;
+
 // Carga el contenido de una URL AJAX dentro del div #datos
 function ajaxLoad(url, query, extraData) {
     var data = $.extend({ query: query || '' }, extraData || {});
     var $contenedor = $('#datos');
 
+    if (_ajaxLoadRequest && _ajaxLoadRequest.readyState !== 4) {
+        _ajaxLoadRequest.abort();
+    }
+
     $contenedor
         .attr('aria-busy', 'true')
         .html('<div class="ajax-loading" role="status"><span class="fa fa-circle-notch fa-spin" aria-hidden="true"></span><span>Cargando información...</span></div>');
 
-    $.ajax({
+    var request = $.ajax({
         url:      url,
         type:     'POST',
         dataType: 'html',
@@ -21,12 +27,17 @@ function ajaxLoad(url, query, extraData) {
         $contenedor.html(resp);
         prepararContenidoAjax($contenedor);
     })
-    .fail(function () {
+    .fail(function (xhr, status) {
+        if (status === 'abort') { return; }
         $contenedor.html('<div class="app-empty-state app-empty-state-error" role="alert"><span class="fa fa-triangle-exclamation" aria-hidden="true"></span><strong>No se pudieron cargar los datos</strong><span>Actualiza la página o inténtalo nuevamente.</span></div>');
     })
     .always(function () {
-        $contenedor.attr('aria-busy', 'false');
+        if (_ajaxLoadRequest === request) {
+            _ajaxLoadRequest = null;
+            $contenedor.attr('aria-busy', 'false');
+        }
     });
+    _ajaxLoadRequest = request;
 }
 
 // Aplica mejoras progresivas sin cambiar el HTML ni la lógica de cada módulo.
@@ -112,9 +123,86 @@ $(function () {
 // Usar siempre en eventos "keyup" para no enviar una petición
 // por cada tecla pulsada (evita sobrecarga innecesaria del servidor).
 var _debounceTimer = null;
-function ajaxLoadDebounced(url, query) {
+function ajaxLoadDebounced(url, query, extraData) {
     clearTimeout(_debounceTimer);
     _debounceTimer = setTimeout(function () {
-        ajaxLoad(url, query);
+        ajaxLoad(url, query, extraData);
     }, 300);
+}
+
+// Lee los filtros visibles sin acoplar el helper a un módulo específico.
+function obtenerFiltrosTabla() {
+    var data = {};
+    $('[data-table-filters]').first().find('[data-table-filter]').each(function () {
+        var name = this.name;
+        if (name) {
+            data[name] = $(this).val() || '';
+        }
+    });
+    return data;
+}
+
+function obtenerBusquedaTabla() {
+    return $.trim($('[data-table-filters]').first().find('[data-table-search]').val() || '');
+}
+
+function resolverDatosExtra(extraData) {
+    var resolved = typeof extraData === 'function' ? extraData() : extraData;
+    return $.extend({}, resolved || {}, obtenerFiltrosTabla());
+}
+
+function actualizarEstadoFiltros() {
+    var $panel = $('[data-table-filters]').first();
+    if (!$panel.length) { return; }
+
+    var active = obtenerBusquedaTabla() !== '' ? 1 : 0;
+    $panel.find('[data-table-filter]').each(function () {
+        if (String($(this).val() || '') !== '') { active++; }
+    });
+
+    var label = active === 0 ? 'Sin filtros activos'
+        : active === 1 ? '1 filtro activo'
+        : active + ' filtros activos';
+    $panel.find('[data-filter-active-count]').text(label);
+    $panel.find('.js-clear-table-filters').prop('disabled', active === 0);
+}
+
+// Inicializa carga, búsqueda, cambios y limpieza para una tabla AJAX.
+function initAjaxTableFilters(url, extraData) {
+    $(function () {
+        var $panel = $('[data-table-filters]').first();
+        if (!$panel.length) {
+            ajaxLoad(url, '', typeof extraData === 'function' ? extraData() : extraData);
+            return;
+        }
+
+        function loadNow() {
+            clearTimeout(_debounceTimer);
+            actualizarEstadoFiltros();
+            ajaxLoad(url, obtenerBusquedaTabla(), resolverDatosExtra(extraData));
+        }
+
+        $panel.off('.appTableFilters');
+        $panel.on('input.appTableFilters', '[data-table-search]', function () {
+            actualizarEstadoFiltros();
+            ajaxLoadDebounced(url, obtenerBusquedaTabla(), resolverDatosExtra(extraData));
+        });
+        $panel.on('change.appTableFilters', '[data-table-filter]', loadNow);
+        $panel.on('click.appTableFilters', '.js-clear-table-filters', function () {
+            $panel.find('[data-table-search], [data-table-filter]').val('');
+            loadNow();
+            $panel.find('[data-table-search]').trigger('focus');
+        });
+
+        loadNow();
+    });
+}
+
+// Construye la misma consulta para descargas y vistas previas de reportes.
+function tableFilterQueryString(extraData) {
+    return $.param($.extend(
+        { buscar: obtenerBusquedaTabla() },
+        obtenerFiltrosTabla(),
+        extraData || {}
+    ));
 }

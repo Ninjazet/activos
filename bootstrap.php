@@ -10,3 +10,4 @@ require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/controllers/Database.php';
 require_once BASE_PATH . '/app/controllers/Auth.php';
 require_once BASE_PATH . '/app/controllers/Upload.php';
+require_once BASE_PATH . '/app/controllers/TableFilter.php';

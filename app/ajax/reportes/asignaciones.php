@@ -5,7 +5,11 @@ Auth::requerirPermiso('reportes');
 
 $db = Database::getInstance();
 $puedeVerActas = (string)Auth::get('actas') === '1' || (string)Auth::get('transacciones') === '1';
-$filtro = is_string($_POST['query'] ?? null) ? trim($_POST['query']) : '';
+$filtro = TableFilter::text('query');
+$estadoAsignacionFiltro = TableFilter::enum('estado_asignacion', ['activa', 'cerrada']);
+$resultadoEquipoFiltro = TableFilter::enum('resultado_equipo', ['1', '3', '4', '5']);
+$fechaDesdeFiltro = TableFilter::date('fecha_desde');
+$fechaHastaFiltro = TableFilter::date('fecha_hasta');
 
 $sql = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion, asg.fecha_devolucion,
                asg.condicion_entrega, asg.condicion_devolucion,
@@ -18,14 +22,20 @@ $sql = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion, asg.fecha_dev
         INNER JOIN marca ma ON eq.idmarca_equipo=ma.idmarca
         INNER JOIN modelo mo ON eq.idmodelo_equipo=mo.idmodelo
         LEFT JOIN areas ar ON em.idarea=ar.idarea";
+$conditions = [];
 $params = [];
 if ($filtro !== '') {
-    $sql .= " WHERE CONCAT(em.nombre,' ',em.apellidos) LIKE ?
+    $conditions[] = "(CONCAT(em.nombre,' ',em.apellidos) LIKE ?
               OR CONCAT(ma.nombreMarca,' ',mo.nombreModelo) LIKE ?
-              OR eq.codigo_activo LIKE ? OR ar.descripcionarea LIKE ?";
+              OR eq.codigo_activo LIKE ? OR ar.descripcionarea LIKE ?)";
     $like = "%$filtro%";
     $params = [$like, $like, $like, $like];
 }
+if ($estadoAsignacionFiltro !== '') { $conditions[] = 'asg.activa = ?'; $params[] = $estadoAsignacionFiltro === 'activa' ? 1 : 0; }
+if ($resultadoEquipoFiltro !== '') { $conditions[] = 'asg.estado_equipo_devolucion = ?'; $params[] = (int)$resultadoEquipoFiltro; }
+if ($fechaDesdeFiltro !== '') { $conditions[] = 'DATE(asg.fecha_asignacion) >= ?'; $params[] = $fechaDesdeFiltro; }
+if ($fechaHastaFiltro !== '') { $conditions[] = 'DATE(asg.fecha_asignacion) <= ?'; $params[] = $fechaHastaFiltro; }
+if ($conditions) { $sql .= ' WHERE ' . implode(' AND ', $conditions); }
 $sql .= ' ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC';
 $resultado = $db->consulta($sql, $params);
 $estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja'];

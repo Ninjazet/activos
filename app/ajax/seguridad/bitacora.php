@@ -7,16 +7,40 @@ require_once __DIR__ . '/../../../bootstrap.php';
 Auth::requerirPermiso('seguridad');
 
 $db = Database::getInstance();
-$q  = trim($_POST['query'] ?? '');
+$q = TableFilter::text('query');
+$accionFiltro = TableFilter::text('accion', 60);
+$moduloFiltro = TableFilter::text('modulo', 80);
+$fechaDesdeFiltro = TableFilter::date('fecha_desde');
+$fechaHastaFiltro = TableFilter::date('fecha_hasta');
 
 $sql = "SELECT idbitacora, idusuario, usuario_texto, accion,
                modulo, detalle, ip, fecha
         FROM bitacora";
+$conditions = [];
 $params = [];
 if ($q !== '') {
-    $sql   .= " WHERE usuario_texto LIKE ? OR accion LIKE ? OR modulo LIKE ? OR detalle LIKE ?";
+    $conditions[] = '(usuario_texto LIKE ? OR accion LIKE ? OR modulo LIKE ? OR detalle LIKE ? OR ip LIKE ?)';
     $like   = "%$q%";
-    $params = [$like, $like, $like, $like];
+    $params = [$like, $like, $like, $like, $like];
+}
+if ($accionFiltro !== '') {
+    $conditions[] = 'accion = ?';
+    $params[] = $accionFiltro;
+}
+if ($moduloFiltro !== '') {
+    $conditions[] = 'modulo = ?';
+    $params[] = $moduloFiltro;
+}
+if ($fechaDesdeFiltro !== '') {
+    $conditions[] = 'DATE(fecha) >= ?';
+    $params[] = $fechaDesdeFiltro;
+}
+if ($fechaHastaFiltro !== '') {
+    $conditions[] = 'DATE(fecha) <= ?';
+    $params[] = $fechaHastaFiltro;
+}
+if ($conditions) {
+    $sql .= ' WHERE ' . implode(' AND ', $conditions);
 }
 $sql .= " ORDER BY fecha DESC LIMIT 500";
 
@@ -35,7 +59,7 @@ $colores = [
 ?>
 <?php if (count($resultado) > 0): ?>
 <p class="text-muted" style="font-size:12px; margin-bottom:6px;">
-    Mostrando los últimos <?= count($resultado) ?> registros. Usa el buscador para filtrar.
+    Mostrando <?= count($resultado) ?> registro(s) según la búsqueda y los filtros aplicados.
 </p>
 <table class="table table-bordered table-striped table-sm" id="tablaBitacora">
     <thead style="background-color:#D3E9F1">

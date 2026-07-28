@@ -8,20 +8,36 @@ if (ob_get_level()) {
     ob_end_clean();
 }
 
-$filtro = trim($_REQUEST['buscar'] ?? '');
+$filtro = TableFilter::text('buscar', 150, $_GET);
+$estadoEquipoFiltro = TableFilter::enum('estado_equipo', ['1', '2', '3', '4', '5'], $_GET);
+$tipoEquipoFiltro = TableFilter::text('tipo_equipo', 50, $_GET);
+$marcaFiltro = TableFilter::positiveInt('idmarca', $_GET);
+$modeloFiltro = TableFilter::positiveInt('idmodelo', $_GET);
+$activoFiltro = TableFilter::enum('activo', ['0', '1'], $_GET);
+$garantiaFiltro = TableFilter::enum('garantia', ['vigente', 'vence_30', 'vencida', 'sin_fecha'], $_GET);
 $sql = "SELECT eq.idequipo, eq.activo, eq.codigo_activo, eq.tipo_equipo, eq.numero_serie,
                eq.estado_equipo, eq.fecha_compra, eq.vencimiento_garantia,
                ma.nombreMarca, mo.nombreModelo
         FROM equipo eq
         INNER JOIN marca ma ON eq.idmarca_equipo=ma.idmarca
         INNER JOIN modelo mo ON eq.idmodelo_equipo=mo.idmodelo";
+$conditions = [];
 $params = [];
 if ($filtro !== '') {
-    $sql .= " WHERE ma.nombreMarca LIKE ? OR mo.nombreModelo LIKE ? OR eq.codigo_activo LIKE ?
-              OR eq.numero_serie LIKE ? OR eq.tipo_equipo LIKE ?";
+    $conditions[] = '(ma.nombreMarca LIKE ? OR mo.nombreModelo LIKE ? OR eq.codigo_activo LIKE ? OR eq.numero_serie LIKE ? OR eq.tipo_equipo LIKE ?)';
     $like = "%$filtro%";
     $params = [$like, $like, $like, $like, $like];
 }
+if ($estadoEquipoFiltro !== '') { $conditions[] = 'eq.estado_equipo = ?'; $params[] = (int)$estadoEquipoFiltro; }
+if ($tipoEquipoFiltro !== '') { $conditions[] = 'eq.tipo_equipo = ?'; $params[] = $tipoEquipoFiltro; }
+if ($marcaFiltro > 0) { $conditions[] = 'eq.idmarca_equipo = ?'; $params[] = $marcaFiltro; }
+if ($modeloFiltro > 0) { $conditions[] = 'eq.idmodelo_equipo = ?'; $params[] = $modeloFiltro; }
+if ($activoFiltro !== '') { $conditions[] = 'eq.activo = ?'; $params[] = (int)$activoFiltro; }
+if ($garantiaFiltro === 'vigente') { $conditions[] = 'eq.vencimiento_garantia >= CURDATE()'; }
+elseif ($garantiaFiltro === 'vence_30') { $conditions[] = 'eq.vencimiento_garantia BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)'; }
+elseif ($garantiaFiltro === 'vencida') { $conditions[] = 'eq.vencimiento_garantia < CURDATE()'; }
+elseif ($garantiaFiltro === 'sin_fecha') { $conditions[] = 'eq.vencimiento_garantia IS NULL'; }
+if ($conditions) { $sql .= ' WHERE ' . implode(' AND ', $conditions); }
 $sql .= " ORDER BY eq.idequipo DESC";
 $rows = $db->consulta($sql, $params);
 

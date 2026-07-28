@@ -10,12 +10,25 @@ $sql = "SELECT us.idusuario, us.idempleado, username, us.estado,
         FROM usuarios us
         INNER JOIN empleados em ON us.idempleado = em.idempleado
         INNER JOIN permisos  pe ON us.idusuario  = pe.idusuario";
+$conditions = [];
 $params = [];
 
-$q = trim($_POST['query'] ?? '');
+$q = TableFilter::text('query');
+$estadoUsuarioFiltro = TableFilter::enum('estado_usuario', ['0', '1']);
+$permisoFiltro = TableFilter::enum('permiso', ['datosmaestros', 'transacciones', 'consultas', 'reportes', 'actas', 'seguridad']);
 if ($q !== '') {
-    $sql   .= " WHERE username LIKE ? OR CONCAT(nombre, ' ', apellidos) LIKE ? OR us.idusuario LIKE ?";
+    $conditions[] = "(username LIKE ? OR CONCAT(nombre, ' ', apellidos) LIKE ? OR us.idusuario LIKE ?)";
     $params = ["%$q%", "%$q%", "%$q%"];
+}
+if ($estadoUsuarioFiltro !== '') {
+    $conditions[] = 'us.estado = ?';
+    $params[] = (int)$estadoUsuarioFiltro;
+}
+if ($permisoFiltro !== '') {
+    $conditions[] = "pe.$permisoFiltro = 1";
+}
+if ($conditions) {
+    $sql .= ' WHERE ' . implode(' AND ', $conditions);
 }
 
 $sql .= " ORDER BY us.idusuario DESC";

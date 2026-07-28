@@ -129,15 +129,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = 'Usuarios';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
+require_once BASE_PATH . '/app/views/layouts/table_filters.php';
 Auth::imprimirFlash();
 ?>
 
 <script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
 <script>
-$(document).ready(function () { ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/usuarios.php'); });
-$(document).on('input', '#buscar', function () {
-    ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/maestros/usuarios.php', $(this).val());
-});
+initAjaxTableFilters('<?= BASE_URL ?>/app/ajax/maestros/usuarios.php');
 </script>
 
 <div class="wrapper">
@@ -150,11 +148,20 @@ $(document).on('input', '#buscar', function () {
                 </a>
             </div>
         </div>
-        <div class="form-group">
-            <label for="buscar" class="visually-hidden">Buscar por usuario, empleado o identificador</label>
-            <input type="search" id="buscar" class="form-control" placeholder="Buscar usuario o empleado..." autocomplete="off">
-            <br><div id="datos"></div>
-        </div>
+        <?php renderTableFilters([
+            'search_label' => 'Buscar usuarios',
+            'search_placeholder' => 'Usuario, empleado o identificador',
+            'table_id' => 'datosE',
+            'filters' => [
+                ['name' => 'estado_usuario', 'label' => 'Estado', 'options' => [1 => 'Activo', 0 => 'Inactivo']],
+                ['name' => 'permiso', 'label' => 'Con permiso de', 'options' => [
+                    'datosmaestros' => 'Maestros', 'transacciones' => 'Transacciones',
+                    'consultas' => 'Consultas', 'reportes' => 'Reportes',
+                    'actas' => 'Actas', 'seguridad' => 'Seguridad',
+                ]],
+            ],
+        ]); ?>
+        <div id="datos" aria-live="polite"></div>
     </div>
 </div>
 

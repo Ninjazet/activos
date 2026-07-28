@@ -4,14 +4,13 @@ Auth::requerirPermiso('reportes');
 Auth::guardarPagina(__FILE__);
 $pageTitle = 'Reporte de Asignaciones';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
+require_once BASE_PATH . '/app/views/layouts/table_filters.php';
 ?>
 <script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
 <script>
-$(document).ready(function(){ ajaxLoad('<?= BASE_URL ?>/app/ajax/reportes/asignaciones.php'); });
-$(document).on('keyup','#buscar',function(){ ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/reportes/asignaciones.php',$(this).val()); });
+initAjaxTableFilters('<?= BASE_URL ?>/app/ajax/reportes/asignaciones.php');
 function descargarPDF() {
-    var q = encodeURIComponent($('#buscar').val() || '');
-    window.open('<?= BASE_URL ?>/reportes/descargar_asignaciones.php?buscar=' + q, '_blank');
+    window.open('<?= BASE_URL ?>/reportes/descargar_asignaciones.php?' + tableFilterQueryString(), '_blank');
 }
 </script>
 <div class="wrapper">
@@ -22,10 +21,16 @@ function descargarPDF() {
         <i class="fa fa-file-pdf"></i> Descargar PDF
       </button>
     </div>
-    <div class="form-group">
-      <input type="text" id="buscar" class="form-control" placeholder="Buscar...">
-      <br><div id="datos"></div>
-    </div>
+    <?php renderTableFilters([
+      'search_label' => 'Buscar asignaciones', 'search_placeholder' => 'Empleado, equipo, código o área', 'table_id' => 'tablaAsgRep',
+      'filters' => [
+        ['name' => 'estado_asignacion', 'label' => 'Estado', 'options' => ['activa' => 'Activa', 'cerrada' => 'Devuelta']],
+        ['name' => 'resultado_equipo', 'label' => 'Resultado del equipo', 'options' => [1 => 'Disponible', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja']],
+        ['name' => 'fecha_desde', 'label' => 'Asignada desde', 'type' => 'date'],
+        ['name' => 'fecha_hasta', 'label' => 'Asignada hasta', 'type' => 'date'],
+      ],
+    ]); ?>
+    <div id="datos" aria-live="polite"></div>
   </div>
 </div>
 <?php require BASE_PATH . '/app/views/layouts/footer.php'; ?>

@@ -8,19 +8,26 @@ if (ob_get_level()) {
     ob_end_clean();
 }
 
-$filtro = trim($_REQUEST['buscar'] ?? '');
+$filtro = TableFilter::text('buscar', 150, $_GET);
+$estadoEmpleadoFiltro = TableFilter::enum('estado_empleado', ['0', '1'], $_GET);
+$areaFiltro = TableFilter::positiveInt('idarea', $_GET);
+$cargoFiltro = TableFilter::positiveInt('idcargo', $_GET);
 $sql = "SELECT em.idempleado, em.nombre, em.apellidos, em.telefono, em.correo, em.activo,
                ar.descripcionarea AS area, ca.descripcioncargo AS cargo
         FROM empleados em
         LEFT JOIN areas ar ON em.idarea=ar.idarea
         LEFT JOIN cargos ca ON em.idcargo=ca.idcargo";
+$conditions = [];
 $params = [];
 if ($filtro !== '') {
-    $sql .= " WHERE em.nombre LIKE ? OR em.apellidos LIKE ? OR em.idempleado LIKE ?
-              OR em.telefono LIKE ? OR em.correo LIKE ?";
+    $conditions[] = '(em.nombre LIKE ? OR em.apellidos LIKE ? OR em.idempleado LIKE ? OR em.telefono LIKE ? OR em.correo LIKE ? OR ar.descripcionarea LIKE ? OR ca.descripcioncargo LIKE ?)';
     $like = "%$filtro%";
-    $params = [$like, $like, $like, $like, $like];
+    $params = [$like, $like, $like, $like, $like, $like, $like];
 }
+if ($estadoEmpleadoFiltro !== '') { $conditions[] = 'em.activo = ?'; $params[] = (int)$estadoEmpleadoFiltro; }
+if ($areaFiltro > 0) { $conditions[] = 'em.idarea = ?'; $params[] = $areaFiltro; }
+if ($cargoFiltro > 0) { $conditions[] = 'em.idcargo = ?'; $params[] = $cargoFiltro; }
+if ($conditions) { $sql .= ' WHERE ' . implode(' AND ', $conditions); }
 $sql .= " ORDER BY em.idempleado DESC";
 $rows = $db->consulta($sql, $params);
 

@@ -8,7 +8,11 @@ if (ob_get_level()) {
     ob_end_clean();
 }
 
-$filtro = trim($_REQUEST['buscar'] ?? '');
+$filtro = TableFilter::text('buscar', 150, $_GET);
+$estadoAsignacionFiltro = TableFilter::enum('estado_asignacion', ['activa', 'cerrada'], $_GET);
+$resultadoEquipoFiltro = TableFilter::enum('resultado_equipo', ['1', '3', '4', '5'], $_GET);
+$fechaDesdeFiltro = TableFilter::date('fecha_desde', $_GET);
+$fechaHastaFiltro = TableFilter::date('fecha_hasta', $_GET);
 $sql = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion, asg.fecha_devolucion,
                asg.condicion_entrega, asg.condicion_devolucion, asg.estado_equipo_devolucion,
                CONCAT(em.nombre,' ',em.apellidos) AS empleado,
@@ -21,14 +25,20 @@ $sql = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion, asg.fecha_dev
         INNER JOIN modelo mo ON eq.idmodelo_equipo=mo.idmodelo
         LEFT JOIN areas ar ON em.idarea=ar.idarea
         LEFT JOIN cargos ca ON em.idcargo=ca.idcargo";
+$conditions = [];
 $params = [];
 if ($filtro !== '') {
-    $sql .= " WHERE CONCAT(em.nombre,' ',em.apellidos) LIKE ?
+    $conditions[] = "(CONCAT(em.nombre,' ',em.apellidos) LIKE ?
               OR CONCAT(ma.nombreMarca,' ',mo.nombreModelo) LIKE ?
-              OR eq.codigo_activo LIKE ? OR ar.descripcionarea LIKE ?";
+              OR eq.codigo_activo LIKE ? OR ar.descripcionarea LIKE ?)";
     $like = "%$filtro%";
     $params = [$like, $like, $like, $like];
 }
+if ($estadoAsignacionFiltro !== '') { $conditions[] = 'asg.activa = ?'; $params[] = $estadoAsignacionFiltro === 'activa' ? 1 : 0; }
+if ($resultadoEquipoFiltro !== '') { $conditions[] = 'asg.estado_equipo_devolucion = ?'; $params[] = (int)$resultadoEquipoFiltro; }
+if ($fechaDesdeFiltro !== '') { $conditions[] = 'DATE(asg.fecha_asignacion) >= ?'; $params[] = $fechaDesdeFiltro; }
+if ($fechaHastaFiltro !== '') { $conditions[] = 'DATE(asg.fecha_asignacion) <= ?'; $params[] = $fechaHastaFiltro; }
+if ($conditions) { $sql .= ' WHERE ' . implode(' AND ', $conditions); }
 $sql .= " ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC";
 $rows = $db->consulta($sql, $params);
 

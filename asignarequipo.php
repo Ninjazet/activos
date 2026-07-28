@@ -175,6 +175,7 @@ $preseleccionarEquipo = max(0, (int)($_GET['idequipo'] ?? 0));
 
 $pageTitle = 'Asignar Equipos';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
+require_once BASE_PATH . '/app/views/layouts/table_filters.php';
 Auth::imprimirFlash();
 ?>
 <script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
@@ -185,11 +186,13 @@ const preseleccionAsignacion = {
     preseleccionar_equipo: <?= json_encode($preseleccionarEquipo) ?>
 };
 
-$(document).ready(function () {
-    ajaxLoad(asignacionUrlAjax, '', preseleccionAsignacion);
-});
-$(document).on('input', '#buscar', function () {
-    ajaxLoadDebounced(asignacionUrlAjax, $(this).val());
+let aplicarPreseleccionAsignacion = true;
+initAjaxTableFilters(asignacionUrlAjax, function () {
+    if (!aplicarPreseleccionAsignacion) {
+        return {};
+    }
+    aplicarPreseleccionAsignacion = false;
+    return preseleccionAsignacion;
 });
 </script>
 <div class="wrapper">
@@ -209,11 +212,18 @@ $(document).on('input', '#buscar', function () {
                     <li><span class="assignment-step">2</span><span><strong>Firmar el acta</strong><small>La firma confirma la recepción del equipo</small></span></li>
                     <li><span class="assignment-step">3</span><span><strong>Recibir devolución</strong><small>Condición final, accesorios y firma de IT</small></span></li>
                 </ol>
-                <div class="form-group">
-                    <label for="buscar" class="visually-hidden">Buscar por empleado, equipo, código o asignación</label>
-                    <input type="search" name="buscar" id="buscar" class="form-control" placeholder="Buscar empleado, equipo o código..." autocomplete="off"><br>
-                    <div id="datos"></div>
-                </div>
+                <?php renderTableFilters([
+                    'search_label' => 'Buscar asignaciones',
+                    'search_placeholder' => 'Empleado, equipo, código o asignación',
+                    'table_id' => 'datosE',
+                    'filters' => [
+                        ['name' => 'condicion_entrega', 'label' => 'Condición de entrega', 'options' => ['Nuevo' => 'Nuevo', 'Excelente' => 'Excelente', 'Bueno' => 'Bueno', 'Regular' => 'Regular']],
+                        ['name' => 'firma_entrega', 'label' => 'Firma de entrega', 'options' => ['firmada' => 'Firmada', 'pendiente' => 'Pendiente', 'no_requerida' => 'No requerida']],
+                        ['name' => 'fecha_desde', 'label' => 'Asignada desde', 'type' => 'date'],
+                        ['name' => 'fecha_hasta', 'label' => 'Asignada hasta', 'type' => 'date'],
+                    ],
+                ]); ?>
+                <div id="datos" aria-live="polite"></div>
             </div>
         </div>
     </div>

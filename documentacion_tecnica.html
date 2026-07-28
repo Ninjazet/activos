@@ -553,7 +553,9 @@ Auth::verificarCsrf();
             <tbody>
               <tr><td><span class="file">public/css/app.css</span></td><td>Estilos generales, navegación, panel, tarjetas, tablas, formularios y adaptación responsive.</td></tr>
               <tr><td><span class="file">public/css/login.css</span></td><td>Pantalla de autenticación.</td></tr>
-              <tr><td><span class="file">public/js/ajax-loader.js</span></td><td>Envía búsquedas POST, espera 300 ms al escribir y coloca la respuesta HTML en <code>#datos</code>.</td></tr>
+              <tr><td><span class="file">public/js/ajax-loader.js</span></td><td>Envía búsquedas y filtros por POST, espera 300 ms al escribir, cancela solicitudes reemplazadas y coloca la respuesta HTML en <code>#datos</code>.</td></tr>
+              <tr><td><span class="file">app/controllers/TableFilter.php</span></td><td>Normaliza textos, enumeraciones, identificadores y fechas recibidas por los filtros antes de construir las consultas.</td></tr>
+              <tr><td><span class="file">app/views/layouts/table_filters.php</span></td><td>Renderiza la barra responsive reutilizable de búsqueda, filtros activos y limpieza.</td></tr>
               <tr><td><span class="file">public/js/catalogos-contextuales.js</span></td><td>Crea o reactiva catálogos desde un modal y actualiza el <code>&lt;select&gt;</code> correspondiente.</td></tr>
             </tbody>
           </table>

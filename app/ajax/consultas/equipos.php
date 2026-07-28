@@ -6,18 +6,30 @@ require_once __DIR__ . "/../../../bootstrap.php";
 Auth::requerirPermiso('consultas');
 
 $db = Database::getInstance();
-$q  = trim($_POST['query'] ?? '');
+$q = TableFilter::text('query');
+$estadoEquipoFiltro = TableFilter::enum('estado_equipo', ['1', '2', '3', '4', '5']);
+$tipoEquipoFiltro = TableFilter::text('tipo_equipo', 50);
+$marcaFiltro = TableFilter::positiveInt('idmarca');
+$modeloFiltro = TableFilter::positiveInt('idmodelo');
+$activoFiltro = TableFilter::enum('activo', ['0', '1']);
 
 $sql = "SELECT eq.idequipo, eq.imagen, eq.activo, eq.codigo_activo, eq.numero_serie, eq.tipo_equipo, eq.estado_equipo, ma.nombreMarca, mo.nombreModelo
         FROM equipo eq
         INNER JOIN marca  ma ON eq.idmarca_equipo  = ma.idmarca
         INNER JOIN modelo mo ON eq.idmodelo_equipo = mo.idmodelo";
+$conditions = [];
 $params = [];
 if ($q !== '') {
-    $sql   .= " WHERE ma.nombreMarca LIKE ? OR mo.nombreModelo LIKE ? OR eq.idequipo LIKE ? OR eq.codigo_activo LIKE ? OR eq.numero_serie LIKE ? OR eq.tipo_equipo LIKE ?";
+    $conditions[] = '(ma.nombreMarca LIKE ? OR mo.nombreModelo LIKE ? OR eq.idequipo LIKE ? OR eq.codigo_activo LIKE ? OR eq.numero_serie LIKE ? OR eq.tipo_equipo LIKE ?)';
     $like   = "%$q%";
     $params = [$like, $like, $like, $like, $like, $like];
 }
+if ($estadoEquipoFiltro !== '') { $conditions[] = 'eq.estado_equipo = ?'; $params[] = (int)$estadoEquipoFiltro; }
+if ($tipoEquipoFiltro !== '') { $conditions[] = 'eq.tipo_equipo = ?'; $params[] = $tipoEquipoFiltro; }
+if ($marcaFiltro > 0) { $conditions[] = 'eq.idmarca_equipo = ?'; $params[] = $marcaFiltro; }
+if ($modeloFiltro > 0) { $conditions[] = 'eq.idmodelo_equipo = ?'; $params[] = $modeloFiltro; }
+if ($activoFiltro !== '') { $conditions[] = 'eq.activo = ?'; $params[] = (int)$activoFiltro; }
+if ($conditions) { $sql .= ' WHERE ' . implode(' AND ', $conditions); }
 $sql .= " ORDER BY eq.idequipo DESC";
 
 $resultado = $db->consulta($sql, $params);

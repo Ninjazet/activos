@@ -6,9 +6,13 @@ require_once __DIR__ . '/../../../bootstrap.php';
 Auth::requerirPermiso('transacciones');
 
 $db = Database::getInstance();
-$q = is_string($_POST['query'] ?? null) ? trim($_POST['query']) : '';
+$q = TableFilter::text('query');
 $preseleccionarEmpleado = max(0, (int)($_POST['preseleccionar_empleado'] ?? 0));
 $preseleccionarEquipo = max(0, (int)($_POST['preseleccionar_equipo'] ?? 0));
+$condicionEntregaFiltro = TableFilter::enum('condicion_entrega', ['Nuevo', 'Excelente', 'Bueno', 'Regular']);
+$firmaEntregaFiltro = TableFilter::enum('firma_entrega', ['firmada', 'pendiente', 'no_requerida']);
+$fechaDesdeFiltro = TableFilter::date('fecha_desde');
+$fechaHastaFiltro = TableFilter::date('fecha_hasta');
 
 $sql = "SELECT asg.idasignacion, asg.idempleado, asg.idequipo, asg.fecha_asignacion,
                asg.condicion_entrega, asg.entrega_cargador, asg.entrega_maletin,
@@ -28,6 +32,25 @@ if ($q !== '') {
               OR eq.codigo_activo LIKE ? OR asg.idasignacion LIKE ?)";
     $like = "%$q%";
     $params = [$like, $like, $like, $like];
+}
+if ($condicionEntregaFiltro !== '') {
+    $sql .= ' AND asg.condicion_entrega = ?';
+    $params[] = $condicionEntregaFiltro;
+}
+if ($firmaEntregaFiltro === 'firmada') {
+    $sql .= " AND asg.firma IS NOT NULL AND asg.firma <> ''";
+} elseif ($firmaEntregaFiltro === 'pendiente') {
+    $sql .= " AND asg.requiere_firma_entrega = 1 AND (asg.firma IS NULL OR asg.firma = '')";
+} elseif ($firmaEntregaFiltro === 'no_requerida') {
+    $sql .= ' AND asg.requiere_firma_entrega = 0';
+}
+if ($fechaDesdeFiltro !== '') {
+    $sql .= ' AND DATE(asg.fecha_asignacion) >= ?';
+    $params[] = $fechaDesdeFiltro;
+}
+if ($fechaHastaFiltro !== '') {
+    $sql .= ' AND DATE(asg.fecha_asignacion) <= ?';
+    $params[] = $fechaHastaFiltro;
 }
 $sql .= " ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC";
 $resultado = $db->consulta($sql, $params);

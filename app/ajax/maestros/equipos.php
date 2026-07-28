@@ -6,7 +6,13 @@ require_once __DIR__ . '/../../../bootstrap.php';
 Auth::requerirPermiso('maestros');
 
 $db  = Database::getInstance();
-$q   = trim($_POST['query'] ?? '');
+$q = TableFilter::text('query');
+$estadoEquipoFiltro = TableFilter::enum('estado_equipo', ['1', '2', '3', '4', '5']);
+$tipoEquipoFiltro = TableFilter::text('tipo_equipo', 50);
+$marcaFiltro = TableFilter::positiveInt('idmarca');
+$modeloFiltro = TableFilter::positiveInt('idmodelo');
+$activoFiltro = TableFilter::enum('activo', ['0', '1']);
+$garantiaFiltro = TableFilter::enum('garantia', ['vigente', 'vence_30', 'vencida', 'sin_fecha']);
 
 $sql = "SELECT eq.idequipo, eq.imagen, eq.idmarca_equipo, eq.idmodelo_equipo,
                eq.activo, eq.fecha_compra, eq.costo, eq.factura, eq.vencimiento_garantia,
@@ -21,6 +27,35 @@ if ($q !== '') {
     $conditions[] = "(ma.nombreMarca LIKE ? OR mo.nombreModelo LIKE ? OR eq.idequipo LIKE ? OR eq.codigo_activo LIKE ? OR eq.numero_serie LIKE ? OR eq.tipo_equipo LIKE ?)";
     $like   = "%$q%";
     $params = [$like, $like, $like, $like, $like, $like];
+}
+if ($estadoEquipoFiltro !== '') {
+    $conditions[] = 'eq.estado_equipo = ?';
+    $params[] = (int)$estadoEquipoFiltro;
+}
+if ($tipoEquipoFiltro !== '') {
+    $conditions[] = 'eq.tipo_equipo = ?';
+    $params[] = $tipoEquipoFiltro;
+}
+if ($marcaFiltro > 0) {
+    $conditions[] = 'eq.idmarca_equipo = ?';
+    $params[] = $marcaFiltro;
+}
+if ($modeloFiltro > 0) {
+    $conditions[] = 'eq.idmodelo_equipo = ?';
+    $params[] = $modeloFiltro;
+}
+if ($activoFiltro !== '') {
+    $conditions[] = 'eq.activo = ?';
+    $params[] = (int)$activoFiltro;
+}
+if ($garantiaFiltro === 'vigente') {
+    $conditions[] = 'eq.vencimiento_garantia >= CURDATE()';
+} elseif ($garantiaFiltro === 'vence_30') {
+    $conditions[] = 'eq.vencimiento_garantia BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)';
+} elseif ($garantiaFiltro === 'vencida') {
+    $conditions[] = 'eq.vencimiento_garantia < CURDATE()';
+} elseif ($garantiaFiltro === 'sin_fecha') {
+    $conditions[] = 'eq.vencimiento_garantia IS NULL';
 }
 if ($conditions) {
     $sql .= " WHERE " . implode(" AND ", $conditions);

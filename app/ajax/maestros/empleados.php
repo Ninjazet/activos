@@ -6,8 +6,11 @@ require_once __DIR__ . '/../../../bootstrap.php';
 Auth::requerirPermiso('maestros');
 
 $db = Database::getInstance();
-$q      = trim($_POST['query'] ?? '');
+$q = TableFilter::text('query');
 $verTodos = ($_POST['ver_todos'] ?? '0') === '1';
+$estadoEmpleadoFiltro = TableFilter::enum('estado_empleado', ['0', '1']);
+$areaFiltro = TableFilter::positiveInt('idarea');
+$cargoFiltro = TableFilter::positiveInt('idcargo');
 
 $sql = "SELECT em.idempleado, em.nombre, em.apellidos, em.edad,
                em.telefono, em.correo, em.direccion, em.imagen, em.activo,
@@ -20,13 +23,24 @@ $sql = "SELECT em.idempleado, em.nombre, em.apellidos, em.edad,
 $conditions = [];
 $params     = [];
 
-if (!$verTodos) {
+if ($estadoEmpleadoFiltro !== '') {
+    $conditions[] = 'em.activo = ?';
+    $params[] = (int)$estadoEmpleadoFiltro;
+} elseif (!$verTodos && !array_key_exists('estado_empleado', $_POST)) {
     $conditions[] = "em.activo = 1";
 }
 if ($q !== '') {
-    $conditions[] = "(em.nombre LIKE ? OR em.apellidos LIKE ? OR em.telefono LIKE ? OR em.correo LIKE ? OR ar.descripcionarea LIKE ?)";
+    $conditions[] = "(em.nombre LIKE ? OR em.apellidos LIKE ? OR em.telefono LIKE ? OR em.correo LIKE ? OR ar.descripcionarea LIKE ? OR ca.descripcioncargo LIKE ?)";
     $like   = "%$q%";
-    $params = array_merge($params, [$like, $like, $like, $like, $like]);
+    $params = array_merge($params, [$like, $like, $like, $like, $like, $like]);
+}
+if ($areaFiltro > 0) {
+    $conditions[] = 'em.idarea = ?';
+    $params[] = $areaFiltro;
+}
+if ($cargoFiltro > 0) {
+    $conditions[] = 'em.idcargo = ?';
+    $params[] = $cargoFiltro;
 }
 if ($conditions) {
     $sql .= " WHERE " . implode(" AND ", $conditions);
@@ -43,21 +57,6 @@ $areasTodas  = $db->consulta("SELECT * FROM areas  ORDER BY activo DESC, descrip
 $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descripcioncargo");
 ?>
 <?php if ($rows): ?>
-
-<div class="table-context-bar">
-    <span>
-        <?php if (!$verTodos): ?>
-            Solo se muestran empleados activos.
-        <?php else: ?>
-            Mostrando todos (activos e inactivos).
-        <?php endif; ?>
-    </span>
-    <?php if (!$verTodos): ?>
-        <a href="#" onclick="ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/empleados.php', '', { ver_todos: 1 }); return false;">
-            Mostrar todos
-        </a>
-    <?php endif; ?>
-</div>
 
 <p class="responsive-table-note">
     <i class="fa fa-circle-info" aria-hidden="true"></i>

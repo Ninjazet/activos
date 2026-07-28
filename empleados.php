@@ -128,18 +128,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
+$filtroAreas = array_column(
+    $db->consulta("SELECT idarea AS valor, descripcionarea AS etiqueta FROM areas ORDER BY descripcionarea"),
+    'etiqueta',
+    'valor'
+);
+$filtroCargos = array_column(
+    $db->consulta("SELECT idcargo AS valor, descripcioncargo AS etiqueta FROM cargos ORDER BY descripcioncargo"),
+    'etiqueta',
+    'valor'
+);
+
 $pageTitle = 'Empleados';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
+require_once BASE_PATH . '/app/views/layouts/table_filters.php';
 Auth::imprimirFlash();
 ?>
 
 <script src="<?= BASE_URL ?>/public/js/ajax-loader.js?v=<?= @filemtime(BASE_PATH . '/public/js/ajax-loader.js') ?: APP_VERSION ?>"></script>
 <script src="<?= BASE_URL ?>/public/js/catalogos-contextuales.js?v=<?= @filemtime(BASE_PATH . '/public/js/catalogos-contextuales.js') ?: APP_VERSION ?>"></script>
 <script>
-$(document).ready(function () { ajaxLoad('<?= BASE_URL ?>/app/ajax/maestros/empleados.php'); });
-$(document).on('input', '#buscar', function () {
-    ajaxLoadDebounced('<?= BASE_URL ?>/app/ajax/maestros/empleados.php', $(this).val());
-});
+initAjaxTableFilters('<?= BASE_URL ?>/app/ajax/maestros/empleados.php');
 </script>
 
 <div class="wrapper">
@@ -157,12 +166,16 @@ $(document).on('input', '#buscar', function () {
                 </button>
             </div>
         </div>
-        <div class="page-toolbar" role="search">
-            <label for="buscar" class="visually-hidden">Buscar empleados</label>
-            <input type="search" id="buscar" class="form-control"
-                   placeholder="Buscar por nombre, teléfono, correo o área"
-                   autocomplete="off" aria-controls="tablaEmp">
-        </div>
+        <?php renderTableFilters([
+            'search_label' => 'Buscar empleados',
+            'search_placeholder' => 'Nombre, teléfono, correo, área o cargo',
+            'table_id' => 'tablaEmp',
+            'filters' => [
+                ['name' => 'estado_empleado', 'label' => 'Estado', 'value' => '1', 'options' => [1 => 'Activo', 0 => 'Inactivo']],
+                ['name' => 'idarea', 'label' => 'Área', 'options' => $filtroAreas],
+                ['name' => 'idcargo', 'label' => 'Cargo', 'options' => $filtroCargos],
+            ],
+        ]); ?>
         <div id="datos" aria-live="polite"></div>
     </div>
 </div>

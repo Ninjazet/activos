@@ -1,0 +1,6 @@
+1. **Gestión de Proveedores**:
+   - Crear tabla `proveedores` y asociarla a la compra de los equipos en el Inventario.
+2. **Módulo de Mantenimientos**:
+   - Crear una tabla `mantenimientos` (`idequipo`, `fecha`, `descripcion`, `costo`, `tipo: Preventivo/Correctivo`).
+   - Botón en el Inventario para enviar un equipo a "Soporte" (cambia su estado y abre una bitácora de reparación).
+agregar licencias

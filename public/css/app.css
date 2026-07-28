@@ -804,6 +804,88 @@ a.attention-item:hover {
     margin-bottom: 18px;
 }
 
+/* ----- Filtros reutilizables de tablas ----- */
+.app-filter-panel {
+    margin-bottom: var(--space-4);
+    padding: var(--space-4);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.app-filter-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.app-filter-heading > div {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.app-filter-heading strong {
+    color: var(--text-strong);
+    font-size: 14px;
+}
+
+.app-filter-heading strong i {
+    margin-right: 5px;
+    color: var(--primary-color);
+}
+
+.app-filter-count {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.app-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    gap: var(--space-3);
+    align-items: end;
+}
+
+.app-filter-field {
+    min-width: 0;
+}
+
+.app-filter-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+.app-filter-search {
+    grid-column: span 2;
+}
+
+.app-filter-field .input-group-text {
+    border-color: var(--border-color);
+    background: #fff;
+    color: var(--text-muted);
+}
+
+@media (max-width: 991px) {
+    .app-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 575px) {
+    .app-filter-panel { padding: 14px; }
+    .app-filter-heading { align-items: flex-start; }
+    .app-filter-grid { grid-template-columns: 1fr; }
+    .app-filter-search { grid-column: auto; }
+    .app-filter-heading .btn { min-height: 34px; }
+}
+
 #buscar {
     width: min(100%, 390px);
     height: var(--control-height);
