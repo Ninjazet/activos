@@ -40,7 +40,6 @@ if ($fechaHastaFiltro !== '') { $conditions[] = 'DATE(asg.fecha_asignacion) <= ?
 if ($conditions) { $sql .= ' WHERE ' . implode(' AND ', $conditions); }
 $sql .= ' ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC';
 $resultado = $db->consulta($sql, $params);
-$estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja'];
 ?>
 
 <?php if ($resultado): ?>
@@ -56,7 +55,7 @@ $estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4
     </thead>
     <tbody>
         <?php foreach ($resultado as $r): ?>
-        <?php $resultadoEquipo = $estadosEquipo[(int)$r['estado_equipo_devolucion']] ?? '—'; ?>
+        <?php $resultadoEquipo = EquipoEstado::nombre((int)$r['estado_equipo_devolucion'], '—'); ?>
         <tr class="<?= (int)$r['activa'] === 0 ? 'text-muted' : '' ?>">
             <td><?= (int)$r['idasignacion'] ?></td>
             <td><?= htmlspecialchars($r['empleado']) ?></td>

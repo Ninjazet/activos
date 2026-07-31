@@ -7,7 +7,7 @@ Auth::requerirPermiso('maestros');
 
 $db  = Database::getInstance();
 $q = TableFilter::text('query');
-$estadoEquipoFiltro = TableFilter::enum('estado_equipo', ['1', '2', '3', '4', '5']);
+$estadoEquipoFiltro = TableFilter::enum('estado_equipo', EquipoEstado::idsComoTexto());
 $tipoEquipoFiltro = TableFilter::text('tipo_equipo', 50);
 $marcaFiltro = TableFilter::positiveInt('idmarca');
 $modeloFiltro = TableFilter::positiveInt('idmodelo');
@@ -92,9 +92,8 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
     <?php foreach ($rows as $r): ?>
         <?php
         $activo = (int)$r['activo'];
-        $estados = [1 => ['Disponible', 'success'], 2 => ['Asignado', 'primary'], 3 => ['En mantenimiento', 'warning'], 4 => ['Perdido o robado', 'danger'], 5 => ['Dado de baja', 'muted']];
         $estadoEquipo = (int)$r['estado_equipo'];
-        $estadoInfo = $estados[$estadoEquipo] ?? ['Sin definir', 'muted'];
+        $estadoInfo = [EquipoEstado::nombre($estadoEquipo), EquipoEstado::badge($estadoEquipo)];
         ?>
         <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>"
             data-idmarca="<?= (int)$r['idmarca_equipo'] ?>" data-idmodelo="<?= (int)$r['idmodelo_equipo'] ?>"
@@ -119,10 +118,7 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
             <td><?= $r['vencimiento_garantia'] ? date('d/m/Y', strtotime($r['vencimiento_garantia'])) : '—' ?></td>
             <td class="table-actions">
                 <?php
-                    $archivoImagen = basename($r['imagen'] ?? '');
-                    $img = ($archivoImagen && file_exists(IMG_EQUIPOS . $archivoImagen))
-                        ? BASE_URL . '/public/img/equipos/' . $archivoImagen
-                        : BASE_URL . '/public/icons/equipo.png';
+                    $img = Imagen::equipo($r['imagen'] ?? null);
                 ?>
                 <a href="#" onclick="return modalImg('<?= htmlspecialchars($img, ENT_QUOTES) ?>')"
                    data-bs-toggle="modal" data-bs-target="#imgModal" title="Ver imagen del equipo" aria-label="Ver imagen del equipo">
@@ -319,7 +315,7 @@ function delEquipo(e) {
             <h6 class="form-section-title" id="nuevoEquipoEstado">Estado operativo</h6>
           </div>
           <div class="form-grid">
-        <div class="form-group form-span-2"><label for="estadoNuevoEquipo">Estado inicial</label><input type="text" id="estadoNuevoEquipo" class="form-control" value="Disponible" disabled><small class="text-muted">Todo equipo nuevo inicia automáticamente como disponible.</small></div>
+        <div class="form-group form-span-2"><label for="estadoNuevoEquipo">Estado inicial</label><input type="text" id="estadoNuevoEquipo" class="form-control" value="<?= EquipoEstado::nombre(EquipoEstado::DISPONIBLE) ?>" disabled><small class="text-muted">Todo equipo nuevo inicia automáticamente como disponible.</small></div>
           </div>
         </section>
         <section class="form-section" aria-labelledby="nuevoEquipoImagen">
@@ -398,7 +394,10 @@ function delEquipo(e) {
           </div>
           <div class="form-grid">
         <div class="form-group form-span-2"><label for="estado_equipoAct">Estado del equipo</label><select name="estado_equipoAct" id="estado_equipoAct" class="form-select" required>
-          <option value="1">Disponible</option><option value="2" disabled>Asignado (automático)</option><option value="3">En mantenimiento</option><option value="4">Perdido o robado</option><option value="5">Dado de baja</option></select></div>
+          <?php foreach (EquipoEstado::opciones() as $estadoId => $estadoNombre): ?>
+            <option value="<?= $estadoId ?>" <?= $estadoId === EquipoEstado::ASIGNADO ? 'disabled' : '' ?>><?= htmlspecialchars($estadoNombre) ?><?= $estadoId === EquipoEstado::ASIGNADO ? ' (automático)' : '' ?></option>
+          <?php endforeach; ?>
+        </select></div>
           </div>
         </section>
         <section class="form-section" aria-labelledby="editarEquipoImagen">

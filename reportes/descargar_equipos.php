@@ -9,7 +9,7 @@ if (ob_get_level()) {
 }
 
 $filtro = TableFilter::text('buscar', 150, $_GET);
-$estadoEquipoFiltro = TableFilter::enum('estado_equipo', ['1', '2', '3', '4', '5'], $_GET);
+$estadoEquipoFiltro = TableFilter::enum('estado_equipo', EquipoEstado::idsComoTexto(), $_GET);
 $tipoEquipoFiltro = TableFilter::text('tipo_equipo', 50, $_GET);
 $marcaFiltro = TableFilter::positiveInt('idmarca', $_GET);
 $modeloFiltro = TableFilter::positiveInt('idmodelo', $_GET);
@@ -67,9 +67,8 @@ $pdf->SetSubject('Inventario de equipos');
 $pdf->setCellPaddings(1.2, 0.8, 1.2, 0.8);
 $pdf->AddPage();
 
-$estados = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja'];
 foreach ($rows as $index => $row) {
-    $estado = $estados[(int)$row['estado_equipo']] ?? 'Sin definir';
+    $estado = EquipoEstado::nombre((int)$row['estado_equipo']);
     if ((int)$row['activo'] === 0 && (int)$row['estado_equipo'] !== 5) {
         $estado .= ' / Inactivo';
     }

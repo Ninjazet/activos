@@ -55,7 +55,7 @@ if ($esPost) {
         die('No se pudo identificar al usuario que recibe el equipo.');
     }
 
-    $estadoEquipo = $condicion === 'Bueno' ? 1 : 3;
+    $estadoEquipo = EquipoEstado::desdeCondicionDevolucion($condicion);
     try {
         $firmaGuardada = guardarFirmaDigital($firmaData, 'firma_devolucion_' . $idasignacion);
         $db->transaccion(function (Database $db) use (
@@ -155,8 +155,7 @@ if (!is_file($rutaFirma)) {
     die('No se encontró el archivo de la firma de devolución.');
 }
 
-$estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja'];
-$estadoResultante = $estadosEquipo[(int)$row['estado_equipo_devolucion']] ?? 'Sin definir';
+$estadoResultante = EquipoEstado::nombre((int)$row['estado_equipo_devolucion']);
 $accesoriosEntrega = textoAccesoriosActa($row['entrega_cargador'], $row['entrega_maletin'], $row['entrega_otros']);
 $accesoriosDevolucion = textoAccesoriosActa($row['devolucion_cargador'], $row['devolucion_maletin'], $row['devolucion_otros']);
 $fechaAsignacion = $row['fecha_asignacion'] ? date('d/m/Y h:i A', strtotime($row['fecha_asignacion'])) : '-';

@@ -69,7 +69,6 @@ $pdf->SetSubject('Historial de asignaciones');
 $pdf->setCellPaddings(1.1, 0.8, 1.1, 0.8);
 $pdf->AddPage();
 
-$estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja'];
 foreach ($rows as $index => $row) {
     $pdf->tableRow([
         $row['idasignacion'],
@@ -79,7 +78,7 @@ foreach ($rows as $index => $row) {
         $row['condicion_entrega'] ?: 'Bueno',
         $row['fecha_devolucion'] ? date('d/m/Y', strtotime($row['fecha_devolucion'])) : '-',
         $row['condicion_devolucion'] ?: '-',
-        $estadosEquipo[(int)$row['estado_equipo_devolucion']] ?? '-',
+        EquipoEstado::nombre((int)$row['estado_equipo_devolucion'], '-'),
         (int)$row['activa'] === 1 ? 'Activa' : 'Devuelta',
     ], $index);
 }

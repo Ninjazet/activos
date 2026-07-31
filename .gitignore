@@ -1,2 +1,6 @@
 # Respaldos locales de seguridad previos a migraciones.
 /database/backups_local/
+
+# Configuración y secretos propios de cada instalación.
+/.env
+/tests/.tmp/

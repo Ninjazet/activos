@@ -43,10 +43,7 @@ $resultado = $db->consulta($sql, $params);
     <tbody>
     <?php foreach ($resultado as $r): ?>
         <?php
-            $archivoImagen = basename($r['imagen'] ?? '');
-            $imgUrl = ($archivoImagen && file_exists(IMG_EMPLEADOS . $archivoImagen))
-                ? BASE_URL . '/public/img/empleados/' . $archivoImagen
-                : BASE_URL . '/public/img/empleados/avatar1.png';
+            $imgUrl = Imagen::empleado($r['imagen'] ?? null);
         ?>
         <tr class="<?= (int)$r['activo'] === 0 ? 'text-muted' : '' ?>">
                 <td><img src="<?= htmlspecialchars($imgUrl, ENT_QUOTES) ?>" alt="Foto de <?= htmlspecialchars($r['nombre'] . ' ' . $r['apellidos'], ENT_QUOTES) ?>" style="width:36px;height:36px;border-radius:50%;object-fit:cover;"></td>

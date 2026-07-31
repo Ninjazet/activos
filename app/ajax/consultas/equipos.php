@@ -7,7 +7,7 @@ Auth::requerirPermiso('consultas');
 
 $db = Database::getInstance();
 $q = TableFilter::text('query');
-$estadoEquipoFiltro = TableFilter::enum('estado_equipo', ['1', '2', '3', '4', '5']);
+$estadoEquipoFiltro = TableFilter::enum('estado_equipo', EquipoEstado::idsComoTexto());
 $tipoEquipoFiltro = TableFilter::text('tipo_equipo', 50);
 $marcaFiltro = TableFilter::positiveInt('idmarca');
 $modeloFiltro = TableFilter::positiveInt('idmodelo');
@@ -42,10 +42,7 @@ $resultado = $db->consulta($sql, $params);
     <tbody>
     <?php foreach ($resultado as $r): ?>
         <?php
-            $archivoImagen = basename($r['imagen'] ?? '');
-            $img = ($archivoImagen && file_exists(IMG_EQUIPOS . $archivoImagen))
-                ? BASE_URL . '/public/img/equipos/' . $archivoImagen
-                : BASE_URL . '/public/icons/equipo.png';
+            $img = Imagen::equipo($r['imagen'] ?? null);
         ?>
         <tr class="<?= (int)$r['activo'] === 0 ? 'text-muted' : '' ?>">
             <td><img src="<?= htmlspecialchars($img, ENT_QUOTES) ?>" alt="Foto del equipo <?= htmlspecialchars($r['codigo_activo'] ?? ('EQ-' . $r['idequipo']), ENT_QUOTES) ?>" style="width:36px;height:36px;object-fit:cover;"></td>
@@ -54,7 +51,7 @@ $resultado = $db->consulta($sql, $params);
             <td><?= htmlspecialchars($r['numero_serie'] ?: '—') ?></td>
             <td><?= htmlspecialchars($r['nombreMarca']) ?></td>
             <td><?= htmlspecialchars($r['nombreModelo']) ?></td>
-            <td><?php $estados=[1=>'Disponible',2=>'Asignado',3=>'En mantenimiento',4=>'Perdido o robado',5=>'Dado de baja']; echo htmlspecialchars($estados[(int)$r['estado_equipo']] ?? 'Sin definir'); ?><?= (int)$r['activo']===0 ? ' <span class="badge app-badge-muted">Inactivo</span>' : '' ?></td>
+            <td><?= htmlspecialchars(EquipoEstado::nombre((int)$r['estado_equipo'])) ?><?= (int)$r['activo']===0 ? ' <span class="badge app-badge-muted">Inactivo</span>' : '' ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>

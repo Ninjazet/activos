@@ -4,13 +4,19 @@ Auth::requerir();
 Auth::guardarPagina();
 $db = Database::getInstance();
 
+$estadoDisponible = EquipoEstado::DISPONIBLE;
+$estadoAsignado = EquipoEstado::ASIGNADO;
+$estadoMantenimiento = EquipoEstado::MANTENIMIENTO;
+$estadoPerdido = EquipoEstado::PERDIDO_ROBADO;
+$estadoBaja = EquipoEstado::BAJA;
+
 $resumen = $db->fila(
     "SELECT COUNT(*) total, COALESCE(SUM(activo=1),0) activos,
-     COALESCE(SUM(activo=1 AND estado_equipo=1),0) disponibles,
-     COALESCE(SUM(activo=1 AND estado_equipo=2),0) asignados,
-     COALESCE(SUM(activo=1 AND estado_equipo=3),0) mantenimiento,
-     COALESCE(SUM(estado_equipo=4),0) perdidos,
-     COALESCE(SUM(estado_equipo=5),0) bajas FROM equipo"
+     COALESCE(SUM(activo=1 AND estado_equipo={$estadoDisponible}),0) disponibles,
+     COALESCE(SUM(activo=1 AND estado_equipo={$estadoAsignado}),0) asignados,
+     COALESCE(SUM(activo=1 AND estado_equipo={$estadoMantenimiento}),0) mantenimiento,
+     COALESCE(SUM(estado_equipo={$estadoPerdido}),0) perdidos,
+     COALESCE(SUM(estado_equipo={$estadoBaja}),0) bajas FROM equipo"
 ) ?? [];
 
 $metricas = [
@@ -63,11 +69,11 @@ if ($metricas['garantias_proximas']) $alertas[] = ['warning','fa-calendar-day',$
 if ($metricas['perdidos']) $alertas[] = ['danger','fa-triangle-exclamation',$metricas['perdidos'],'equipo(s) perdido(s) o robado(s)',$urlEquipos];
 
 $estados = [
-    ['Disponible',$metricas['disponibles'],'available'],
-    ['Asignado',$metricas['asignados'],'assigned'],
-    ['En mantenimiento',$metricas['mantenimiento'],'maintenance'],
-    ['Perdido o robado',$metricas['perdidos'],'lost'],
-    ['Dado de baja',$metricas['bajas'],'retired'],
+    [EquipoEstado::nombre(EquipoEstado::DISPONIBLE),$metricas['disponibles'],'available'],
+    [EquipoEstado::nombre(EquipoEstado::ASIGNADO),$metricas['asignados'],'assigned'],
+    [EquipoEstado::nombre(EquipoEstado::MANTENIMIENTO),$metricas['mantenimiento'],'maintenance'],
+    [EquipoEstado::nombre(EquipoEstado::PERDIDO_ROBADO),$metricas['perdidos'],'lost'],
+    [EquipoEstado::nombre(EquipoEstado::BAJA),$metricas['bajas'],'retired'],
 ];
 $mostrarEstadoEquipos = false; // Cambiar a true para reactivar el bloque completo.
 $hora = (int)date('G');

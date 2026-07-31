@@ -58,8 +58,17 @@ class Upload {
         $extension   = self::TIPOS_PERMITIDOS[$mime];
         $nombreFinal = $prefijo . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
 
-        if (!is_dir($carpetaDestino) || !is_writable($carpetaDestino)) {
-            throw new \RuntimeException('La carpeta de destino no existe o no tiene permisos de escritura.');
+        // En Docker el volumen puede existir sin sus subcarpetas. Se crean al
+        // primer uso; si el usuario de Apache/PHP no tiene permisos, se
+        // conserva un mensaje claro para corregir el montaje.
+        if (!is_dir($carpetaDestino)
+            && !mkdir($carpetaDestino, 0775, true)
+            && !is_dir($carpetaDestino)
+        ) {
+            throw new \RuntimeException('No se pudo crear la carpeta de destino para la imagen.');
+        }
+        if (!is_writable($carpetaDestino)) {
+            throw new \RuntimeException('La carpeta de destino no tiene permisos de escritura.');
         }
 
         if (!move_uploaded_file($archivo['tmp_name'], $carpetaDestino . $nombreFinal)) {

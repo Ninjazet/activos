@@ -38,7 +38,6 @@ if ($fechaHastaFiltro !== '') { $conditions[] = 'DATE(asg.fecha_asignacion) <= ?
 if ($conditions) { $sql .= ' WHERE ' . implode(' AND ', $conditions); }
 $sql .= ' ORDER BY asg.fecha_asignacion DESC, asg.idasignacion DESC';
 $resultado = $db->consulta($sql, $params);
-$estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja'];
 ?>
 
 <?php if ($resultado): ?>
@@ -61,7 +60,7 @@ $estadosEquipo = [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4
             <td><?= htmlspecialchars($r['condicion_entrega'] ?: 'Bueno') ?></td>
             <td><?= $r['fecha_devolucion'] ? date('d/m/Y', strtotime($r['fecha_devolucion'])) : '—' ?></td>
             <td><?= htmlspecialchars($r['condicion_devolucion'] ?: '—') ?></td>
-            <td><?= htmlspecialchars($estadosEquipo[(int)$r['estado_equipo_devolucion']] ?? '—') ?></td>
+            <td><?= htmlspecialchars(EquipoEstado::nombre((int)$r['estado_equipo_devolucion'], '—')) ?></td>
             <td><?= (int)$r['activa'] === 1
                 ? '<span class="badge app-badge-success">Activa</span>'
                 : '<span class="badge app-badge-muted">Devuelta</span>' ?></td>

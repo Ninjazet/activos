@@ -17,17 +17,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idcargo   = (int)($_POST['idcargo'] ?? 0);
         $idsexo    = (int)($_POST['idsexo'] ?? 0);
         $telefono  = trim($_POST['telefono'] ?? '')  ?: null;
-        $correo    = strtolower(trim($_POST['correo'] ?? '')) ?: null;
+        $correo    = null;
         $direccion = trim($_POST['direccion'] ?? '') ?: null;
-
-        if ($correo !== null && (strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL))) {
-            Auth::flash('error', 'Ingresa un correo electrónico válido.');
-            header('Location: ' . BASE_URL . '/empleados.php');
-            exit;
-        }
         $imagen    = '';
 
         try {
+            $correo = Validacion::correoOpcional($_POST['correo'] ?? null);
             if (!Upload::estaVacio($_FILES['archivo'] ?? null)) {
                 $archivoGuardado = Upload::guardarImagen($_FILES['archivo'], IMG_EMPLEADOS, 'emp');
                 $imagen = 'public/img/empleados/' . $archivoGuardado;
@@ -57,16 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idcargo   = (int)($_POST['cargoAct'] ?? 0);
         $idsexo    = (int)($_POST['sexoAct'] ?? 0);
         $telefono  = trim($_POST['telefonoAct'] ?? '')  ?: null;
-        $correo    = strtolower(trim($_POST['correoAct'] ?? '')) ?: null;
+        $correo    = null;
         $direccion = trim($_POST['direccionAct'] ?? '') ?: null;
 
-        if ($correo !== null && (strlen($correo) > 150 || !filter_var($correo, FILTER_VALIDATE_EMAIL))) {
-            Auth::flash('error', 'Ingresa un correo electrónico válido.');
-            header('Location: ' . BASE_URL . '/empleados.php');
-            exit;
-        }
-
         try {
+            $correo = Validacion::correoOpcional($_POST['correoAct'] ?? null);
             if (!Upload::estaVacio($_FILES['archivoAct'] ?? null)) {
                 $archivoGuardado = Upload::guardarImagen($_FILES['archivoAct'], IMG_EMPLEADOS, 'emp');
                 $db->ejecutar(

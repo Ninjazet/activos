@@ -245,7 +245,7 @@
             <div class="card"><h3>Custodia</h3><p>Relaciona un equipo con un empleado, deja constancia de las condiciones de entrega y cierra la asignación al devolverlo.</p></div>
             <div class="card"><h3>Control</h3><p>Limita cada módulo mediante permisos, registra acciones relevantes en bitácora y produce consultas, reportes y actas PDF.</p></div>
           </div>
-          <div class="callout"><strong>Alcance de esta guía.</strong> Describe el código que existe actualmente. Cuando el README antiguo contradiga este documento, verifique el código: el proyecto actual usa la ruta <code>/activos</code> y contraseñas con hash.</div>
+          <div class="callout"><strong>Alcance de esta guía.</strong> Describe el código actual. El README resume la puesta en marcha y este documento amplía los flujos y las reglas que debe conservar un programador.</div>
         </section>
 
         <section id="inicio-rapido" data-title="instalar ejecutar xampp inicio rápido configuración">
@@ -254,14 +254,14 @@
           <ol>
             <li>Coloque el proyecto en <code>C:\xampp\htdocs\activos</code>.</li>
             <li>Inicie Apache y MySQL/MariaDB desde XAMPP.</li>
-            <li>Compruebe en <span class="file">config/database.php</span> que la base sea <code>gestactivos</code>, el host <code>localhost</code> y que las credenciales coincidan con su servidor.</li>
+            <li>Copie <span class="file">.env.example</span> como <span class="file">.env</span> y configure URL, almacenamiento y conexión. En Docker también puede inyectar esas variables desde el contenedor.</li>
             <li>Importe el respaldo actual de la base. No ejecute las migraciones históricas sobre una base ya actualizada sin revisar antes su contenido.</li>
             <li>Abra <code>http://localhost:8080/activos/</code> si Apache usa el puerto 8080, o <code>http://localhost/activos/</code> si usa el puerto 80.</li>
             <li>Inicie sesión con un usuario existente de la base. No hay credenciales universales codificadas en la aplicación.</li>
           </ol>
           <div class="grid">
-            <div class="card"><h3>Configuración principal</h3><ul><li><span class="file">config/app.php</span>: nombre, versión, URL base, zona horaria y carpetas de imágenes.</li><li><span class="file">config/database.php</span>: conexión PDO.</li></ul></div>
-            <div class="card"><h3>Requisitos de escritura</h3><p>El usuario de Apache debe poder escribir en las carpetas configuradas para fotografías y firmas. Los archivos subidos se guardan con nombres aleatorios.</p></div>
+            <div class="card"><h3>Configuración principal</h3><ul><li><span class="file">config/env.php</span>: carga opcional de <code>.env</code>.</li><li><span class="file">config/app.php</span>: URL, zona horaria y almacenamiento.</li><li><span class="file">config/database.php</span>: parámetros PDO mediante entorno.</li></ul></div>
+            <div class="card"><h3>Requisitos de escritura</h3><p>El usuario de Apache/PHP debe poder escribir en <code>APP_STORAGE_PATH</code>. Las subcarpetas se crean al primer uso y los archivos se guardan con nombres aleatorios.</p></div>
           </div>
         </section>
 
@@ -276,17 +276,19 @@
             <div><strong>Database/PDO</strong><br>Consulta o modifica MariaDB, con transacción si corresponde.</div>
             <div><strong>Respuesta</strong><br>Vista completa, fragmento HTML, JSON, redirección o PDF.</div>
           </div>
-          <h3>Las cuatro capas que sí existen</h3>
+          <h3>Capas actuales</h3>
           <table>
             <thead><tr><th>Capa</th><th>Ubicación</th><th>Responsabilidad</th></tr></thead>
             <tbody>
-              <tr><td>Arranque e infraestructura</td><td><span class="file">bootstrap.php</span>, <span class="file">config/</span>, <span class="file">app/core/</span></td><td>Constantes, conexión, sesión, autenticación, CSRF, cargas y utilidades.</td></tr>
-              <tr><td>Controladores</td><td><span class="file">app/controllers/</span></td><td>Procesan altas, cambios, activaciones, inactivaciones y reglas de negocio.</td></tr>
-              <tr><td>Vistas y fragmentos</td><td>Archivos raíz, <span class="file">app/pages/</span>, <span class="file">app/ajax/</span></td><td>Construyen páginas, formularios, tablas, modales y respuestas AJAX.</td></tr>
-              <tr><td>Documentos</td><td><span class="file">reportes/</span>, <span class="file">public/lib/tcpdf/</span></td><td>Consultas imprimibles, exportaciones y actas con firma.</td></tr>
+              <tr><td>Arranque y configuración</td><td><span class="file">bootstrap.php</span>, <span class="file">config/</span></td><td>Carga entorno, constantes y clases compartidas.</td></tr>
+              <tr><td>Control HTTP e infraestructura</td><td><span class="file">app/controllers/</span></td><td>Sesión, permisos, CSRF, PDO, cargas y adaptación de solicitudes.</td></tr>
+              <tr><td>Dominio y soporte</td><td><span class="file">app/domain/</span>, <span class="file">app/support/</span></td><td>Estados, normalización de formularios, imágenes y validaciones comunes.</td></tr>
+              <tr><td>Servicios</td><td><span class="file">app/services/</span></td><td>Reglas de negocio y transacciones reutilizables sin generar HTML.</td></tr>
+              <tr><td>Vistas y AJAX</td><td>Archivos raíz, <span class="file">app/views/</span>, <span class="file">app/ajax/</span></td><td>Construyen páginas, tablas, modales y respuestas parciales.</td></tr>
+              <tr><td>Documentos</td><td><span class="file">reportes/</span>, <span class="file">lib/tcpdf/</span></td><td>Consultas imprimibles, exportaciones y actas con firma.</td></tr>
             </tbody>
           </table>
-          <div class="callout warning"><strong>Importante.</strong> No asuma que el nombre “controlador” implica separación completa de HTML y lógica. Antes de modificar una función, siga la ruta desde la página principal hasta su controlador y su archivo AJAX.</div>
+          <div class="callout warning"><strong>Importante.</strong> Los módulos antiguos todavía pueden mezclar control y vista. No los reorganice todos a la vez: extraiga reglas a servicios y fragmentos a vistas conforme el módulo necesite cambios.</div>
         </section>
 
         <section id="estructura" data-title="directorios carpetas archivos árbol estructura">
@@ -297,23 +299,27 @@
 ├── login.php                    Autenticación
 ├── bootstrap.php                Carga configuración y clases comunes
 ├── config/
-│   ├── app.php                  Constantes, rutas y zona horaria
-│   └── database.php             Credenciales de MariaDB/MySQL
+│   ├── env.php                  Variables del sistema y archivo .env
+│   ├── app.php                  URL, almacenamiento y zona horaria
+│   └── database.php             Parámetros de MariaDB/MySQL
 ├── app/
-│   ├── core/                    Database, Auth, Upload y utilidades
-│   ├── controllers/             Escritura y reglas de cada módulo
-│   ├── pages/                   Formularios y vistas parciales
-│   └── ajax/                    Tablas, búsquedas y acciones asíncronas
+│   ├── controllers/             HTTP, Database, Auth y Upload
+│   ├── domain/                  Estados y formularios normalizados
+│   ├── services/                Reglas y transacciones de negocio
+│   ├── support/                 Imágenes y validaciones comunes
+│   ├── views/                   Layouts, formularios y vistas parciales
+│   └── ajax/                    Tablas y respuestas asíncronas
 ├── reportes/                    Consultas, descargas y actas PDF
 ├── public/
 │   ├── css/                     app.css y login.css
 │   ├── js/                      Carga AJAX y catálogos contextuales
 │   ├── icons/                   Logo e iconos locales
-│   ├── img/                     Fotografías y firmas
-│   └── lib/tcpdf/               Biblioteca PDF incluida en el proyecto
+│   └── img/                     Fotografías y firmas
+├── lib/tcpdf/                   Biblioteca PDF incluida en el proyecto
+├── tests/                       Regresión automatizada
 ├── database/                    Respaldo actual, migraciones y datos demo
 └── documentacion_tecnica.html   Este documento</code></pre>
-          <p>Los módulos siguen normalmente el patrón: <code>modulo.php</code> abre la pantalla, <code>app/pages/modulo/...</code> contiene formulario o vista, <code>app/controllers/ModuloController.php</code> escribe y <code>app/ajax/modulo/...</code> lista o busca.</p>
+          <p>Los módulos nuevos deben seguir el patrón: <code>modulo.php</code> controla la entrada, un servicio contiene la regla de negocio, <code>app/views/modulo/...</code> contiene el HTML y <code>app/ajax/modulo/...</code> lista o busca. Los catálogos simples delegan en <code>CatalogoController</code> y <code>CatalogoService</code>.</p>
         </section>
 
         <section id="orden-lectura" data-title="leer código orden recorrido nuevo programador">
@@ -321,7 +327,7 @@
           <h2>Cómo entender el código sin perderse</h2>
           <ol>
             <li><strong>Empiece por <span class="file">bootstrap.php</span>.</strong> Así sabrá qué constantes y clases están disponibles en cada solicitud.</li>
-            <li><strong>Lea <span class="file">app/core/Auth.php</span> y <span class="file">app/core/Database.php</span>.</strong> Son las dependencias transversales.</li>
+            <li><strong>Lea <span class="file">app/controllers/Auth.php</span> y <span class="file">app/controllers/Database.php</span>.</strong> Son las dependencias transversales.</li>
             <li><strong>Revise <span class="file">login.php</span> y <span class="file">index.php</span>.</strong> Muestran el inicio de sesión, la estructura de sesión y el uso de permisos.</li>
             <li><strong>Siga un módulo sencillo.</strong> Empleados o equipos muestran bien el patrón de formulario → controlador → tabla AJAX.</li>
             <li><strong>Deje asignaciones para el final.</strong> Es el flujo más delicado porque coordina empleado, equipo, firmas, fechas, estados y transacciones.</li>
@@ -333,13 +339,13 @@
         <section id="nucleo" data-title="funciones clases database auth upload csrf flash bitácora">
           <span class="section-number">06 · Núcleo y funciones</span>
           <h2>Clases que usa todo el sistema</h2>
-          <h3><span class="file">app/core/Database.php</span></h3>
+          <h3><span class="file">app/controllers/Database.php</span></h3>
           <p>Implementa una única conexión PDO mediante el patrón singleton. Los controladores deben enviar parámetros a consultas preparadas; no deben concatenar valores del usuario en SQL.</p>
           <table>
             <thead><tr><th>Método</th><th>Uso</th></tr></thead>
             <tbody>
               <tr><td><code>Database::getInstance()</code></td><td>Obtiene la conexión compartida.</td></tr>
-              <tr><td><code>consulta($sql, $params)</code></td><td>Ejecuta SELECT y devuelve el statement.</td></tr>
+              <tr><td><code>consulta($sql, $params)</code></td><td>Ejecuta SELECT y devuelve un arreglo de filas.</td></tr>
               <tr><td><code>fila($sql, $params)</code></td><td>Devuelve una sola fila asociativa.</td></tr>
               <tr><td><code>contar($sql, $params)</code></td><td>Devuelve un valor de conteo.</td></tr>
               <tr><td><code>ejecutar($sql, $params)</code></td><td>Ejecuta INSERT, UPDATE u otra escritura.</td></tr>
@@ -353,7 +359,7 @@ $empleado = $db-&gt;fila(
     ['id' =&gt; $idEmpleado]
 );</code></pre>
 
-          <h3><span class="file">app/core/Auth.php</span></h3>
+          <h3><span class="file">app/controllers/Auth.php</span></h3>
           <table>
             <thead><tr><th>Función</th><th>Qué garantiza</th></tr></thead>
             <tbody>
@@ -365,13 +371,15 @@ $empleado = $db-&gt;fila(
               <tr><td><code>Auth::verificarCsrf()</code></td><td>Rechaza POST sin token válido.</td></tr>
               <tr><td><code>Auth::flash()</code> / <code>obtenerFlash()</code></td><td>Transporta mensajes entre una escritura y la redirección siguiente.</td></tr>
               <tr><td><code>Auth::hashPassword()</code> / <code>verificarPassword()</code></td><td>Genera y comprueba hashes seguros; nunca se guarda la contraseña legible.</td></tr>
-              <tr><td><code>Auth::bitacora()</code></td><td>Registra usuario, acción, módulo, detalle, IP y fecha.</td></tr>
+              <tr><td><code>Auth::registrarBitacora()</code></td><td>Registra usuario, acción, módulo, detalle, IP y fecha.</td></tr>
             </tbody>
           </table>
           <p>El login limita intentos fallidos a 5 dentro de 15 minutos, regenera el ID de sesión y actualiza hashes antiguos cuando PHP recomienda un rehash.</p>
 
-          <h3><span class="file">app/core/Upload.php</span></h3>
-          <p>Valida que el archivo sea una imagen real, limita el tamaño a 5 MB, admite JPG/PNG/GIF/WEBP y genera un nombre aleatorio. Toda carga nueva debe reutilizar esta clase en lugar de confiar en la extensión proporcionada por el navegador.</p>
+          <h3><span class="file">app/controllers/Upload.php</span></h3>
+          <p>Valida que el archivo sea una imagen real, limita el tamaño a 5 MB, admite JPG/PNG/GIF/WEBP, crea la carpeta configurada cuando es posible y genera un nombre aleatorio. Toda carga nueva debe reutilizar esta clase.</p>
+          <h3>Dominio, soporte y servicios</h3>
+          <p><span class="file">EquipoEstado.php</span> es la fuente única de nombres y colores de estados; <span class="file">Validacion.php</span> normaliza entradas; <span class="file">Imagen.php</span> resuelve imágenes o fallbacks; <span class="file">AsignacionService.php</span> y <span class="file">CatalogoService.php</span> concentran las reglas que antes estaban repetidas en páginas.</p>
         </section>
 
         <section id="flujos-http" data-title="get post ajax json redirect http flujo solicitud">
@@ -388,7 +396,7 @@ $empleado = $db-&gt;fila(
           <h3>Plantilla segura para una escritura</h3>
           <pre><code>&lt;?php
 require_once __DIR__ . '/../../bootstrap.php';
-Auth::requerirPermiso('datosmaestros');
+Auth::requerirPermiso('maestros');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -399,7 +407,7 @@ Auth::verificarCsrf();
 // 1. Normalizar y validar entrada.
 // 2. Consultar conflictos y dependencias.
 // 3. Ejecutar la escritura, en transacción si cambia varias tablas.
-// 4. Registrar Auth::bitacora(...).
+// 4. Registrar Auth::registrarBitacora(...).
 // 5. Crear flash y redirigir.</code></pre>
         </section>
 
@@ -410,7 +418,7 @@ Auth::verificarCsrf();
           <table>
             <thead><tr><th>Permiso</th><th>Habilita</th><th>Ejemplos</th></tr></thead>
             <tbody>
-              <tr><td><code>datosmaestros</code></td><td>Inventario, empleados y catálogos.</td><td>Crear/editar/inactivar equipos, empleados, áreas, cargos, marcas y modelos.</td></tr>
+              <tr><td><code>maestros</code></td><td>Inventario, empleados y catálogos.</td><td>Crear/editar/inactivar equipos, empleados, áreas, cargos, marcas y modelos.</td></tr>
               <tr><td><code>transacciones</code></td><td>Operación de custodia.</td><td>Asignar, editar una asignación abierta, firmar entrega y devolver equipo.</td></tr>
               <tr><td><code>consultas</code></td><td>Vistas de consulta.</td><td>Consultar inventario, empleados y asignaciones sin alterar datos.</td></tr>
               <tr><td><code>reportes</code></td><td>Listados y descargas.</td><td>Reportes PDF de empleados, equipos y asignaciones.</td></tr>
@@ -499,7 +507,7 @@ Auth::verificarCsrf();
           <p>Áreas, cargos, marcas y modelos usan baja lógica. Los formularios de empleados/equipos también pueden crear ciertos catálogos de forma contextual y agregar la nueva opción al selector sin abandonar la operación.</p>
 
           <h3>Bitácora</h3>
-          <p>Registra quién hizo qué, en qué módulo, con qué detalle, desde qué IP y cuándo. Al agregar una operación relevante, agregue también su llamada a <code>Auth::bitacora()</code>.</p>
+          <p>Registra quién hizo qué, en qué módulo, con qué detalle, desde qué IP y cuándo. Al agregar una operación relevante, agregue también su llamada a <code>Auth::registrarBitacora()</code>.</p>
         </section>
 
         <section id="asignaciones" data-title="asignación entrega devolución firma canvas checklist transacción">
@@ -620,20 +628,20 @@ Auth::verificarCsrf();
           <ol>
             <li>Defina tabla y relaciones.</li>
             <li>Elija un permiso existente o agregue uno a base, sesión, formulario de permisos y todas las rutas.</li>
-            <li>Cree entrada de página, controlador, formulario y tabla AJAX siguiendo un módulo parecido.</li>
+            <li>Cree una entrada de página pequeña, un servicio para la regla, vistas para el HTML y un endpoint AJAX cuando necesite actualización parcial.</li>
             <li>Use baja lógica si el registro puede aparecer en el historial.</li>
             <li>Agregue bitácora en altas, cambios, activaciones e inactivaciones.</li>
             <li>Agregue el enlace al menú únicamente para usuarios autorizados.</li>
           </ol>
 
           <h3>Cambiar una regla de asignación</h3>
-          <p>Revise conjuntamente el controlador de asignación, el AJAX del formulario, las dos actas, las consultas, los reportes y los estados de equipo. Una regla aplicada solo en JavaScript puede evadirse; una regla aplicada solo al crear puede romper la devolución.</p>
+          <p>Revise conjuntamente <span class="file">AsignacionService.php</span>, el AJAX del formulario, las dos actas, las consultas, los reportes y <span class="file">EquipoEstado.php</span>. Una regla aplicada solo en JavaScript puede evadirse; una regla aplicada solo al crear puede romper la devolución.</p>
 
           <h3>Cambiar el diseño</h3>
           <ul>
             <li>Interfaz general: <span class="file">public/css/app.css</span>.</li>
             <li>Login: <span class="file">public/css/login.css</span>.</li>
-            <li>Encabezado y dependencias: <span class="file">app/pages/head.php</span>.</li>
+            <li>Encabezado y dependencias: <span class="file">app/views/layouts/head.php</span>.</li>
             <li>PDF comunes: <span class="file">reportes/pdf_layout.php</span>.</li>
             <li>No edite archivos dentro de TCPDF salvo que esté actualizando conscientemente la biblioteca.</li>
           </ul>
@@ -654,9 +662,9 @@ Auth::verificarCsrf();
         <section id="pruebas" data-title="pruebas qa validar checklist casos manuales">
           <span class="section-number">16 · Cómo probar</span>
           <h2>Recorrido funcional recomendado</h2>
-          <p>El proyecto no contiene actualmente una suite automatizada completa. Cada cambio debe acompañarse al menos de validación sintáctica y un recorrido manual con datos de prueba.</p>
+          <p>Antes de la revisión manual, ejecute <code>C:\xampp\php\php.exe tests\run.php</code>. La suite es de solo lectura sobre los datos operativos y comprueba reglas, esquema, permisos, renderizado, PDF y sintaxis.</p>
           <ol>
-            <li><strong>PHP:</strong> ejecute <code>php -l archivo.php</code> en cada archivo modificado.</li>
+            <li><strong>Regresión:</strong> confirme que la suite termine con cero fallas.</li>
             <li><strong>Sesión:</strong> pruebe usuario activo, credenciales incorrectas, cierre de sesión y acceso directo sin autenticar.</li>
             <li><strong>Permisos:</strong> pruebe la URL directa con un usuario que no tenga el permiso, no solo la visibilidad del menú.</li>
             <li><strong>Catálogos:</strong> cree, edite, inactive, reactive y cree desde un formulario contextual.</li>
@@ -698,14 +706,10 @@ Auth::verificarCsrf();
           <table>
             <thead><tr><th>Prioridad</th><th>Hallazgo</th><th>Acción sugerida</th></tr></thead>
             <tbody>
-              <tr><td>Alta</td><td>Las firmas se guardan bajo una carpeta pública.</td><td>Mientras existan, servirlas mediante una ruta autorizada o moverlas fuera del web root.</td></tr>
-              <tr><td>Media</td><td>Credenciales de base codificadas en <span class="file">config/database.php</span>.</td><td>Mover secretos a variables de entorno y mantener valores locales fuera del repositorio.</td></tr>
-              <tr><td>Media</td><td>Conexión configurada con <code>utf8</code>.</td><td>Migrar de forma controlada a <code>utf8mb4</code> para cobertura Unicode completa.</td></tr>
               <tr><td>Media</td><td>Dependencias principales cargadas desde CDN.</td><td>Versionar copias locales o aplicar integridad y una política de disponibilidad.</td></tr>
-              <tr><td>Media</td><td>La base actual contiene claves foráneas duplicadas sobre <code>asignacion.idequipo</code>.</td><td>Confirmar nombres con <code>SHOW CREATE TABLE</code> y retirar solo la restricción redundante.</td></tr>
-              <tr><td>Media</td><td>No existe suite automatizada de regresión.</td><td>Empezar con pruebas de permisos, estados y ciclo asignación/devolución.</td></tr>
-              <tr><td>Baja</td><td>El README antiguo menciona otra ruta y contraseñas en texto plano.</td><td>Actualizarlo o dirigir explícitamente a este documento.</td></tr>
-              <tr><td>Baja</td><td><code>Auth::guardarPagina(string $archivo)</code> recibe un argumento que no utiliza.</td><td>Eliminar el parámetro o implementar el comportamiento esperado tras revisar llamadas.</td></tr>
+              <tr><td>Media</td><td>TCPDF se mantiene como una copia local con compatibilidad para PHP 8.2.</td><td>Evaluar una actualización oficial de la biblioteca antes de subir la versión de PHP.</td></tr>
+              <tr><td>Media</td><td>La regresión automatizada no controla un navegador real ni escribe un ciclo completo.</td><td>Agregar pruebas end-to-end con una base aislada cuando exista un entorno de integración.</td></tr>
+              <tr><td>Baja</td><td>Empleados, equipos y usuarios todavía conservan parte del patrón inicial en archivos grandes.</td><td>Extraer sus reglas a servicios solamente cuando uno de esos módulos reciba cambios funcionales.</td></tr>
             </tbody>
           </table>
           <div class="callout warning"><strong>No corrija todo en un solo cambio.</strong> Cada punto debe abordarse por separado, con respaldo, revisión de impacto y pruebas de regresión.</div>

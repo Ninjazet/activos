@@ -53,10 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 session_regenerate_id(true);
 
                 $nomApe = trim(($reg['nombre'] ?? '') . ' ' . ($reg['apellidos'] ?? ''));
-                $archivoImagen = basename($reg['imagen'] ?? '');
-                $fotoUrl = ($archivoImagen && file_exists(IMG_EMPLEADOS . $archivoImagen))
-                    ? BASE_URL . '/public/img/empleados/' . $archivoImagen
-                    : BASE_URL . '/public/img/empleados/avatar1.png';
+                $fotoUrl = Imagen::empleado($reg['imagen'] ?? null);
 
                 // Cargar permisos y datos de usuario en sesión
                 $_SESSION['idusuario']     = $reg['idusuario'];
@@ -102,10 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div id="auth">
-        <div class="row h-100 g-0">
+        <canvas class="login-pixel-rain" id="loginPixelRain" aria-hidden="true"></canvas>
+        <div class="row h-100 g-0 login-content">
             <!-- Columna izquierda (ilustración y texto, visible en pantallas grandes) -->
             <div class="col-lg-7 d-none d-lg-flex align-items-center justify-content-center p-5">
-                <div class="text-white text-center">
+                <div class="login-brand text-white text-center">
                     <!-- Ícono en lugar de imagen (no dependemos de un archivo externo) -->
                     <i class="bi bi-shield-lock mb-4" style="font-size: 8rem; opacity: 0.9;"></i>
                     <h1 class="display-5 fw-bold"><?= htmlspecialchars(APP_NAME) ?></h1>
@@ -115,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- Columna derecha (formulario de login) -->
             <div class="col-lg-5 d-flex align-items-center justify-content-center">
-                <div class="p-4 p-md-5 w-100" style="max-width: 400px;">
+                <div class="login-form-panel p-4 p-md-5 w-100">
                     <!-- Nombre de la app visible solo en móvil -->
                     <div class="d-lg-none text-center mb-4">
                         <h2 class="text-brand"><?= htmlspecialchars(APP_NAME) ?></h2>
@@ -164,5 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     toastr.error('<?= addslashes(htmlspecialchars($error)) ?>', 'Error');
 </script>
 <?php endif; ?>
+<script src="<?= BASE_URL ?>/public/js/login-background.js?v=<?= urlencode((string)(@filemtime(BASE_PATH . '/public/js/login-background.js') ?: APP_VERSION)) ?>"></script>
 </body>
 </html>

@@ -73,10 +73,7 @@ $cargosTodos = $db->consulta("SELECT * FROM cargos ORDER BY activo DESC, descrip
     <?php foreach ($rows as $r): ?>
         <?php
             $activo   = (int)$r['activo'];
-            $archivoImagen = basename($r['imagen'] ?? '');
-            $imgUrl = ($archivoImagen && file_exists(IMG_EMPLEADOS . $archivoImagen))
-                ? BASE_URL . '/public/img/empleados/' . $archivoImagen
-                : BASE_URL . '/public/img/empleados/avatar1.png';
+            $imgUrl = Imagen::empleado($r['imagen'] ?? null);
         ?>
         <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>"
             data-idarea="<?= (int)$r['idarea'] ?>" data-idcargo="<?= (int)$r['idcargo'] ?>" data-idsexo="<?= (int)$r['idsexo'] ?>"

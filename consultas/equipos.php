@@ -22,7 +22,7 @@ initAjaxTableFilters('<?= BASE_URL ?>/app/ajax/consultas/equipos.php');
     <?php renderTableFilters([
       'search_label' => 'Buscar equipos', 'search_placeholder' => 'Código, serie, tipo, marca o modelo', 'table_id' => 'tablaConsEquipo',
       'filters' => [
-        ['name' => 'estado_equipo', 'label' => 'Estado operativo', 'options' => [1 => 'Disponible', 2 => 'Asignado', 3 => 'En mantenimiento', 4 => 'Perdido o robado', 5 => 'Dado de baja']],
+        ['name' => 'estado_equipo', 'label' => 'Estado operativo', 'options' => EquipoEstado::opciones()],
         ['name' => 'tipo_equipo', 'label' => 'Tipo', 'options' => $filtroTipos],
         ['name' => 'idmarca', 'label' => 'Marca', 'options' => $filtroMarcas],
         ['name' => 'idmodelo', 'label' => 'Modelo', 'options' => $filtroModelos],

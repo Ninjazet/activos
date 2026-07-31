@@ -6,12 +6,7 @@
 // ============================================================
 
 $nomApe = Auth::get('nombre');
-$imagen = Auth::get('foto');
-
-// Si por alguna razón falta la foto en sesión, usar el avatar por defecto
-if (empty($imagen)) {
-    $imagen = BASE_URL . '/public/img/empleados/avatar1.png';
-}
+$imagen = Imagen::empleado(Auth::get('foto'));
 
 $mae  = $_SESSION['maestros']      ?? '0';
 $tran = $_SESSION['transacciones'] ?? '0';
