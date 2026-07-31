@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $permisos = [
                 isset($_POST['maestros']) ? 1 : 0,
                 $permisoTransacciones,
+                isset($_POST['mantenimientos']) ? 1 : 0,
                 isset($_POST['consultas']) ? 1 : 0,
                 isset($_POST['reportes']) ? 1 : 0,
                 isset($_POST['actas']) || $permisoTransacciones === 1 ? 1 : 0,
@@ -42,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         [$usuario, $passHash, $idempleado]
                     );
                     $db->ejecutar(
-                        "INSERT INTO permisos (idusuario, datosmaestros, transacciones, consultas, reportes, actas, seguridad)
-                         VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        "INSERT INTO permisos (idusuario, datosmaestros, transacciones, mantenimientos, consultas, reportes, actas, seguridad)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                         array_merge([$idusuario], $permisos)
                     );
                 });
@@ -72,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $permisos = [
                 isset($_POST['maestrosAct']) ? 1 : 0,
                 $permisoTransacciones,
+                isset($_POST['mantenimientosAct']) ? 1 : 0,
                 isset($_POST['consultasAct']) ? 1 : 0,
                 isset($_POST['reportesAct']) ? 1 : 0,
                 isset($_POST['actasAct']) || $permisoTransacciones === 1 ? 1 : 0,
@@ -89,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $db->ejecutar("UPDATE usuarios SET username=? WHERE idusuario=?", [$usuario, $id]);
                     }
                     $db->ejecutar(
-                        "UPDATE permisos SET datosmaestros=?, transacciones=?, consultas=?, reportes=?, actas=?, seguridad=? WHERE idusuario=?",
+                        "UPDATE permisos SET datosmaestros=?, transacciones=?, mantenimientos=?, consultas=?, reportes=?, actas=?, seguridad=? WHERE idusuario=?",
                         array_merge($permisos, [$id])
                     );
                 });
@@ -156,6 +158,7 @@ initAjaxTableFilters('<?= BASE_URL ?>/app/ajax/maestros/usuarios.php');
                 ['name' => 'estado_usuario', 'label' => 'Estado', 'options' => [1 => 'Activo', 0 => 'Inactivo']],
                 ['name' => 'permiso', 'label' => 'Con permiso de', 'options' => [
                     'datosmaestros' => 'Maestros', 'transacciones' => 'Transacciones',
+                    'mantenimientos' => 'Mantenimientos',
                     'consultas' => 'Consultas', 'reportes' => 'Reportes',
                     'actas' => 'Actas', 'seguridad' => 'Seguridad',
                 ]],

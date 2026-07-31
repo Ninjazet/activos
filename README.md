@@ -1,6 +1,6 @@
 # GestActivos
 
-Sistema web para administrar inventario, empleados, asignaciones, devoluciones, actas y reportes.
+Sistema web para administrar inventario, empleados, proveedores, asignaciones, devoluciones, mantenimientos, actas y reportes.
 
 Tecnologías principales: PHP 8, MySQL/MariaDB, Apache, Bootstrap 5, jQuery/DataTables y TCPDF.
 
@@ -52,6 +52,7 @@ app/
   views/
     layouts/                     Estructura general de las páginas
     maestros/                    Vistas reutilizadas por catálogos
+    mantenimientos/              Operación e historial técnico de equipos
     transacciones/asignaciones/  Modales, checklist y scripts de asignación
   ajax/                          Endpoints que responden tablas o fragmentos HTML
 consultas/                       Páginas de consulta
@@ -70,6 +71,9 @@ Toda entrada PHP debe comenzar cargando `bootstrap.php`. No deben incluirse manu
 - `Validacion`: normaliza fechas, correos, costos, textos, identificadores y números de serie.
 - `EquipoFormulario`: transforma los formularios de creación y edición de equipos en datos normalizados.
 - `AsignacionService`: protege el ciclo de asignación dentro de transacciones de base de datos.
+- `ProveedorService` y `ProveedorController`: administran el catálogo ampliado y su ficha de compras.
+- `MantenimientoEstado`: centraliza tipos, estados, resultados y estilos de mantenimiento.
+- `MantenimientoService`: abre, actualiza, cancela y cierra mantenimientos manteniendo sincronizado el estado del equipo.
 - `CatalogoService` y `CatalogoController`: reúnen el CRUD de áreas, cargos, marcas y modelos.
 
 ## Cómo modificar un módulo existente
@@ -95,7 +99,17 @@ Para una operación de negocio:
 4. Usa el endpoint AJAX únicamente para filtros, consultas y renderizado.
 5. Agrega al menos una prueba de la nueva regla en `tests/run.php`.
 
-No borres historial de asignaciones. Las bajas de empleados, equipos y catálogos son lógicas y deben respetar sus dependencias.
+No borres historial de asignaciones ni mantenimientos. Las bajas de empleados, equipos, proveedores y catálogos son lógicas y deben respetar sus dependencias.
+
+## Proveedores y mantenimientos
+
+- `proveedores.php` permite buscar, crear, editar, inactivar, reactivar y abrir la ficha de un proveedor. El proveedor es opcional en equipos y mantenimientos.
+- `mantenimientos.php` requiere el permiso independiente `mantenimientos`. Solo admite equipos activos y Disponibles, sin asignación ni mantenimiento abierto.
+- Un mantenimiento Reparado devuelve el equipo a Disponible. Un resultado No reparable lo deja Dado de baja. Cancelar conserva el historial y restaura un estado operativo seguro.
+- Una devolución con condición Con daño o No funcional cierra la asignación y abre el mantenimiento correctivo dentro de la misma transacción.
+- El estado En mantenimiento no se elige manualmente desde Inventario; lo controla este flujo.
+
+Para actualizar una instalación existente, ejecuta una sola vez `database/migracion_proveedores_mantenimientos_20260731.sql`. Una instalación nueva debe importarse directamente desde `database/gestactivos.sql`.
 
 ## Pruebas de regresión
 
@@ -105,7 +119,9 @@ Desde la raíz del proyecto ejecuta:
 C:\xampp\php\php.exe tests\run.php
 ```
 
-La suite comprueba reglas de estados, validaciones, configuración por entorno, conexión y esquema, integridad de asignaciones, restricciones SQL, archivos referenciados, permisos AJAX, renderizado de páginas, generación de PDF y sintaxis PHP global. No crea, edita ni elimina datos operativos; solamente genera sesiones temporales dentro de `tests/.tmp`.
+La suite comprueba reglas de estados, validaciones, configuración por entorno, conexión y esquema, integridad de asignaciones y mantenimientos, restricciones SQL, archivos referenciados, permisos AJAX, renderizado de páginas, generación de PDF y sintaxis PHP global. No crea, edita ni elimina datos operativos; solamente genera sesiones temporales dentro de `tests/.tmp`.
+
+`tests/module_flow_worker.php` cubre escrituras reales de proveedores, cierres de mantenimiento y devoluciones con daño. Tiene un bloqueo de seguridad y solo funciona cuando `DB_NAME` contiene `_feature_test_`; debe ejecutarse sobre una copia temporal desechable, nunca sobre la base operativa.
 
 Después de una modificación visual, completa además una revisión manual en escritorio y móvil. Para cambios de asignación, recorre siempre creación, firma de entrega y devolución.
 

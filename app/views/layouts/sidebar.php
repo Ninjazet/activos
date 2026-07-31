@@ -10,6 +10,7 @@ $imagen = Imagen::empleado(Auth::get('foto'));
 
 $mae  = $_SESSION['maestros']      ?? '0';
 $tran = $_SESSION['transacciones'] ?? '0';
+$mant = $_SESSION['mantenimientos'] ?? '0';
 $con  = $_SESSION['consultas']     ?? '0';
 $rep  = $_SESSION['reportes']      ?? '0';
 $seg  = $_SESSION['seguridad']     ?? '0';
@@ -69,11 +70,13 @@ $esRutaActiva = static function (string $url) use ($rutaActual): bool {
             'modelos.php' => ['icons/modelo.png', 'Modelos'],
             'areas.php'   => ['icons/area.png',   'Áreas'],
             'cargo.php'   => ['icons/cargo.png',  'Cargos'],
+            'proveedores.php' => [null, 'Proveedores'],
         ];
         $catalogoActivo = false;
         foreach (array_keys($submenuCatalogos) as $urlCatalogo) {
             $catalogoActivo = $catalogoActivo || $esRutaActiva($urlCatalogo);
         }
+        $catalogoActivo = $catalogoActivo || $esRutaActiva('proveedor.php');
         ?>
         <div class="item has-submenu <?= $catalogoActivo ? 'is-open' : '' ?>" id="catalogos">
             <a href="#catalogos" class="<?= $catalogoActivo ? 'active' : '' ?>">
@@ -83,11 +86,21 @@ $esRutaActiva = static function (string $url) use ($rutaActual): bool {
             <div class="subitem">
                 <?php foreach ($submenuCatalogos as $url => [$icon, $label]): ?>
                 <a href="<?= BASE_URL ?>/<?= $url ?>" class="<?= $esRutaActiva($url) ? 'active' : '' ?>">
-                    <div class="icon"><img src="<?= BASE_URL ?>/public/<?= $icon ?>" alt=""></div>
+                    <div class="icon"><?php if ($icon): ?><img src="<?= BASE_URL ?>/public/<?= $icon ?>" alt=""><?php else: ?><i class="fa-solid fa-truck" aria-hidden="true"></i><?php endif; ?></div>
                     <div class="title"><span><?= $label ?></span></div>
                 </a>
                 <?php endforeach; ?>
             </div>
+        </div>
+        <div class="item separator"></div>
+        <?php endif; ?>
+
+        <?php if ($mant == '1'): ?>
+        <div class="item menu-directo">
+            <a href="<?= BASE_URL ?>/mantenimientos.php" class="<?= $esRutaActiva('mantenimientos.php') ? 'active' : '' ?>">
+                <div class="icon"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i></div>
+                <div class="title"><span>Mantenimientos</span></div>
+            </a>
         </div>
         <div class="item separator"></div>
         <?php endif; ?>
@@ -124,6 +137,7 @@ $esRutaActiva = static function (string $url) use ($rutaActual): bool {
                 'consultas/marcas.php'      => 'Marcas',
                 'consultas/modelos.php'     => 'Modelos',
                 'consultas/asignaciones.php'=> 'Asignaciones',
+                'consultas/mantenimientos.php'=> 'Mantenimientos',
                 'consultas/areas.php'       => 'Áreas',
             ];
             foreach ($submenuConsultas as $url => $label): ?>
@@ -150,6 +164,7 @@ $esRutaActiva = static function (string $url) use ($rutaActual): bool {
                 'reportes/empleados.php'   => 'Reporte de Empleados',
                 'reportes/equipos.php'     => 'Reporte de Equipos',
                 'reportes/asignaciones.php'=> 'Reporte de Asignaciones',
+                'reportes/mantenimientos.php'=> 'Reporte de Mantenimientos',
             ];
             foreach ($submenuReportes as $url => $label): ?>
             <div class="subitem">

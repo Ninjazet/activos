@@ -6,6 +6,10 @@ $rutas = [
     'equipos' => 'equipos.php',
     'empleados' => 'empleados.php',
     'asignaciones' => 'asignarequipo.php',
+    'proveedores' => 'proveedores.php',
+    'mantenimientos' => 'mantenimientos.php',
+    'consulta_mantenimientos' => 'consultas/mantenimientos.php',
+    'reporte_mantenimientos' => 'reportes/mantenimientos.php',
     'areas_ajax' => 'app/ajax/maestros/areas.php',
     'cargos_ajax' => 'app/ajax/maestros/cargo.php',
     'marcas_ajax' => 'app/ajax/maestros/marcas.php',
@@ -13,6 +17,10 @@ $rutas = [
     'equipos_ajax' => 'app/ajax/maestros/equipos.php',
     'empleados_ajax' => 'app/ajax/maestros/empleados.php',
     'asignaciones_ajax' => 'app/ajax/transacciones/asignarequipo.php',
+    'proveedores_ajax' => 'app/ajax/maestros/proveedores.php',
+    'mantenimientos_ajax' => 'app/ajax/transacciones/mantenimientos.php',
+    'consulta_mantenimientos_ajax' => 'app/ajax/consultas/mantenimientos.php',
+    'reporte_mantenimientos_ajax' => 'app/ajax/reportes/mantenimientos.php',
 ];
 
 $clave = $argv[1] ?? '';
@@ -41,6 +49,7 @@ $_SESSION = [
     'reportes' => '1',
     'actas' => '1',
     'seguridad' => '1',
+    'mantenimientos' => '1',
     'estado' => '0',
 ];
 

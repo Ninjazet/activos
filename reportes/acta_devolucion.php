@@ -56,11 +56,12 @@ if ($esPost) {
     }
 
     $estadoEquipo = EquipoEstado::desdeCondicionDevolucion($condicion);
+    $idMantenimiento = null;
     try {
         $firmaGuardada = guardarFirmaDigital($firmaData, 'firma_devolucion_' . $idasignacion);
         $db->transaccion(function (Database $db) use (
             $idasignacion, $condicion, $cargador, $maletin, $otros,
-            $observaciones, $estadoEquipo, $firmaGuardada, $idusuario
+            $observaciones, $estadoEquipo, $firmaGuardada, $idusuario, &$idMantenimiento
         ): void {
             $actual = $db->fila(
                 "SELECT asg.activa, asg.firma, asg.requiere_firma_entrega, asg.firma_devolucion, asg.idequipo, eq.activo
@@ -98,10 +99,20 @@ if ($esPost) {
                     $firmaGuardada['relativa'], $idusuario, $idasignacion,
                 ]
             );
-            $db->ejecutar(
-                'UPDATE equipo SET estado_equipo=? WHERE idequipo=? AND activo=1',
-                [$estadoEquipo, (int)$actual['idequipo']]
-            );
+            if ($estadoEquipo === EquipoEstado::MANTENIMIENTO) {
+                $idMantenimiento = (new MantenimientoService($db))->abrirDesdeDevolucion(
+                    $idasignacion,
+                    (int)$actual['idequipo'],
+                    $condicion,
+                    $observaciones !== '' ? $observaciones : null,
+                    $idusuario
+                );
+            } else {
+                $db->ejecutar(
+                    'UPDATE equipo SET estado_equipo=? WHERE idequipo=? AND activo=1',
+                    [$estadoEquipo, (int)$actual['idequipo']]
+                );
+            }
         });
     } catch (RuntimeException $e) {
         eliminarFirmaDigitalTemporal($firmaGuardada['absoluta'] ?? null);
@@ -116,6 +127,12 @@ if ($esPost) {
         $idusuario, Auth::get('usuario'), 'devolver', 'asignaciones',
         "asignación #$idasignacion; condición: $condicion; estado equipo: $estadoEquipo"
     );
+    if ($idMantenimiento !== null) {
+        Auth::registrarBitacora(
+            $idusuario, Auth::get('usuario'), 'crear', 'mantenimientos',
+            "mantenimiento #$idMantenimiento generado por devolución #$idasignacion"
+        );
+    }
 }
 
 $sqlActa = "SELECT asg.idasignacion, asg.activa, asg.fecha_asignacion, asg.fecha_devolucion,

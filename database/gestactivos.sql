@@ -113,7 +113,7 @@ CREATE TABLE `bitacora` (
   KEY `idx_bitacora_usuario` (`idusuario`),
   KEY `idx_bitacora_fecha` (`fecha`),
   KEY `idx_bitacora_accion` (`accion`)
-) ENGINE=InnoDB AUTO_INCREMENT=99 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=107 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -122,7 +122,7 @@ CREATE TABLE `bitacora` (
 
 LOCK TABLES `bitacora` WRITE;
 /*!40000 ALTER TABLE `bitacora` DISABLE KEYS */;
-INSERT INTO `bitacora` VALUES (1,1,'emartinez','login_exitoso',NULL,NULL,'::1','2026-07-01 11:09:14'),(2,NULL,'emartinez','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-01 11:12:14'),(3,NULL,'emartinez','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-01 11:12:19'),(4,1,'emartinez','login_exitoso',NULL,NULL,'::1','2026-07-01 11:12:23'),(5,1,'emartinez','crear','asignacion','emp=9 equipo=5','::1','2026-07-01 11:14:50'),(6,1,'emartinez','crear','marca','facturacion','::1','2026-07-01 11:15:39'),(7,1,'emartinez','crear','usuarios','www','::1','2026-07-02 11:44:51'),(8,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-06 18:45:53'),(9,7,'wcaste','crear','asignacion','emp=7 equipo=1','::1','2026-07-06 18:49:39'),(10,7,'wcaste','crear','asignacion','emp=4 equipo=3','::1','2026-07-06 18:50:02'),(11,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 11:31:20'),(12,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 11:33:55'),(13,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:04:00'),(14,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:04:04'),(15,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:31:29'),(16,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:34:14'),(17,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:41:17'),(18,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:45:07'),(19,7,'wcaste','crear','empleados','Wilfredos Castellanoss','::1','2026-07-15 12:46:48'),(20,7,'wcaste','crear','usuarios','wcastess','::1','2026-07-15 12:47:07'),(21,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-15 12:47:14'),(22,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-15 13:24:47'),(23,8,'www','login_exitoso',NULL,NULL,'::1','2026-07-16 10:34:41'),(24,9,'wcastess','crear','acta_firma','asignacion #7','::1','2026-07-16 10:53:40'),(25,9,'wcastess','crear','asignacion','emp=2 equipo=4','::1','2026-07-16 10:54:24'),(26,9,'wcastess','crear','acta_firma','asignacion #9','::1','2026-07-16 10:54:33'),(27,9,'wcastess','crear','acta_firma','asignacion #9','::1','2026-07-16 10:57:12'),(28,9,'wcastess','crear','acta_firma','asignacion #8','::1','2026-07-16 10:57:38'),(29,9,'wcastess','crear','acta_firma','asignacion #8','::1','2026-07-16 10:58:14'),(30,9,'wcastess','crear','acta_firma','asignacion #6','::1','2026-07-16 10:58:27'),(31,9,'wcastess','crear','acta_firma','asignacion #5','::1','2026-07-16 10:58:47'),(32,9,'wcastess','login_exitoso',NULL,NULL,'127.0.0.1','2026-07-16 11:24:44'),(33,9,'wcastess','crear','acta_firma','asignacion #4','::1','2026-07-16 11:37:05'),(34,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-16 11:49:31'),(35,9,'wcastess','crear','equipos','marca=5 modelo=6','::1','2026-07-16 11:55:43'),(36,9,'wcastess','crear','asignacion','emp=7 equipo=7','::1','2026-07-16 11:56:03'),(37,9,'wcastess','crear','acta_firma','asignacion #10','::1','2026-07-16 11:56:17'),(38,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-16 12:11:41'),(39,9,'wcastess','crear','areas','Área QA Sistemas','::1','2026-07-16 12:20:44'),(40,9,'wcastess','crear','cargos','Analista QA IT','::1','2026-07-16 12:22:13'),(41,9,'wcastess','crear','marca','Lenovo QA','::1','2026-07-16 12:22:39'),(42,9,'wcastess','crear','modelo','ThinkPad QA T14','::1','2026-07-16 12:23:01'),(43,9,'wcastess','crear','empleados','ALMA PRUEBA','::1','2026-07-16 12:24:13'),(44,9,'wcastess','editar','empleados','ALMA PRUEBA (#41)','::1','2026-07-16 12:25:16'),(45,9,'wcastess','crear','usuarios','ALMA','::1','2026-07-16 12:26:48'),(46,10,'ALMA','login_exitoso',NULL,NULL,'::1','2026-07-16 12:27:27'),(47,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-16 12:28:33'),(48,9,'wcastess','crear','equipos','#8 marca=6 modelo=7','::1','2026-07-16 12:29:39'),(49,9,'wcastess','crear','asignacion','emp=41 equipo=8','::1','2026-07-16 12:30:46'),(50,9,'wcastess','crear','acta_firma','asignacion #11','::1','2026-07-16 12:32:54'),(51,9,'wcastess','devolucion','asignacion','#11 equipo=8','::1','2026-07-16 12:35:24'),(52,9,'wcastess','editar','equipos','#8','::1','2026-07-16 12:36:48'),(53,9,'wcastess','editar','equipos','#8','::1','2026-07-16 12:37:14'),(54,9,'wcastess','crear','empleados','ADMIN ADMIN','::1','2026-07-16 12:41:18'),(55,9,'wcastess','crear','usuarios','ADMIN','::1','2026-07-16 12:41:42'),(56,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-16 12:41:49'),(59,1,'emartinez','devolver','asignaciones','asignación #25; condición: Bueno; estado equipo: 1','127.0.0.1','2026-07-19 12:28:41'),(60,1,'emartinez','devolver','asignaciones','asignación #26; condición: Con daño; estado equipo: 3','127.0.0.1','2026-07-19 12:29:02'),(61,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 13:42:39'),(62,11,'ADMIN','crear','asignacion','#27 emp=43 equipo=21','::1','2026-07-19 13:43:57'),(63,11,'ADMIN','crear','acta_entrega','asignacion #27','::1','2026-07-19 13:44:06'),(64,11,'ADMIN','devolver','asignaciones','asignación #27; condición: Bueno; estado equipo: 1','::1','2026-07-19 13:44:37'),(65,11,'ADMIN','devolver','asignaciones','asignación #17; condición: Con daño; estado equipo: 3','::1','2026-07-19 13:45:13'),(66,11,'ADMIN','editar','usuarios','ALMA (#10)','::1','2026-07-19 13:46:21'),(67,11,'ADMIN','eliminar','usuarios','#1','::1','2026-07-19 13:46:31'),(68,11,'ADMIN','reactivar','usuarios','#1','::1','2026-07-19 13:46:36'),(69,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 14:19:31'),(70,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 14:31:57'),(71,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 14:50:46'),(72,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 16:39:46'),(73,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 20:03:16'),(74,11,'ADMIN','editar','asignacion','#16 emp=47 equipo=13 anterior=13','::1','2026-07-19 20:10:45'),(75,NULL,'ADMIN','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:12:50'),(76,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 20:12:50'),(77,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:01'),(78,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:08'),(79,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:10'),(80,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:11'),(81,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:13'),(82,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 20:13:23'),(83,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-20 18:13:40'),(84,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-20 18:34:06'),(85,11,'ADMIN','crear','marca','psa (alta contextual)','::1','2026-07-20 18:35:44'),(86,11,'ADMIN','crear','equipos','#39 marca=17 modelo=19','::1','2026-07-20 18:37:20'),(87,11,'ADMIN','eliminar','areas','#12','::1','2026-07-20 18:39:32'),(88,11,'ADMIN','eliminar','empleados','#67','::1','2026-07-20 18:39:44'),(89,11,'ADMIN','crear','asignacion','#28 emp=52 equipo=22','::1','2026-07-20 18:41:19'),(90,11,'ADMIN','crear','acta_entrega','asignacion #28','::1','2026-07-20 18:42:07'),(91,11,'ADMIN','devolver','asignaciones','asignación #28; condición: Bueno; estado equipo: 1','::1','2026-07-20 18:43:11'),(92,11,'ADMIN','crear','usuarios','ADMINn','::1','2026-07-20 18:46:00'),(93,11,'ADMIN','crear','empleados','Wilfredo Castellanos','::1','2026-07-21 18:20:03'),(94,12,'ADMINn','login_exitoso',NULL,NULL,'::1','2026-07-27 09:58:39'),(95,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-27 10:04:58'),(96,11,'ADMIN','crear','asignacion','#29 emp=4 equipo=25','::1','2026-07-27 10:37:24'),(97,11,'ADMIN','crear','acta_entrega','asignacion #29','::1','2026-07-27 10:37:47'),(98,11,'ADMIN','crear','equipos','#40 marca=11 modelo=15','::1','2026-07-27 11:46:20');
+INSERT INTO `bitacora` VALUES (1,1,'emartinez','login_exitoso',NULL,NULL,'::1','2026-07-01 11:09:14'),(2,NULL,'emartinez','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-01 11:12:14'),(3,NULL,'emartinez','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-01 11:12:19'),(4,1,'emartinez','login_exitoso',NULL,NULL,'::1','2026-07-01 11:12:23'),(5,1,'emartinez','crear','asignacion','emp=9 equipo=5','::1','2026-07-01 11:14:50'),(6,1,'emartinez','crear','marca','facturacion','::1','2026-07-01 11:15:39'),(7,1,'emartinez','crear','usuarios','www','::1','2026-07-02 11:44:51'),(8,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-06 18:45:53'),(9,7,'wcaste','crear','asignacion','emp=7 equipo=1','::1','2026-07-06 18:49:39'),(10,7,'wcaste','crear','asignacion','emp=4 equipo=3','::1','2026-07-06 18:50:02'),(11,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 11:31:20'),(12,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 11:33:55'),(13,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:04:00'),(14,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:04:04'),(15,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:31:29'),(16,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:34:14'),(17,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:41:17'),(18,7,'wcaste','login_exitoso',NULL,NULL,'::1','2026-07-15 12:45:07'),(19,7,'wcaste','crear','empleados','Wilfredos Castellanoss','::1','2026-07-15 12:46:48'),(20,7,'wcaste','crear','usuarios','wcastess','::1','2026-07-15 12:47:07'),(21,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-15 12:47:14'),(22,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-15 13:24:47'),(23,8,'www','login_exitoso',NULL,NULL,'::1','2026-07-16 10:34:41'),(24,9,'wcastess','crear','acta_firma','asignacion #7','::1','2026-07-16 10:53:40'),(25,9,'wcastess','crear','asignacion','emp=2 equipo=4','::1','2026-07-16 10:54:24'),(26,9,'wcastess','crear','acta_firma','asignacion #9','::1','2026-07-16 10:54:33'),(27,9,'wcastess','crear','acta_firma','asignacion #9','::1','2026-07-16 10:57:12'),(28,9,'wcastess','crear','acta_firma','asignacion #8','::1','2026-07-16 10:57:38'),(29,9,'wcastess','crear','acta_firma','asignacion #8','::1','2026-07-16 10:58:14'),(30,9,'wcastess','crear','acta_firma','asignacion #6','::1','2026-07-16 10:58:27'),(31,9,'wcastess','crear','acta_firma','asignacion #5','::1','2026-07-16 10:58:47'),(32,9,'wcastess','login_exitoso',NULL,NULL,'127.0.0.1','2026-07-16 11:24:44'),(33,9,'wcastess','crear','acta_firma','asignacion #4','::1','2026-07-16 11:37:05'),(34,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-16 11:49:31'),(35,9,'wcastess','crear','equipos','marca=5 modelo=6','::1','2026-07-16 11:55:43'),(36,9,'wcastess','crear','asignacion','emp=7 equipo=7','::1','2026-07-16 11:56:03'),(37,9,'wcastess','crear','acta_firma','asignacion #10','::1','2026-07-16 11:56:17'),(38,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-16 12:11:41'),(39,9,'wcastess','crear','areas','Área QA Sistemas','::1','2026-07-16 12:20:44'),(40,9,'wcastess','crear','cargos','Analista QA IT','::1','2026-07-16 12:22:13'),(41,9,'wcastess','crear','marca','Lenovo QA','::1','2026-07-16 12:22:39'),(42,9,'wcastess','crear','modelo','ThinkPad QA T14','::1','2026-07-16 12:23:01'),(43,9,'wcastess','crear','empleados','ALMA PRUEBA','::1','2026-07-16 12:24:13'),(44,9,'wcastess','editar','empleados','ALMA PRUEBA (#41)','::1','2026-07-16 12:25:16'),(45,9,'wcastess','crear','usuarios','ALMA','::1','2026-07-16 12:26:48'),(46,10,'ALMA','login_exitoso',NULL,NULL,'::1','2026-07-16 12:27:27'),(47,9,'wcastess','login_exitoso',NULL,NULL,'::1','2026-07-16 12:28:33'),(48,9,'wcastess','crear','equipos','#8 marca=6 modelo=7','::1','2026-07-16 12:29:39'),(49,9,'wcastess','crear','asignacion','emp=41 equipo=8','::1','2026-07-16 12:30:46'),(50,9,'wcastess','crear','acta_firma','asignacion #11','::1','2026-07-16 12:32:54'),(51,9,'wcastess','devolucion','asignacion','#11 equipo=8','::1','2026-07-16 12:35:24'),(52,9,'wcastess','editar','equipos','#8','::1','2026-07-16 12:36:48'),(53,9,'wcastess','editar','equipos','#8','::1','2026-07-16 12:37:14'),(54,9,'wcastess','crear','empleados','ADMIN ADMIN','::1','2026-07-16 12:41:18'),(55,9,'wcastess','crear','usuarios','ADMIN','::1','2026-07-16 12:41:42'),(56,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-16 12:41:49'),(59,1,'emartinez','devolver','asignaciones','asignación #25; condición: Bueno; estado equipo: 1','127.0.0.1','2026-07-19 12:28:41'),(60,1,'emartinez','devolver','asignaciones','asignación #26; condición: Con daño; estado equipo: 3','127.0.0.1','2026-07-19 12:29:02'),(61,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 13:42:39'),(62,11,'ADMIN','crear','asignacion','#27 emp=43 equipo=21','::1','2026-07-19 13:43:57'),(63,11,'ADMIN','crear','acta_entrega','asignacion #27','::1','2026-07-19 13:44:06'),(64,11,'ADMIN','devolver','asignaciones','asignación #27; condición: Bueno; estado equipo: 1','::1','2026-07-19 13:44:37'),(65,11,'ADMIN','devolver','asignaciones','asignación #17; condición: Con daño; estado equipo: 3','::1','2026-07-19 13:45:13'),(66,11,'ADMIN','editar','usuarios','ALMA (#10)','::1','2026-07-19 13:46:21'),(67,11,'ADMIN','eliminar','usuarios','#1','::1','2026-07-19 13:46:31'),(68,11,'ADMIN','reactivar','usuarios','#1','::1','2026-07-19 13:46:36'),(69,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 14:19:31'),(70,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 14:31:57'),(71,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 14:50:46'),(72,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 16:39:46'),(73,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 20:03:16'),(74,11,'ADMIN','editar','asignacion','#16 emp=47 equipo=13 anterior=13','::1','2026-07-19 20:10:45'),(75,NULL,'ADMIN','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:12:50'),(76,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 20:12:50'),(77,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:01'),(78,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:08'),(79,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:10'),(80,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:11'),(81,NULL,'ADMINyuiktu6t','login_fallido',NULL,'Intento fallido desde ::1','::1','2026-07-19 20:13:13'),(82,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-19 20:13:23'),(83,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-20 18:13:40'),(84,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-20 18:34:06'),(85,11,'ADMIN','crear','marca','psa (alta contextual)','::1','2026-07-20 18:35:44'),(86,11,'ADMIN','crear','equipos','#39 marca=17 modelo=19','::1','2026-07-20 18:37:20'),(87,11,'ADMIN','eliminar','areas','#12','::1','2026-07-20 18:39:32'),(88,11,'ADMIN','eliminar','empleados','#67','::1','2026-07-20 18:39:44'),(89,11,'ADMIN','crear','asignacion','#28 emp=52 equipo=22','::1','2026-07-20 18:41:19'),(90,11,'ADMIN','crear','acta_entrega','asignacion #28','::1','2026-07-20 18:42:07'),(91,11,'ADMIN','devolver','asignaciones','asignación #28; condición: Bueno; estado equipo: 1','::1','2026-07-20 18:43:11'),(92,11,'ADMIN','crear','usuarios','ADMINn','::1','2026-07-20 18:46:00'),(93,11,'ADMIN','crear','empleados','Wilfredo Castellanos','::1','2026-07-21 18:20:03'),(94,12,'ADMINn','login_exitoso',NULL,NULL,'::1','2026-07-27 09:58:39'),(95,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-27 10:04:58'),(96,11,'ADMIN','crear','asignacion','#29 emp=4 equipo=25','::1','2026-07-27 10:37:24'),(97,11,'ADMIN','crear','acta_entrega','asignacion #29','::1','2026-07-27 10:37:47'),(98,11,'ADMIN','crear','equipos','#40 marca=11 modelo=15','::1','2026-07-27 11:46:20'),(99,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-28 11:14:50'),(100,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-28 11:40:16'),(101,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-28 12:01:43'),(102,11,'ADMIN','eliminar','equipos','#40','::1','2026-07-28 12:01:59'),(103,11,'ADMIN','reactivar','equipos','#40','::1','2026-07-28 12:02:07'),(104,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-28 12:08:49'),(105,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-31 11:58:03'),(106,11,'ADMIN','login_exitoso',NULL,NULL,'::1','2026-07-31 11:58:13');
 /*!40000 ALTER TABLE `bitacora` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -202,6 +202,7 @@ CREATE TABLE `equipo` (
   `idequipo` int(11) NOT NULL AUTO_INCREMENT,
   `idmarca_equipo` int(11) NOT NULL,
   `idmodelo_equipo` int(11) NOT NULL,
+  `idproveedor` int(11) DEFAULT NULL,
   `imagen` varchar(500) NOT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT 1,
   `fecha_compra` date DEFAULT NULL,
@@ -217,8 +218,10 @@ CREATE TABLE `equipo` (
   UNIQUE KEY `uq_equipo_numero_serie` (`numero_serie`),
   KEY `idmarca_equipo` (`idmarca_equipo`),
   KEY `idmodelo_equipo` (`idmodelo_equipo`),
+  KEY `idx_equipo_proveedor` (`idproveedor`),
   CONSTRAINT `equipo_ibfk_1` FOREIGN KEY (`idmodelo_equipo`) REFERENCES `modelo` (`idmodelo`),
-  CONSTRAINT `equipo_ibfk_2` FOREIGN KEY (`idmarca_equipo`) REFERENCES `marca` (`idmarca`)
+  CONSTRAINT `equipo_ibfk_2` FOREIGN KEY (`idmarca_equipo`) REFERENCES `marca` (`idmarca`),
+  CONSTRAINT `fk_equipo_proveedor` FOREIGN KEY (`idproveedor`) REFERENCES `proveedores` (`idproveedor`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -228,8 +231,61 @@ CREATE TABLE `equipo` (
 
 LOCK TABLES `equipo` WRITE;
 /*!40000 ALTER TABLE `equipo` DISABLE KEYS */;
-INSERT INTO `equipo` VALUES (1,2,4,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0001','Otro'),(2,1,2,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0002','Otro'),(3,1,1,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0003','Otro'),(4,1,1,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0004','Otro'),(5,1,3,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0005','Otro'),(6,4,6,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0006','Otro'),(7,5,6,'',1,'2026-07-08',22.00,'1111','2029-06-06',2,NULL,'EQ-0007','Otro'),(8,6,7,'',1,'2026-07-01',25000.00,'0001','2026-10-28',1,'NS10','EQ-0008','Laptop'),(9,1,8,'',1,'2025-01-15',48900.00,'DEMO-FAC-1001','2028-01-15',2,'DEMO-SN-1001','EQ-1001','Laptop'),(10,2,9,'',1,'2025-02-10',42500.00,'DEMO-FAC-1002','2028-02-10',2,'DEMO-SN-1002','EQ-1002','Laptop'),(11,3,10,'',1,'2025-03-08',46500.00,'DEMO-FAC-1003','2028-03-08',2,'DEMO-SN-1003','EQ-1003','Laptop'),(12,7,11,'',1,'2025-04-22',78500.00,'DEMO-FAC-1004','2028-04-22',2,'DEMO-SN-1004','EQ-1004','Laptop'),(13,8,12,'',1,'2025-05-16',53900.00,'DEMO-FAC-1005','2028-05-16',2,'DEMO-SN-1005','EQ-1005','Laptop'),(14,9,13,'',1,'2025-06-05',51200.00,'DEMO-FAC-1006','2028-06-05',3,'DEMO-SN-1006','EQ-1006','Laptop'),(15,10,14,'',1,'2025-06-20',44750.00,'DEMO-FAC-1007','2028-06-20',1,'DEMO-SN-1007','EQ-1007','Laptop'),(16,11,15,'',1,'2025-07-11',31800.00,'DEMO-FAC-1008','2028-07-11',1,'DEMO-SN-1008','EQ-1008','Laptop'),(17,3,16,'',1,'2024-08-15',16200.00,'DEMO-FAC-1009','2027-08-15',1,'DEMO-SN-1009','EQ-1009','Monitor'),(18,9,17,'',1,'2024-09-12',11800.00,'DEMO-FAC-1010','2027-09-12',1,'DEMO-SN-1010','EQ-1010','Monitor'),(19,2,18,'',1,'2024-10-03',14600.00,'DEMO-FAC-1011','2027-10-03',1,'DEMO-SN-1011','EQ-1011','Impresora'),(20,12,19,'',1,'2024-10-28',12900.00,'DEMO-FAC-1012','2027-10-28',1,'DEMO-SN-1012','EQ-1012','Impresora'),(21,9,20,'',1,'2025-01-09',22900.00,'DEMO-FAC-1013','2027-01-09',1,'DEMO-SN-1013','EQ-1013','Teléfono'),(22,7,21,'',1,'2025-01-19',26900.00,'DEMO-FAC-1014','2027-01-19',1,'DEMO-SN-1014','EQ-1014','Teléfono'),(23,13,22,'',1,'2024-11-07',68500.00,'DEMO-FAC-1015','2029-11-07',1,'DEMO-SN-1015','EQ-1015','Equipo de red'),(24,14,23,'',1,'2024-12-14',7200.00,'DEMO-FAC-1016','2027-12-14',1,'DEMO-SN-1016','EQ-1016','Equipo de red'),(25,15,24,'',1,'2025-02-26',245000.00,'DEMO-FAC-1017','2030-02-26',2,'DEMO-SN-1017','EQ-1017','Servidor'),(26,3,25,'',1,'2025-03-13',34200.00,'DEMO-FAC-1018','2028-03-13',1,'DEMO-SN-1018','EQ-1018','Computadora de escritorio'),(27,1,26,'',1,'2023-04-12',28700.00,'DEMO-FAC-1019','2026-04-12',3,'DEMO-SN-1019','EQ-1019','Computadora de escritorio'),(28,8,27,'',1,'2023-05-18',17300.00,'DEMO-FAC-1020','2026-05-18',3,'DEMO-SN-1020','EQ-1020','Monitor'),(29,2,9,'',1,'2023-06-21',36500.00,'DEMO-FAC-1021','2026-06-21',3,'DEMO-SN-1021','EQ-1021','Laptop'),(30,12,19,'',1,'2023-07-07',10800.00,'DEMO-FAC-1022','2026-07-07',3,'DEMO-SN-1022','EQ-1022','Impresora'),(31,3,10,'',1,'2023-08-16',39800.00,'DEMO-FAC-1023','2026-08-16',4,'DEMO-SN-1023','EQ-1023','Laptop'),(32,9,20,'',1,'2024-01-25',21600.00,'DEMO-FAC-1024','2026-01-25',4,'DEMO-SN-1024','EQ-1024','Teléfono'),(33,11,15,'',0,'2021-02-11',24800.00,'DEMO-FAC-1025','2024-02-11',5,'DEMO-SN-1025','EQ-1025','Laptop'),(34,9,17,'',0,'2020-09-30',8900.00,'DEMO-FAC-1026','2023-09-30',5,'DEMO-SN-1026','EQ-1026','Monitor'),(35,1,8,'',1,'2026-01-12',49800.00,'DEMO-FAC-1027','2029-01-12',1,'DEMO-SN-1027','EQ-1027','Laptop'),(36,7,11,'',1,'2026-02-09',79900.00,'DEMO-FAC-1028','2029-02-09',1,'DEMO-SN-1028','EQ-1028','Laptop'),(37,3,16,'',1,'2026-03-17',16900.00,'DEMO-FAC-1029','2029-03-17',1,'DEMO-SN-1029','EQ-1029','Monitor'),(38,14,23,'',1,'2026-04-06',7600.00,'DEMO-FAC-1030','2029-04-06',1,'DEMO-SN-1030','EQ-1030','Equipo de red'),(39,17,19,'',1,'2026-07-20',50000.00,'00014545','2026-07-26',1,'NS10000','EQ-0039','Impresora'),(40,11,15,'',1,NULL,NULL,NULL,NULL,1,NULL,'EQ-0040','Laptop');
+INSERT INTO `equipo` VALUES (1,2,4,NULL,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0001','Otro'),(2,1,2,NULL,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0002','Otro'),(3,1,1,NULL,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0003','Otro'),(4,1,1,NULL,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0004','Otro'),(5,1,3,NULL,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0005','Otro'),(6,4,6,NULL,'',1,NULL,NULL,NULL,NULL,2,NULL,'EQ-0006','Otro'),(7,5,6,NULL,'',1,'2026-07-08',22.00,'1111','2029-06-06',2,NULL,'EQ-0007','Otro'),(8,6,7,NULL,'',1,'2026-07-01',25000.00,'0001','2026-10-28',1,'NS10','EQ-0008','Laptop'),(9,1,8,NULL,'',1,'2025-01-15',48900.00,'DEMO-FAC-1001','2028-01-15',2,'DEMO-SN-1001','EQ-1001','Laptop'),(10,2,9,NULL,'',1,'2025-02-10',42500.00,'DEMO-FAC-1002','2028-02-10',2,'DEMO-SN-1002','EQ-1002','Laptop'),(11,3,10,NULL,'',1,'2025-03-08',46500.00,'DEMO-FAC-1003','2028-03-08',2,'DEMO-SN-1003','EQ-1003','Laptop'),(12,7,11,NULL,'',1,'2025-04-22',78500.00,'DEMO-FAC-1004','2028-04-22',2,'DEMO-SN-1004','EQ-1004','Laptop'),(13,8,12,NULL,'',1,'2025-05-16',53900.00,'DEMO-FAC-1005','2028-05-16',2,'DEMO-SN-1005','EQ-1005','Laptop'),(14,9,13,NULL,'',1,'2025-06-05',51200.00,'DEMO-FAC-1006','2028-06-05',3,'DEMO-SN-1006','EQ-1006','Laptop'),(15,10,14,NULL,'',1,'2025-06-20',44750.00,'DEMO-FAC-1007','2028-06-20',1,'DEMO-SN-1007','EQ-1007','Laptop'),(16,11,15,NULL,'',1,'2025-07-11',31800.00,'DEMO-FAC-1008','2028-07-11',1,'DEMO-SN-1008','EQ-1008','Laptop'),(17,3,16,NULL,'',1,'2024-08-15',16200.00,'DEMO-FAC-1009','2027-08-15',1,'DEMO-SN-1009','EQ-1009','Monitor'),(18,9,17,NULL,'',1,'2024-09-12',11800.00,'DEMO-FAC-1010','2027-09-12',1,'DEMO-SN-1010','EQ-1010','Monitor'),(19,2,18,NULL,'',1,'2024-10-03',14600.00,'DEMO-FAC-1011','2027-10-03',1,'DEMO-SN-1011','EQ-1011','Impresora'),(20,12,19,NULL,'',1,'2024-10-28',12900.00,'DEMO-FAC-1012','2027-10-28',1,'DEMO-SN-1012','EQ-1012','Impresora'),(21,9,20,NULL,'',1,'2025-01-09',22900.00,'DEMO-FAC-1013','2027-01-09',1,'DEMO-SN-1013','EQ-1013','Teléfono'),(22,7,21,NULL,'',1,'2025-01-19',26900.00,'DEMO-FAC-1014','2027-01-19',1,'DEMO-SN-1014','EQ-1014','Teléfono'),(23,13,22,NULL,'',1,'2024-11-07',68500.00,'DEMO-FAC-1015','2029-11-07',1,'DEMO-SN-1015','EQ-1015','Equipo de red'),(24,14,23,NULL,'',1,'2024-12-14',7200.00,'DEMO-FAC-1016','2027-12-14',1,'DEMO-SN-1016','EQ-1016','Equipo de red'),(25,15,24,NULL,'',1,'2025-02-26',245000.00,'DEMO-FAC-1017','2030-02-26',2,'DEMO-SN-1017','EQ-1017','Servidor'),(26,3,25,NULL,'',1,'2025-03-13',34200.00,'DEMO-FAC-1018','2028-03-13',1,'DEMO-SN-1018','EQ-1018','Computadora de escritorio'),(27,1,26,NULL,'',1,'2023-04-12',28700.00,'DEMO-FAC-1019','2026-04-12',3,'DEMO-SN-1019','EQ-1019','Computadora de escritorio'),(28,8,27,NULL,'',1,'2023-05-18',17300.00,'DEMO-FAC-1020','2026-05-18',3,'DEMO-SN-1020','EQ-1020','Monitor'),(29,2,9,NULL,'',1,'2023-06-21',36500.00,'DEMO-FAC-1021','2026-06-21',3,'DEMO-SN-1021','EQ-1021','Laptop'),(30,12,19,NULL,'',1,'2023-07-07',10800.00,'DEMO-FAC-1022','2026-07-07',3,'DEMO-SN-1022','EQ-1022','Impresora'),(31,3,10,NULL,'',1,'2023-08-16',39800.00,'DEMO-FAC-1023','2026-08-16',4,'DEMO-SN-1023','EQ-1023','Laptop'),(32,9,20,NULL,'',1,'2024-01-25',21600.00,'DEMO-FAC-1024','2026-01-25',4,'DEMO-SN-1024','EQ-1024','Teléfono'),(33,11,15,NULL,'',0,'2021-02-11',24800.00,'DEMO-FAC-1025','2024-02-11',5,'DEMO-SN-1025','EQ-1025','Laptop'),(34,9,17,NULL,'',0,'2020-09-30',8900.00,'DEMO-FAC-1026','2023-09-30',5,'DEMO-SN-1026','EQ-1026','Monitor'),(35,1,8,NULL,'',1,'2026-01-12',49800.00,'DEMO-FAC-1027','2029-01-12',1,'DEMO-SN-1027','EQ-1027','Laptop'),(36,7,11,NULL,'',1,'2026-02-09',79900.00,'DEMO-FAC-1028','2029-02-09',1,'DEMO-SN-1028','EQ-1028','Laptop'),(37,3,16,NULL,'',1,'2026-03-17',16900.00,'DEMO-FAC-1029','2029-03-17',1,'DEMO-SN-1029','EQ-1029','Monitor'),(38,14,23,NULL,'',1,'2026-04-06',7600.00,'DEMO-FAC-1030','2029-04-06',1,'DEMO-SN-1030','EQ-1030','Equipo de red'),(39,17,19,NULL,'',1,'2026-07-20',50000.00,'00014545','2026-07-26',1,'NS10000','EQ-0039','Impresora'),(40,11,15,NULL,'',1,NULL,NULL,NULL,NULL,1,NULL,'EQ-0040','Laptop');
 /*!40000 ALTER TABLE `equipo` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mantenimientos`
+--
+
+DROP TABLE IF EXISTS `mantenimientos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mantenimientos` (
+  `idmantenimiento` int(11) NOT NULL AUTO_INCREMENT,
+  `idequipo` int(11) NOT NULL,
+  `idproveedor` int(11) DEFAULT NULL,
+  `idasignacion_origen` int(11) DEFAULT NULL,
+  `tipo` varchar(20) NOT NULL,
+  `estado` varchar(20) NOT NULL DEFAULT 'Abierto',
+  `fecha_ingreso` datetime NOT NULL DEFAULT current_timestamp(),
+  `fecha_cierre` datetime DEFAULT NULL,
+  `descripcion_problema` varchar(1000) NOT NULL,
+  `diagnostico` varchar(1000) DEFAULT NULL,
+  `trabajo_realizado` varchar(1000) DEFAULT NULL,
+  `costo` decimal(12,2) DEFAULT NULL,
+  `resultado` varchar(30) DEFAULT NULL,
+  `observaciones` varchar(1000) DEFAULT NULL,
+  `estado_anterior_equipo` tinyint(3) unsigned NOT NULL DEFAULT 1,
+  `origen` varchar(20) NOT NULL DEFAULT 'Manual',
+  `idusuario_apertura` int(11) DEFAULT NULL,
+  `idusuario_cierre` int(11) DEFAULT NULL,
+  `fecha_creacion` datetime NOT NULL DEFAULT current_timestamp(),
+  `fecha_actualizacion` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`idmantenimiento`),
+  UNIQUE KEY `uq_mantenimiento_asignacion_origen` (`idasignacion_origen`),
+  KEY `idx_mantenimiento_equipo_estado` (`idequipo`,`estado`),
+  KEY `idx_mantenimiento_estado_fecha` (`estado`,`fecha_ingreso`),
+  KEY `idx_mantenimiento_proveedor` (`idproveedor`),
+  KEY `idx_mantenimiento_usuario_apertura` (`idusuario_apertura`),
+  KEY `idx_mantenimiento_usuario_cierre` (`idusuario_cierre`),
+  CONSTRAINT `fk_mantenimiento_asignacion` FOREIGN KEY (`idasignacion_origen`) REFERENCES `asignacion` (`idasignacion`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_mantenimiento_equipo` FOREIGN KEY (`idequipo`) REFERENCES `equipo` (`idequipo`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_mantenimiento_proveedor` FOREIGN KEY (`idproveedor`) REFERENCES `proveedores` (`idproveedor`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_mantenimiento_usuario_apertura` FOREIGN KEY (`idusuario_apertura`) REFERENCES `usuarios` (`idusuario`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_mantenimiento_usuario_cierre` FOREIGN KEY (`idusuario_cierre`) REFERENCES `usuarios` (`idusuario`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mantenimientos`
+--
+
+LOCK TABLES `mantenimientos` WRITE;
+/*!40000 ALTER TABLE `mantenimientos` DISABLE KEYS */;
+INSERT INTO `mantenimientos` VALUES (1,14,NULL,NULL,'Correctivo','Abierto','2026-07-31 12:16:35',NULL,'Registro inicial generado al habilitar el módulo de mantenimientos.',NULL,NULL,NULL,NULL,NULL,1,'Migración',NULL,NULL,'2026-07-31 12:16:35','2026-07-31 12:16:35'),(2,27,NULL,NULL,'Correctivo','Abierto','2026-07-31 12:16:35',NULL,'Registro inicial generado al habilitar el módulo de mantenimientos.',NULL,NULL,NULL,NULL,NULL,1,'Migración',NULL,NULL,'2026-07-31 12:16:35','2026-07-31 12:16:35'),(3,28,NULL,NULL,'Correctivo','Abierto','2026-07-31 12:16:35',NULL,'Registro inicial generado al habilitar el módulo de mantenimientos.',NULL,NULL,NULL,NULL,NULL,1,'Migración',NULL,NULL,'2026-07-31 12:16:35','2026-07-31 12:16:35'),(4,29,NULL,NULL,'Correctivo','Abierto','2026-07-31 12:16:35',NULL,'Registro inicial generado al habilitar el módulo de mantenimientos.',NULL,NULL,NULL,NULL,NULL,1,'Migración',NULL,NULL,'2026-07-31 12:16:35','2026-07-31 12:16:35'),(5,30,NULL,NULL,'Correctivo','Abierto','2026-07-31 12:16:35',NULL,'Registro inicial generado al habilitar el módulo de mantenimientos.',NULL,NULL,NULL,NULL,NULL,1,'Migración',NULL,NULL,'2026-07-31 12:16:35','2026-07-31 12:16:35');
+/*!40000 ALTER TABLE `mantenimientos` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -296,6 +352,7 @@ CREATE TABLE `permisos` (
   `idusuario` int(11) NOT NULL,
   `datosmaestros` tinyint(1) NOT NULL,
   `transacciones` tinyint(1) NOT NULL,
+  `mantenimientos` tinyint(1) NOT NULL DEFAULT 0,
   `consultas` tinyint(1) NOT NULL,
   `reportes` tinyint(1) NOT NULL,
   `actas` tinyint(1) NOT NULL DEFAULT 0,
@@ -312,8 +369,43 @@ CREATE TABLE `permisos` (
 
 LOCK TABLES `permisos` WRITE;
 /*!40000 ALTER TABLE `permisos` DISABLE KEYS */;
-INSERT INTO `permisos` VALUES (1,1,1,1,1,1,1,1),(2,2,1,0,1,0,0,0),(3,3,1,0,1,0,0,0),(4,4,0,0,0,1,1,0),(5,5,1,1,1,1,1,1),(6,6,0,1,1,1,1,0),(7,7,1,1,1,1,1,1),(8,8,1,1,1,1,1,1),(9,9,1,1,1,1,1,1),(10,10,1,1,1,1,1,1),(11,11,1,1,1,1,1,1),(12,12,0,0,0,0,0,0);
+INSERT INTO `permisos` VALUES (1,1,1,1,1,1,1,1,1),(2,2,1,0,0,1,0,0,0),(3,3,1,0,0,1,0,0,0),(4,4,0,0,0,0,1,1,0),(5,5,1,1,1,1,1,1,1),(6,6,0,1,1,1,1,1,0),(7,7,1,1,1,1,1,1,1),(8,8,1,1,1,1,1,1,1),(9,9,1,1,1,1,1,1,1),(10,10,1,1,1,1,1,1,1),(11,11,1,1,1,1,1,1,1),(12,12,0,0,0,0,0,0,0);
 /*!40000 ALTER TABLE `permisos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `proveedores`
+--
+
+DROP TABLE IF EXISTS `proveedores`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `proveedores` (
+  `idproveedor` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(150) NOT NULL,
+  `rtn` varchar(30) DEFAULT NULL,
+  `contacto` varchar(120) DEFAULT NULL,
+  `telefono` varchar(30) DEFAULT NULL,
+  `correo` varchar(150) DEFAULT NULL,
+  `direccion` varchar(255) DEFAULT NULL,
+  `observaciones` varchar(500) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` datetime NOT NULL DEFAULT current_timestamp(),
+  `fecha_actualizacion` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`idproveedor`),
+  UNIQUE KEY `uq_proveedores_nombre` (`nombre`),
+  UNIQUE KEY `uq_proveedores_rtn` (`rtn`),
+  KEY `idx_proveedores_activo` (`activo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `proveedores`
+--
+
+LOCK TABLES `proveedores` WRITE;
+/*!40000 ALTER TABLE `proveedores` DISABLE KEYS */;
+/*!40000 ALTER TABLE `proveedores` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -370,10 +462,6 @@ INSERT INTO `usuarios` VALUES (1,'emartinez','$2y$10$gcpigWkliTOaPrrPmPdVs.OTxLv
 UNLOCK TABLES;
 
 --
--- Dumping events for database 'gestactivos'
---
-
---
 -- Dumping routines for database 'gestactivos'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -386,4 +474,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-28 11:12:29
+-- Dump completed on 2026-07-31 12:42:49

@@ -19,6 +19,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new RuntimeException('Ya existe un equipo registrado con ese número de serie.');
             }
 
+            if ($datos['idproveedor'] !== null && !$db->fila(
+                'SELECT idproveedor FROM proveedores WHERE idproveedor=? AND activo=1',
+                [$datos['idproveedor']]
+            )) {
+                throw new RuntimeException('El proveedor seleccionado no está activo o no existe.');
+            }
+
             $imagen = '';
             if (!Upload::estaVacio($_FILES['archivo'] ?? null)) {
                 $archivoGuardado = Upload::guardarImagen($_FILES['archivo'], IMG_EQUIPOS, 'equipo');
@@ -28,11 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idEquipo = $db->transaccion(function (Database $db) use ($datos, $imagen) {
                 $id = $db->ejecutar(
                     "INSERT INTO equipo
-                        (idmarca_equipo, idmodelo_equipo, imagen, activo, fecha_compra, costo, factura,
+                        (idmarca_equipo, idmodelo_equipo, idproveedor, imagen, activo, fecha_compra, costo, factura,
                          vencimiento_garantia, estado_equipo, numero_serie, codigo_activo, tipo_equipo)
-                     VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, NULL, ?)",
+                     VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, NULL, ?)",
                     [
-                        $datos['idmarca'], $datos['idmodelo'], $imagen, $datos['fecha_compra'],
+                        $datos['idmarca'], $datos['idmodelo'], $datos['idproveedor'], $imagen, $datos['fecha_compra'],
                         $datos['costo'], $datos['factura'], $datos['garantia'], EquipoEstado::DISPONIBLE,
                         $datos['numero_serie'], $datos['tipo_equipo'],
                     ]
@@ -66,21 +73,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             )) {
                 throw new RuntimeException('Ya existe otro equipo registrado con ese número de serie.');
             }
+            $equipoActual = $db->fila('SELECT idproveedor FROM equipo WHERE idequipo=?', [$datos['id']]);
+            if (!$equipoActual) {
+                throw new RuntimeException('El equipo indicado no existe.');
+            }
+            if ($datos['idproveedor'] !== null) {
+                $proveedor = $db->fila('SELECT activo FROM proveedores WHERE idproveedor=?', [$datos['idproveedor']]);
+                $conservaProveedor = (int)($equipoActual['idproveedor'] ?? 0) === $datos['idproveedor'];
+                if (!$proveedor || ((int)$proveedor['activo'] !== 1 && !$conservaProveedor)) {
+                    throw new RuntimeException('El proveedor seleccionado no está disponible.');
+                }
+            }
             if ($db->fila(
                 'SELECT idasignacion FROM asignacion WHERE idequipo=? AND activa=1',
                 [$datos['id']]
             )) {
                 $datos['estado'] = EquipoEstado::ASIGNADO;
-            } elseif ($datos['estado'] === EquipoEstado::ASIGNADO) {
+            } elseif ($db->fila(
+                "SELECT idmantenimiento FROM mantenimientos
+                 WHERE idequipo=? AND estado IN ('Abierto','En proceso')",
+                [$datos['id']]
+            )) {
+                $datos['estado'] = EquipoEstado::MANTENIMIENTO;
+            } elseif (in_array($datos['estado'], [EquipoEstado::ASIGNADO, EquipoEstado::MANTENIMIENTO], true)) {
                 $datos['estado'] = EquipoEstado::DISPONIBLE;
             }
 
             if (!Upload::estaVacio($_FILES['archivoAct'] ?? null)) {
                 $archivoGuardado = Upload::guardarImagen($_FILES['archivoAct'], IMG_EQUIPOS, 'equipo');
                 $db->ejecutar(
-                    "UPDATE equipo SET idmarca_equipo=?, idmodelo_equipo=?, imagen=?, fecha_compra=?, costo=?, factura=?, vencimiento_garantia=?, numero_serie=?, tipo_equipo=?, estado_equipo=?, activo=IF(?=5,0,activo) WHERE idequipo=?",
+                    "UPDATE equipo SET idmarca_equipo=?, idmodelo_equipo=?, idproveedor=?, imagen=?, fecha_compra=?, costo=?, factura=?, vencimiento_garantia=?, numero_serie=?, tipo_equipo=?, estado_equipo=?, activo=IF(?=5,0,activo) WHERE idequipo=?",
                     [
-                        $datos['idmarca'], $datos['idmodelo'], 'public/img/equipos/' . $archivoGuardado,
+                        $datos['idmarca'], $datos['idmodelo'], $datos['idproveedor'], 'public/img/equipos/' . $archivoGuardado,
                         $datos['fecha_compra'], $datos['costo'], $datos['factura'], $datos['garantia'],
                         $datos['numero_serie'], $datos['tipo_equipo'], $datos['estado'],
                         $datos['estado'], $datos['id'],
@@ -88,9 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
             } else {
                 $db->ejecutar(
-                    "UPDATE equipo SET idmarca_equipo=?, idmodelo_equipo=?, fecha_compra=?, costo=?, factura=?, vencimiento_garantia=?, numero_serie=?, tipo_equipo=?, estado_equipo=?, activo=IF(?=5,0,activo) WHERE idequipo=?",
+                    "UPDATE equipo SET idmarca_equipo=?, idmodelo_equipo=?, idproveedor=?, fecha_compra=?, costo=?, factura=?, vencimiento_garantia=?, numero_serie=?, tipo_equipo=?, estado_equipo=?, activo=IF(?=5,0,activo) WHERE idequipo=?",
                     [
-                        $datos['idmarca'], $datos['idmodelo'], $datos['fecha_compra'], $datos['costo'],
+                        $datos['idmarca'], $datos['idmodelo'], $datos['idproveedor'], $datos['fecha_compra'], $datos['costo'],
                         $datos['factura'], $datos['garantia'], $datos['numero_serie'],
                         $datos['tipo_equipo'], $datos['estado'], $datos['estado'], $datos['id'],
                     ]
@@ -120,8 +144,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Auth::flash('error', 'El equipo indicado no existe.');
         } elseif ((int)$filaActual['activo'] === 1) {
             $tieneAsignacion = $db->fila("SELECT idasignacion FROM asignacion WHERE idequipo=? AND activa=1", [$idEquipoDel]);
+            $tieneMantenimiento = $db->fila(
+                'SELECT idmantenimiento FROM mantenimientos WHERE idequipo=? AND estado IN (?,?)',
+                [$idEquipoDel, MantenimientoEstado::ABIERTO, MantenimientoEstado::EN_PROCESO]
+            );
             if ($tieneAsignacion) {
                 Auth::flash('error', 'No se puede dar de baja: este equipo tiene una asignación activa. Quita primero la asignación.');
+            } elseif ($tieneMantenimiento) {
+                Auth::flash('error', 'No se puede dar de baja directamente: cierra el mantenimiento con resultado No reparable.');
             } else {
                 $db->ejecutar(
                     'UPDATE equipo SET activo=0, estado_equipo=? WHERE idequipo=?',
@@ -159,6 +189,11 @@ $filtroTipos = array_column(
     'etiqueta',
     'valor'
 );
+$filtroProveedores = array_column(
+    $db->consulta("SELECT idproveedor AS valor, nombre AS etiqueta FROM proveedores ORDER BY nombre"),
+    'etiqueta',
+    'valor'
+);
 
 $pageTitle = 'Equipos';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
@@ -193,6 +228,7 @@ initAjaxTableFilters('<?= BASE_URL ?>/app/ajax/maestros/equipos.php');
         ['name' => 'tipo_equipo', 'label' => 'Tipo', 'options' => $filtroTipos],
         ['name' => 'idmarca', 'label' => 'Marca', 'options' => $filtroMarcas],
         ['name' => 'idmodelo', 'label' => 'Modelo', 'options' => $filtroModelos],
+        ['name' => 'idproveedor', 'label' => 'Proveedor', 'options' => $filtroProveedores],
         ['name' => 'activo', 'label' => 'Registro', 'options' => [1 => 'Activo', 0 => 'Inactivo']],
         ['name' => 'garantia', 'label' => 'Garantía', 'options' => ['vigente' => 'Vigente', 'vence_30' => 'Vence en 30 días', 'vencida' => 'Vencida', 'sin_fecha' => 'Sin fecha']],
       ],

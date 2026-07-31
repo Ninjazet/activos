@@ -45,12 +45,14 @@ $movimientos = $db->consulta(
 $permisos = [
     'maestros' => ($_SESSION['maestros'] ?? '0') == '1',
     'transacciones' => ($_SESSION['transacciones'] ?? '0') == '1',
+    'mantenimientos' => ($_SESSION['mantenimientos'] ?? '0') == '1',
     'consultas' => ($_SESSION['consultas'] ?? '0') == '1',
     'reportes' => ($_SESSION['reportes'] ?? '0') == '1',
     'seguridad' => ($_SESSION['seguridad'] ?? '0') == '1',
 ];
 $acciones = [];
 if ($permisos['transacciones']) $acciones[] = ['asignarequipo.php','fa-laptop-file','Nueva asignación','Entregar un equipo disponible'];
+if ($permisos['mantenimientos']) $acciones[] = ['mantenimientos.php','fa-screwdriver-wrench','Mantenimientos','Abrir y dar seguimiento a reparaciones'];
 if ($permisos['maestros']) {
     $acciones[] = ['equipos.php','fa-laptop','Inventario','Registrar o actualizar equipos'];
     $acciones[] = ['empleados.php','fa-users','Personal','Administrar empleados'];
@@ -61,9 +63,10 @@ if ($permisos['seguridad']) $acciones[] = ['usuarios.php','fa-user-shield','Usua
 
 $urlEquipos = $permisos['maestros'] ? 'equipos.php' : ($permisos['consultas'] ? 'consultas/equipos.php' : null);
 $urlAsignaciones = $permisos['transacciones'] ? 'asignarequipo.php' : ($permisos['consultas'] ? 'consultas/asignaciones.php' : null);
+$urlMantenimientos = $permisos['mantenimientos'] ? 'mantenimientos.php' : ($permisos['consultas'] ? 'consultas/mantenimientos.php' : $urlEquipos);
 $alertas = [];
 if ($metricas['firmas']) $alertas[] = ['warning','fa-signature',$metricas['firmas'],'entrega(s) pendiente(s) de firma',$urlAsignaciones];
-if ($metricas['mantenimiento']) $alertas[] = ['info','fa-screwdriver-wrench',$metricas['mantenimiento'],'equipo(s) en mantenimiento',$urlEquipos];
+if ($metricas['mantenimiento']) $alertas[] = ['info','fa-screwdriver-wrench',$metricas['mantenimiento'],'equipo(s) en mantenimiento',$urlMantenimientos];
 if ($metricas['garantias_vencidas']) $alertas[] = ['danger','fa-shield-halved',$metricas['garantias_vencidas'],'garantía(s) vencida(s)',$urlEquipos];
 if ($metricas['garantias_proximas']) $alertas[] = ['warning','fa-calendar-day',$metricas['garantias_proximas'],'garantía(s) vencen en 30 días',$urlEquipos];
 if ($metricas['perdidos']) $alertas[] = ['danger','fa-triangle-exclamation',$metricas['perdidos'],'equipo(s) perdido(s) o robado(s)',$urlEquipos];

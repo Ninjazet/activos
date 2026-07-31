@@ -11,22 +11,25 @@ $estadoEquipoFiltro = TableFilter::enum('estado_equipo', EquipoEstado::idsComoTe
 $tipoEquipoFiltro = TableFilter::text('tipo_equipo', 50);
 $marcaFiltro = TableFilter::positiveInt('idmarca');
 $modeloFiltro = TableFilter::positiveInt('idmodelo');
+$proveedorFiltro = TableFilter::positiveInt('idproveedor');
 $activoFiltro = TableFilter::enum('activo', ['0', '1']);
 $garantiaFiltro = TableFilter::enum('garantia', ['vigente', 'vence_30', 'vencida', 'sin_fecha']);
 
-$sql = "SELECT eq.idequipo, eq.imagen, eq.idmarca_equipo, eq.idmodelo_equipo,
+$sql = "SELECT eq.idequipo, eq.imagen, eq.idmarca_equipo, eq.idmodelo_equipo, eq.idproveedor,
                eq.activo, eq.fecha_compra, eq.costo, eq.factura, eq.vencimiento_garantia,
-               eq.estado_equipo, eq.numero_serie, eq.codigo_activo, eq.tipo_equipo, ma.nombreMarca, mo.nombreModelo
+               eq.estado_equipo, eq.numero_serie, eq.codigo_activo, eq.tipo_equipo,
+               ma.nombreMarca, mo.nombreModelo, p.nombre AS proveedor
         FROM equipo eq
         INNER JOIN marca  ma ON eq.idmarca_equipo  = ma.idmarca
-        INNER JOIN modelo mo ON eq.idmodelo_equipo = mo.idmodelo";
+        INNER JOIN modelo mo ON eq.idmodelo_equipo = mo.idmodelo
+        LEFT JOIN proveedores p ON eq.idproveedor=p.idproveedor";
 
 $conditions = [];
 $params     = [];
 if ($q !== '') {
-    $conditions[] = "(ma.nombreMarca LIKE ? OR mo.nombreModelo LIKE ? OR eq.idequipo LIKE ? OR eq.codigo_activo LIKE ? OR eq.numero_serie LIKE ? OR eq.tipo_equipo LIKE ?)";
+    $conditions[] = "(ma.nombreMarca LIKE ? OR mo.nombreModelo LIKE ? OR eq.idequipo LIKE ? OR eq.codigo_activo LIKE ? OR eq.numero_serie LIKE ? OR eq.tipo_equipo LIKE ? OR p.nombre LIKE ?)";
     $like   = "%$q%";
-    $params = [$like, $like, $like, $like, $like, $like];
+    $params = [$like, $like, $like, $like, $like, $like, $like];
 }
 if ($estadoEquipoFiltro !== '') {
     $conditions[] = 'eq.estado_equipo = ?';
@@ -43,6 +46,10 @@ if ($marcaFiltro > 0) {
 if ($modeloFiltro > 0) {
     $conditions[] = 'eq.idmodelo_equipo = ?';
     $params[] = $modeloFiltro;
+}
+if ($proveedorFiltro > 0) {
+    $conditions[] = 'eq.idproveedor = ?';
+    $params[] = $proveedorFiltro;
 }
 if ($activoFiltro !== '') {
     $conditions[] = 'eq.activo = ?';
@@ -65,11 +72,13 @@ $sql .= " ORDER BY eq.idequipo DESC";
 $rows    = $db->consulta($sql, $params);
 $marcas  = $db->consulta("SELECT * FROM marca  WHERE activo=1 ORDER BY nombreMarca");
 $modelos = $db->consulta("SELECT * FROM modelo WHERE activo=1 ORDER BY nombreModelo");
+$proveedores = $db->consulta("SELECT * FROM proveedores WHERE activo=1 ORDER BY nombre");
 
 // Para el modal de EDITAR: incluye también inactivos (marcados), para no perder
 // la referencia si el equipo ya tenía una marca/modelo que luego se dio de baja.
 $marcasTodas  = $db->consulta("SELECT * FROM marca  ORDER BY activo DESC, nombreMarca");
 $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombreModelo");
+$proveedoresTodos = $db->consulta("SELECT * FROM proveedores ORDER BY activo DESC, nombre");
 ?>
 <?php if ($rows): ?>
 <p class="responsive-table-note">
@@ -84,7 +93,7 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
             <th data-priority="5">Marca</th><th data-priority="3">Modelo</th>
             <th data-priority="2">Estado del equipo</th>
             <th data-priority="8">Fecha compra</th><th data-priority="7">Costo</th>
-            <th data-priority="9">Factura</th><th data-priority="10">Garantía</th>
+            <th data-priority="9">Factura</th><th data-priority="10">Proveedor</th><th data-priority="11">Garantía</th>
             <th data-priority="1">Acciones</th>
         </tr>
     </thead>
@@ -97,6 +106,7 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
         ?>
         <tr class="<?= $activo === 0 ? 'text-muted' : '' ?>"
             data-idmarca="<?= (int)$r['idmarca_equipo'] ?>" data-idmodelo="<?= (int)$r['idmodelo_equipo'] ?>"
+            data-idproveedor="<?= (int)($r['idproveedor'] ?? 0) ?>"
             data-fecha-compra="<?= htmlspecialchars($r['fecha_compra'] ?? '', ENT_QUOTES) ?>"
             data-costo="<?= htmlspecialchars($r['costo'] ?? '', ENT_QUOTES) ?>"
             data-factura="<?= htmlspecialchars($r['factura'] ?? '', ENT_QUOTES) ?>"
@@ -115,6 +125,7 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
             <td><?= $r['fecha_compra'] ? date('d/m/Y', strtotime($r['fecha_compra'])) : '—' ?></td>
             <td><?= $r['costo'] !== null ? 'L ' . number_format((float)$r['costo'], 2) : '—' ?></td>
             <td><?= htmlspecialchars($r['factura'] ?: '—') ?></td>
+            <td><?= htmlspecialchars($r['proveedor'] ?: '—') ?></td>
             <td><?= $r['vencimiento_garantia'] ? date('d/m/Y', strtotime($r['vencimiento_garantia'])) : '—' ?></td>
             <td class="table-actions">
                 <?php
@@ -128,6 +139,12 @@ $modelosTodos = $db->consulta("SELECT * FROM modelo ORDER BY activo DESC, nombre
                 <a href="<?= BASE_URL ?>/asignarequipo.php?idequipo=<?= (int)$r['idequipo'] ?>"
                    title="Asignar este equipo a un empleado" aria-label="Asignar este equipo a un empleado">
                     <i class="fa fa-user-plus" aria-hidden="true"></i>
+                </a>
+                <?php endif; ?>
+                <?php if ($activo === 1 && $estadoEquipo === EquipoEstado::DISPONIBLE && (string)($_SESSION['mantenimientos'] ?? '0') === '1'): ?>
+                <a href="<?= BASE_URL ?>/mantenimientos.php?idequipo=<?= (int)$r['idequipo'] ?>"
+                   title="Enviar este equipo a mantenimiento" aria-label="Enviar este equipo a mantenimiento">
+                    <i class="fa fa-screwdriver-wrench" aria-hidden="true"></i>
                 </a>
                 <?php endif; ?>
                 <?php if ($activo === 1): ?>
@@ -166,7 +183,7 @@ $(document).ready(function () {
             { targets: 0, className: 'dtr-control', responsivePriority: 6 },
             { targets: 1, responsivePriority: 1 },
             { targets: 6, responsivePriority: 2 },
-            { targets: 11, responsivePriority: 1, orderable: false }
+            { targets: 12, responsivePriority: 1, orderable: false }
         ]
     });
 });
@@ -179,6 +196,7 @@ function editEquipo(e) {
     $('#idequipo').val(tr.find('td').eq(0).text());
     $('#marcaAct').val(tr.data('idmarca'));
     $('#modeloAct').val(tr.data('idmodelo'));
+    $('#proveedorAct').val(String(tr.data('idproveedor') || 0));
     $('#numero_serieAct').val(tr.attr('data-numero-serie'));
     $('#tipo_equipoAct').val(tr.attr('data-tipo-equipo'));
     $('#fecha_compraAct').val(tr.attr('data-fecha-compra'));
@@ -307,6 +325,7 @@ function delEquipo(e) {
         <div class="form-group"><label for="fechaCompraNuevo">Fecha de compra</label><input type="date" name="fecha_compra" id="fechaCompraNuevo" class="form-control"></div>
         <div class="form-group"><label for="costoNuevo">Costo (L)</label><input type="number" name="costo" id="costoNuevo" class="form-control" min="0" step="0.01" placeholder="0.00"></div>
         <div class="form-group"><label for="facturaNueva">Número de factura</label><input type="text" name="factura" id="facturaNueva" class="form-control" maxlength="100"></div>
+        <div class="form-group"><label for="proveedorNuevoEquipo">Proveedor</label><select name="idproveedor" id="proveedorNuevoEquipo" class="form-select"><option value="0">Sin proveedor registrado</option><?php foreach ($proveedores as $proveedor): ?><option value="<?= (int)$proveedor['idproveedor'] ?>"><?= htmlspecialchars($proveedor['nombre']) ?></option><?php endforeach; ?></select></div>
         <div class="form-group"><label for="garantiaNueva">Vencimiento de garantía</label><input type="date" name="vencimiento_garantia" id="garantiaNueva" class="form-control"></div>
           </div>
         </section>
@@ -384,18 +403,20 @@ function delEquipo(e) {
         <div class="form-group"><label for="fecha_compraAct">Fecha de compra</label><input type="date" name="fecha_compraAct" id="fecha_compraAct" class="form-control"></div>
         <div class="form-group"><label for="costoAct">Costo (L)</label><input type="number" name="costoAct" id="costoAct" class="form-control" min="0" step="0.01"></div>
         <div class="form-group"><label for="facturaAct">Número de factura</label><input type="text" name="facturaAct" id="facturaAct" class="form-control" maxlength="100"></div>
+        <div class="form-group"><label for="proveedorAct">Proveedor</label><select name="proveedorAct" id="proveedorAct" class="form-select"><option value="0">Sin proveedor registrado</option><?php foreach ($proveedoresTodos as $proveedor): ?><option value="<?= (int)$proveedor['idproveedor'] ?>"><?= htmlspecialchars($proveedor['nombre']) ?><?= (int)$proveedor['activo'] === 0 ? ' (inactivo)' : '' ?></option><?php endforeach; ?></select></div>
         <div class="form-group"><label for="vencimiento_garantiaAct">Vencimiento de garantía</label><input type="date" name="vencimiento_garantiaAct" id="vencimiento_garantiaAct" class="form-control"></div>
           </div>
         </section>
         <section class="form-section" aria-labelledby="editarEquipoEstado">
           <div class="form-section-header">
             <h6 class="form-section-title" id="editarEquipoEstado">Estado operativo</h6>
-            <small class="form-section-help">El estado Asignado se controla desde las transacciones.</small>
+            <small class="form-section-help">Asignado y En mantenimiento se controlan desde sus módulos.</small>
           </div>
           <div class="form-grid">
         <div class="form-group form-span-2"><label for="estado_equipoAct">Estado del equipo</label><select name="estado_equipoAct" id="estado_equipoAct" class="form-select" required>
           <?php foreach (EquipoEstado::opciones() as $estadoId => $estadoNombre): ?>
-            <option value="<?= $estadoId ?>" <?= $estadoId === EquipoEstado::ASIGNADO ? 'disabled' : '' ?>><?= htmlspecialchars($estadoNombre) ?><?= $estadoId === EquipoEstado::ASIGNADO ? ' (automático)' : '' ?></option>
+            <?php $automatico = in_array($estadoId, [EquipoEstado::ASIGNADO, EquipoEstado::MANTENIMIENTO], true); ?>
+            <option value="<?= $estadoId ?>" <?= $automatico ? 'disabled' : '' ?>><?= htmlspecialchars($estadoNombre) ?><?= $automatico ? ' (automático)' : '' ?></option>
           <?php endforeach; ?>
         </select></div>
           </div>

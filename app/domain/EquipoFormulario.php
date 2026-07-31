@@ -16,6 +16,7 @@ final class EquipoFormulario {
         $sufijo = $edicion ? 'Act' : '';
         $marcaCampo = $edicion ? 'marcaAct' : 'idmarca';
         $modeloCampo = $edicion ? 'modeloAct' : 'idmodelo';
+        $proveedorCampo = $edicion ? 'proveedorAct' : 'idproveedor';
 
         $fechaCompra = Validacion::fechaOpcional(
             $origen['fecha_compra' . $sufijo] ?? null,
@@ -44,6 +45,7 @@ final class EquipoFormulario {
                 : null,
             'idmarca' => Validacion::enteroPositivo($origen[$marcaCampo] ?? null, 'La marca'),
             'idmodelo' => Validacion::enteroPositivo($origen[$modeloCampo] ?? null, 'El modelo'),
+            'idproveedor' => Validacion::enteroPositivoOpcional($origen[$proveedorCampo] ?? null, 'El proveedor'),
             'fecha_compra' => $fechaCompra,
             'costo' => Validacion::costoOpcional($origen['costo' . $sufijo] ?? null),
             'factura' => Validacion::textoOpcional($origen['factura' . $sufijo] ?? null, 100, 'La factura'),

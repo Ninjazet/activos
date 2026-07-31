@@ -222,7 +222,7 @@
 
     <main>
       <header class="hero">
-        <div class="eyebrow">Referencia técnica · 19 de julio de 2026</div>
+        <div class="eyebrow">Referencia técnica · 31 de julio de 2026</div>
         <h1>Cómo funciona GestActivos</h1>
         <p>Una guía práctica para que otro programador pueda instalar, recorrer, mantener y ampliar el sistema sin tener que deducir cada flujo desde cero.</p>
         <div class="badges">
@@ -239,7 +239,7 @@
         <section id="proposito" data-title="propósito alcance resumen sistema">
           <span class="section-number">01 · Propósito</span>
           <h2>Qué resuelve el sistema</h2>
-          <p class="lead">GestActivos administra empleados, equipos, catálogos, usuarios, permisos y el ciclo completo de entrega y devolución de activos.</p>
+          <p class="lead">GestActivos administra empleados, equipos, proveedores, mantenimientos, catálogos, usuarios, permisos y el ciclo completo de entrega y devolución de activos.</p>
           <div class="grid three">
             <div class="card"><h3>Inventario</h3><p>Registra cada equipo con código interno, serie, tipo, datos de compra, garantía y estado operativo.</p></div>
             <div class="card"><h3>Custodia</h3><p>Relaciona un equipo con un empleado, deja constancia de las condiciones de entrega y cierra la asignación al devolverlo.</p></div>
@@ -418,10 +418,11 @@ Auth::verificarCsrf();
           <table>
             <thead><tr><th>Permiso</th><th>Habilita</th><th>Ejemplos</th></tr></thead>
             <tbody>
-              <tr><td><code>maestros</code></td><td>Inventario, empleados y catálogos.</td><td>Crear/editar/inactivar equipos, empleados, áreas, cargos, marcas y modelos.</td></tr>
+              <tr><td><code>maestros</code></td><td>Inventario, empleados y catálogos.</td><td>Crear/editar/inactivar equipos, empleados, proveedores, áreas, cargos, marcas y modelos.</td></tr>
               <tr><td><code>transacciones</code></td><td>Operación de custodia.</td><td>Asignar, editar una asignación abierta, firmar entrega y devolver equipo.</td></tr>
-              <tr><td><code>consultas</code></td><td>Vistas de consulta.</td><td>Consultar inventario, empleados y asignaciones sin alterar datos.</td></tr>
-              <tr><td><code>reportes</code></td><td>Listados y descargas.</td><td>Reportes PDF de empleados, equipos y asignaciones.</td></tr>
+              <tr><td><code>mantenimientos</code></td><td>Operación técnica.</td><td>Abrir, actualizar, cancelar y cerrar mantenimientos.</td></tr>
+              <tr><td><code>consultas</code></td><td>Vistas de consulta.</td><td>Consultar inventario, empleados, asignaciones y mantenimientos sin alterar datos.</td></tr>
+              <tr><td><code>reportes</code></td><td>Listados y descargas.</td><td>Reportes PDF de empleados, equipos, asignaciones y mantenimientos.</td></tr>
               <tr><td><code>actas</code></td><td>Consulta documental.</td><td>Abrir actas ya creadas sin poder ejecutar transacciones.</td></tr>
               <tr><td><code>seguridad</code></td><td>Administración del sistema.</td><td>Usuarios, permisos y bitácora.</td></tr>
             </tbody>
@@ -437,8 +438,10 @@ Auth::verificarCsrf();
             <thead><tr><th>Tabla</th><th>Propósito</th><th>Relaciones relevantes</th></tr></thead>
             <tbody>
               <tr><td><code>empleados</code></td><td>Datos personales, correo, foto y bandera <code>activo</code>.</td><td>Apunta a <code>cargos</code>, <code>areas</code> y <code>sexo</code>; recibe asignaciones y usuarios.</td></tr>
-              <tr><td><code>equipo</code></td><td>Activo físico, compra, garantía, serie, código y estado.</td><td>Apunta a <code>marca</code> y <code>modelo</code>; recibe asignaciones.</td></tr>
+              <tr><td><code>equipo</code></td><td>Activo físico, compra, garantía, serie, código y estado.</td><td>Apunta a <code>marca</code>, <code>modelo</code> y opcionalmente <code>proveedores</code>; recibe asignaciones y mantenimientos.</td></tr>
               <tr><td><code>asignacion</code></td><td>Historial de entrega y devolución.</td><td>Relaciona empleado, equipo y usuario de devolución; conserva firmas y checklist.</td></tr>
+              <tr><td><code>proveedores</code></td><td>Catálogo comercial ampliado con contacto y baja lógica.</td><td>Se relaciona opcionalmente con compras de equipos y trabajos de mantenimiento.</td></tr>
+              <tr><td><code>mantenimientos</code></td><td>Historial técnico, diagnóstico, trabajo, costo y resultado.</td><td>Relaciona equipo, proveedor opcional, asignación de origen y usuarios de apertura/cierre.</td></tr>
               <tr><td><code>usuarios</code></td><td>Credencial vinculada a un empleado.</td><td>Uno a uno lógico con <code>permisos</code>; genera entradas de bitácora.</td></tr>
               <tr><td><code>permisos</code></td><td>Banderas de autorización por usuario.</td><td>Se carga en sesión al iniciar sesión.</td></tr>
               <tr><td><code>bitacora</code></td><td>Auditoría de acciones.</td><td>Referencia al usuario que ejecutó la acción.</td></tr>
@@ -489,9 +492,26 @@ Auth::verificarCsrf();
           <ul>
             <li>Después del INSERT genera el código único <code>EQ-0001</code> usando el identificador recién creado.</li>
             <li>Valida serie, tipo, estado, fechas y costo antes de escribir.</li>
-            <li>Si existe asignación abierta, el estado se fuerza a Asignado.</li>
-            <li>Un equipo no puede darse de baja mientras tenga una asignación activa.</li>
+            <li>Si existe asignación abierta, el estado se fuerza a Asignado; si hay mantenimiento abierto, se fuerza a En mantenimiento.</li>
+            <li>Un equipo no puede darse de baja mientras tenga una asignación o un mantenimiento activo.</li>
+            <li>El proveedor de compra es opcional. Solo proveedores activos pueden vincularse a equipos nuevos; las relaciones históricas se conservan al inactivar el proveedor.</li>
             <li>La baja lógica coloca el estado en Dado de baja; la reactivación lo devuelve a Disponible.</li>
+          </ul>
+
+          <h3>Proveedores</h3>
+          <ul>
+            <li>Permite crear, editar, buscar, inactivar y reactivar sin borrar relaciones históricas.</li>
+            <li>La ficha muestra contacto, RTN, cantidad de equipos, total registrado en compras y el inventario relacionado.</li>
+            <li>Los proveedores activos aparecen en compras y mantenimientos nuevos; los inactivos siguen visibles al editar registros históricos.</li>
+          </ul>
+
+          <h3>Mantenimientos</h3>
+          <ul>
+            <li>Solo un equipo activo y Disponible, sin asignación ni mantenimiento abierto, puede enviarse manualmente.</li>
+            <li>Los estados operativos son Abierto y En proceso. Completado y Cancelado son historial y nunca se eliminan.</li>
+            <li>Reparado devuelve el equipo a Disponible; No reparable lo deja Dado de baja.</li>
+            <li>Cancelar restaura un estado anterior seguro. El estado En mantenimiento ya no se selecciona manualmente desde Inventario.</li>
+            <li>Una devolución Con daño o No funcional abre automáticamente un mantenimiento Correctivo dentro de la misma transacción.</li>
           </ul>
 
           <h3>Usuarios y permisos</h3>
@@ -538,14 +558,14 @@ Auth::verificarCsrf();
             <div>Si es nueva, exige firma de entrega previa.</div>
             <div>Recibe condición, observaciones y firma de devolución.</div>
             <div>Cierra asignación, fecha y usuario de devolución.</div>
-            <div>Equipo queda Disponible o En mantenimiento.</div>
+            <div>Equipo queda Disponible o se crea su mantenimiento correctivo.</div>
           </div>
           <table>
             <thead><tr><th>Condición de devolución</th><th>Estado resultante del equipo</th></tr></thead>
             <tbody>
               <tr><td>Bueno</td><td>Disponible (1)</td></tr>
-              <tr><td>Con daño</td><td>En mantenimiento (3)</td></tr>
-              <tr><td>No funcional</td><td>En mantenimiento (3)</td></tr>
+              <tr><td>Con daño</td><td>En mantenimiento (3) y registro Correctivo abierto</td></tr>
+              <tr><td>No funcional</td><td>En mantenimiento (3) y registro Correctivo abierto</td></tr>
             </tbody>
           </table>
           <div class="callout danger"><strong>“Eliminar asignación” no existe.</strong> Cerrar la custodia siempre significa devolver equipo: completar datos de devolución, guardar la firma, marcar <code>activa = 0</code> y conservar la fila para siempre.</div>
@@ -580,7 +600,7 @@ Auth::verificarCsrf();
         <section id="reportes" data-title="reportes pdf tcpdf actas layout descargar">
           <span class="section-number">13 · Reportes y actas</span>
           <h2>Generación de PDF</h2>
-          <p>Los reportes de empleados, equipos y asignaciones consultan la misma base y generan documentos con TCPDF. <span class="file">reportes/pdf_layout.php</span> centraliza encabezado, logotipo local, tipografía, pie y elementos visuales comunes.</p>
+          <p>Los reportes de empleados, equipos, asignaciones y mantenimientos consultan la misma base y generan documentos con TCPDF. <span class="file">reportes/pdf_layout.php</span> centraliza encabezado, logotipo local, tipografía, pie y elementos visuales comunes.</p>
           <ul>
             <li>Use <span class="file">public/icons/logo_pdf.jpg</span> para los PDF; no dependa de recursos del sistema operativo ni de URLs externas.</li>
             <li>No imprima espacios, HTML ni mensajes antes de llamar a la salida de TCPDF; cualquier salida previa puede corromper el archivo.</li>
@@ -600,6 +620,8 @@ Auth::verificarCsrf();
               <tr><td>Panel</td><td class="route"><span class="file">index.php</span></td><td>Consultas de métricas y alertas, app.css.</td></tr>
               <tr><td>Empleados</td><td class="route"><span class="file">empleados.php</span></td><td>Controller de empleados, páginas y AJAX de empleados.</td></tr>
               <tr><td>Equipos</td><td class="route"><span class="file">equipos.php</span></td><td>Controller de equipos, formularios y AJAX de inventario.</td></tr>
+              <tr><td>Proveedores</td><td class="route"><span class="file">proveedores.php</span></td><td><code>ProveedorController</code>, <code>ProveedorService</code>, tabla AJAX y ficha <span class="file">proveedor.php</span>.</td></tr>
+              <tr><td>Mantenimientos</td><td class="route"><span class="file">mantenimientos.php</span></td><td><code>MantenimientoController</code>, <code>MantenimientoService</code>, vistas, consultas y reporte PDF.</td></tr>
               <tr><td>Asignar equipo</td><td class="route"><span class="file">asignarequipo.php</span></td><td><span class="file">app/ajax/transacciones/asignarequipo.php</span> y controlador de asignación.</td></tr>
               <tr><td>Acta de entrega</td><td class="route"><span class="file">reportes/acta_asignacion.php</span></td><td>Asignación, firma, TCPDF y layout común.</td></tr>
               <tr><td>Acta de devolución</td><td class="route"><span class="file">reportes/acta_devolucion.php</span></td><td>Cierre de asignación, estado del equipo y firma.</td></tr>
@@ -670,11 +692,13 @@ Auth::verificarCsrf();
             <li><strong>Catálogos:</strong> cree, edite, inactive, reactive y cree desde un formulario contextual.</li>
             <li><strong>Empleado:</strong> cree uno con correo, edítelo, vincule usuario y verifique que las dependencias impidan inactivarlo.</li>
             <li><strong>Equipo:</strong> cree uno y compruebe código EQ, serie, estados, garantía, baja y reactivación.</li>
+            <li><strong>Proveedor:</strong> cree, edite, inactive y reactive uno; relaciónelo con un equipo y compruebe su ficha.</li>
             <li><strong>Asignación:</strong> asigne solo un equipo Disponible a un empleado activo; intente duplicarlo y confirme el rechazo.</li>
             <li><strong>Firmas:</strong> firme entrega, compruebe que no se sobrescriba y abra el acta con permiso <code>actas</code>.</li>
             <li><strong>Devolución:</strong> compruebe que una asignación nueva sin firma no cierre; luego firme y devuelva en cada condición.</li>
-            <li><strong>Historial:</strong> confirme que la fila cerrada sigue visible y que el equipo termina Disponible o En mantenimiento.</li>
-            <li><strong>PDF:</strong> abra y descargue los tres reportes y ambas actas; revise logo, saltos de página y caracteres españoles.</li>
+            <li><strong>Mantenimiento:</strong> abra y actualice uno; cierre como Reparado y No reparable, y compruebe Disponible o Dado de baja.</li>
+            <li><strong>Historial:</strong> confirme que asignaciones y mantenimientos cerrados siguen visibles.</li>
+            <li><strong>PDF:</strong> abra y descargue los cuatro reportes y ambas actas; revise logo, saltos de página y caracteres españoles.</li>
             <li><strong>Bitácora:</strong> confirme que las acciones ejecutadas aparezcan con usuario y detalle correctos.</li>
           </ol>
           <div class="callout success"><strong>Datos aislados.</strong> Use registros claramente identificados como prueba y una copia de base separada cuando evalúe migraciones o reglas destructivas.</div>
@@ -687,11 +711,15 @@ Auth::verificarCsrf();
             <li>Un equipo solo puede tener una asignación activa.</li>
             <li>Solo un equipo activo y Disponible puede asignarse.</li>
             <li>Asignación activa y equipo Asignado deben coincidir.</li>
+            <li>Un equipo En mantenimiento tiene exactamente un registro Abierto o En proceso.</li>
+            <li>Un equipo no puede tener simultáneamente asignación y mantenimiento abiertos.</li>
+            <li>Solo un equipo Disponible puede entrar manualmente a mantenimiento.</li>
+            <li>Un mantenimiento cerrado nunca se elimina ni queda sin fecha de cierre.</li>
             <li>La devolución cierra el registro; nunca lo elimina.</li>
             <li>Las nuevas asignaciones necesitan firma de entrega antes de devolución.</li>
             <li>Una firma registrada no se reemplaza silenciosamente.</li>
             <li>Un empleado con asignación abierta no se inactiva.</li>
-            <li>Un equipo con asignación abierta no se da de baja.</li>
+            <li>Un equipo con asignación o mantenimiento abierto no se da de baja directamente.</li>
             <li>Un usuario no se reactiva si su empleado está inactivo.</li>
             <li>Contraseñas, tokens CSRF y datos de sesión nunca se imprimen ni se guardan en bitácora.</li>
             <li>Cada endpoint valida autorización; la interfaz visual no es una barrera de seguridad.</li>
@@ -708,7 +736,7 @@ Auth::verificarCsrf();
             <tbody>
               <tr><td>Media</td><td>Dependencias principales cargadas desde CDN.</td><td>Versionar copias locales o aplicar integridad y una política de disponibilidad.</td></tr>
               <tr><td>Media</td><td>TCPDF se mantiene como una copia local con compatibilidad para PHP 8.2.</td><td>Evaluar una actualización oficial de la biblioteca antes de subir la versión de PHP.</td></tr>
-              <tr><td>Media</td><td>La regresión automatizada no controla un navegador real ni escribe un ciclo completo.</td><td>Agregar pruebas end-to-end con una base aislada cuando exista un entorno de integración.</td></tr>
+              <tr><td>Media</td><td>La regresión automatizada todavía no controla un navegador real.</td><td>Agregar pruebas end-to-end cuando exista un entorno de integración. El flujo transaccional ya puede probarse de forma aislada con <code>tests/module_flow_worker.php</code>.</td></tr>
               <tr><td>Baja</td><td>Empleados, equipos y usuarios todavía conservan parte del patrón inicial en archivos grandes.</td><td>Extraer sus reglas a servicios solamente cuando uno de esos módulos reciba cambios funcionales.</td></tr>
             </tbody>
           </table>

@@ -83,7 +83,7 @@ $db = Database::getInstance();
 
 $suite->prueba('Conexión y esquema principal', static function () use ($db): void {
     TestRunner::igual(1, (int)$db->fila('SELECT 1 valor')['valor']);
-    foreach (['equipo', 'empleados', 'asignacion', 'usuarios', 'permisos'] as $tabla) {
+    foreach (['equipo', 'empleados', 'asignacion', 'usuarios', 'permisos', 'proveedores', 'mantenimientos'] as $tabla) {
         TestRunner::verdadero(
             $db->contar(
                 'SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?',
@@ -91,6 +91,73 @@ $suite->prueba('Conexión y esquema principal', static function () use ($db): vo
             ) === 1,
             'Falta la tabla ' . $tabla
         );
+    }
+});
+
+$suite->prueba('Estados de mantenimiento centralizados', static function (): void {
+    TestRunner::igual(4, count(MantenimientoEstado::estados()));
+    TestRunner::igual('Preventivo', MantenimientoEstado::tipos()[MantenimientoEstado::PREVENTIVO]);
+    TestRunner::igual('success', MantenimientoEstado::badge(MantenimientoEstado::COMPLETADO));
+    TestRunner::verdadero(in_array(MantenimientoEstado::ABIERTO, MantenimientoEstado::estadosActivos(), true));
+});
+
+$suite->prueba('Esquema de proveedores y mantenimientos', static function () use ($db): void {
+    TestRunner::igual(
+        1,
+        $db->contar(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='equipo' AND COLUMN_NAME='idproveedor'"
+        )
+    );
+    TestRunner::igual(
+        1,
+        $db->contar(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='permisos' AND COLUMN_NAME='mantenimientos'"
+        )
+    );
+    TestRunner::igual(
+        5,
+        $db->contar(
+            "SELECT COUNT(*) FROM information_schema.REFERENTIAL_CONSTRAINTS
+             WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='mantenimientos'"
+        )
+    );
+    TestRunner::igual(
+        1,
+        $db->contar(
+            "SELECT COUNT(*) FROM information_schema.REFERENTIAL_CONSTRAINTS
+             WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='equipo'
+               AND CONSTRAINT_NAME='fk_equipo_proveedor'"
+        )
+    );
+});
+
+$suite->prueba('Integridad de mantenimientos y equipos', static function () use ($db): void {
+    $revisiones = [
+        "SELECT COUNT(*) FROM equipo eq WHERE eq.activo=1 AND eq.estado_equipo=3
+         AND (SELECT COUNT(*) FROM mantenimientos m WHERE m.idequipo=eq.idequipo AND m.estado IN ('Abierto','En proceso'))<>1",
+        "SELECT COUNT(*) FROM mantenimientos m INNER JOIN equipo eq ON eq.idequipo=m.idequipo
+         WHERE m.estado IN ('Abierto','En proceso') AND (eq.activo<>1 OR eq.estado_equipo<>3)",
+        "SELECT COUNT(*) FROM mantenimientos m INNER JOIN asignacion a ON a.idequipo=m.idequipo
+         WHERE m.estado IN ('Abierto','En proceso') AND a.activa=1",
+        "SELECT COUNT(*) FROM mantenimientos WHERE estado IN ('Abierto','En proceso') AND fecha_cierre IS NOT NULL",
+        "SELECT COUNT(*) FROM mantenimientos WHERE estado IN ('Completado','Cancelado') AND fecha_cierre IS NULL",
+        "SELECT COUNT(*) FROM (SELECT idequipo FROM mantenimientos WHERE estado IN ('Abierto','En proceso')
+         GROUP BY idequipo HAVING COUNT(*)>1) duplicados",
+    ];
+    foreach ($revisiones as $sql) {
+        TestRunner::igual(0, $db->contar($sql), $sql);
+    }
+});
+
+$suite->prueba('Servicios de proveedores y mantenimientos consultan datos', static function () use ($db): void {
+    TestRunner::verdadero(is_array((new ProveedorService($db))->listar()));
+    $mantenimientos = new MantenimientoService($db);
+    TestRunner::verdadero(is_array($mantenimientos->listar()));
+    $metricas = $mantenimientos->metricas();
+    foreach (['abiertos', 'en_proceso', 'cerrados_mes', 'costo_mes'] as $campo) {
+        TestRunner::verdadero(array_key_exists($campo, $metricas), 'Falta la mÃ©trica ' . $campo);
     }
 });
 
@@ -187,8 +254,11 @@ $suite->prueba('Endpoints AJAX conservan control de permisos', static function (
 
 foreach ([
     'index', 'equipos', 'empleados', 'asignaciones',
+    'proveedores', 'mantenimientos', 'consulta_mantenimientos', 'reporte_mantenimientos',
     'areas_ajax', 'cargos_ajax', 'marcas_ajax', 'modelos_ajax',
     'equipos_ajax', 'empleados_ajax', 'asignaciones_ajax',
+    'proveedores_ajax', 'mantenimientos_ajax',
+    'consulta_mantenimientos_ajax', 'reporte_mantenimientos_ajax',
 ] as $objetivo) {
     $suite->prueba('Renderizado: ' . $objetivo, static function () use ($raiz, $objetivo): void {
         $resultado = TestRunner::proceso([
@@ -224,6 +294,20 @@ $suite->prueba('Generación de PDF sin avisos PHP', static function () use ($rai
     }
     TestRunner::verdadero(str_starts_with($contenido, '%PDF-'));
     TestRunner::verdadero(strlen($contenido) > 10000);
+});
+
+$suite->prueba('Reporte PDF de mantenimientos', static function () use ($raiz): void {
+    $resultado = TestRunner::proceso([
+        PHP_BINARY,
+        '-d',
+        'display_errors=1',
+        '-d',
+        'error_reporting=32767',
+        $raiz . '/tests/pdf_report_worker.php',
+    ]);
+    TestRunner::igual(0, $resultado['codigo'], $resultado['error']);
+    $datos = json_decode($resultado['salida'], true, 512, JSON_THROW_ON_ERROR);
+    TestRunner::verdadero($datos['bytes'] > 10000, 'El PDF de mantenimientos fue demasiado pequeño.');
 });
 
 $suite->prueba('Sintaxis PHP de todo el proyecto', static function () use ($raiz): void {

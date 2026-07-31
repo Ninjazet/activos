@@ -11,6 +11,13 @@ final class Validacion {
         return (int)$valor;
     }
 
+    public static function enteroPositivoOpcional($valor, string $campo): ?int {
+        if ($valor === null || $valor === '' || $valor === '0' || $valor === 0) {
+            return null;
+        }
+        return self::enteroPositivo($valor, $campo);
+    }
+
     public static function textoOpcional($valor, int $maximo, string $campo): ?string {
         if ($valor === null || $valor === '') {
             return null;

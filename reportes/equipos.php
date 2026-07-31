@@ -6,6 +6,7 @@ $db = Database::getInstance();
 $filtroMarcas = array_column($db->consulta("SELECT idmarca AS valor, nombreMarca AS etiqueta FROM marca ORDER BY nombreMarca"), 'etiqueta', 'valor');
 $filtroModelos = array_column($db->consulta("SELECT idmodelo AS valor, nombreModelo AS etiqueta FROM modelo ORDER BY nombreModelo"), 'etiqueta', 'valor');
 $filtroTipos = array_column($db->consulta("SELECT DISTINCT tipo_equipo AS valor, tipo_equipo AS etiqueta FROM equipo WHERE tipo_equipo IS NOT NULL AND tipo_equipo<>'' ORDER BY tipo_equipo"), 'etiqueta', 'valor');
+$filtroProveedores = array_column($db->consulta("SELECT idproveedor AS valor,nombre AS etiqueta FROM proveedores ORDER BY nombre"), 'etiqueta', 'valor');
 $pageTitle = 'Reporte de Equipos';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 require_once BASE_PATH . '/app/views/layouts/table_filters.php';
@@ -29,6 +30,7 @@ initAjaxTableFilters('<?= BASE_URL ?>/app/ajax/reportes/equipos.php');
         ['name' => 'tipo_equipo', 'label' => 'Tipo', 'options' => $filtroTipos],
         ['name' => 'idmarca', 'label' => 'Marca', 'options' => $filtroMarcas],
         ['name' => 'idmodelo', 'label' => 'Modelo', 'options' => $filtroModelos],
+        ['name' => 'idproveedor', 'label' => 'Proveedor', 'options' => $filtroProveedores],
         ['name' => 'activo', 'label' => 'Registro', 'options' => [1 => 'Activo', 0 => 'Inactivo']],
         ['name' => 'garantia', 'label' => 'Garantía', 'options' => ['vigente' => 'Vigente', 'vence_30' => 'Vence en 30 días', 'vencida' => 'Vencida', 'sin_fecha' => 'Sin fecha']],
       ],
