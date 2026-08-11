@@ -4,6 +4,8 @@ Sistema web para administrar inventario, empleados, proveedores, asignaciones, d
 
 Tecnologías principales: PHP 8, MySQL/MariaDB, Apache, Bootstrap 5, jQuery/DataTables y TCPDF.
 
+El esquema de instalación es compatible con MariaDB 10.4 o posterior y MySQL 8.0 o posterior. La conexión y todas las tablas utilizan `utf8mb4`.
+
 ## Inicio local con XAMPP
 
 1. Coloca el proyecto en `C:\xampp\htdocs\activos`.

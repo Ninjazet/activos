@@ -271,8 +271,8 @@ CREATE TABLE `licencia_asignaciones` (
   KEY `idx_licencia_asignaciones_usuario_devuelve` (`idusuario_devolucion`),
   KEY `fk_licencia_asignaciones_cupo` (`idlicencia`,`idcupo`),
   CONSTRAINT `fk_licencia_asignaciones_cupo` FOREIGN KEY (`idlicencia`, `idcupo`) REFERENCES `licencia_cupos` (`idlicencia`, `idcupo`) ON UPDATE CASCADE,
-  CONSTRAINT `fk_licencia_asignaciones_empleado` FOREIGN KEY (`idempleado`) REFERENCES `empleados` (`idempleado`) ON UPDATE CASCADE,
-  CONSTRAINT `fk_licencia_asignaciones_equipo` FOREIGN KEY (`idequipo`) REFERENCES `equipo` (`idequipo`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_licencia_asignaciones_empleado` FOREIGN KEY (`idempleado`) REFERENCES `empleados` (`idempleado`),
+  CONSTRAINT `fk_licencia_asignaciones_equipo` FOREIGN KEY (`idequipo`) REFERENCES `equipo` (`idequipo`),
   CONSTRAINT `fk_licencia_asignaciones_licencia` FOREIGN KEY (`idlicencia`) REFERENCES `licencias` (`idlicencia`) ON UPDATE CASCADE,
   CONSTRAINT `fk_licencia_asignaciones_usuario_asigna` FOREIGN KEY (`idusuario_asignacion`) REFERENCES `usuarios` (`idusuario`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_licencia_asignaciones_usuario_devuelve` FOREIGN KEY (`idusuario_devolucion`) REFERENCES `usuarios` (`idusuario`) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -759,4 +759,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-11 11:45:09
+-- Dump completed on 2026-08-11 13:39:45

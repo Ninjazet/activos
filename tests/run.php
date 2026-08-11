@@ -255,6 +255,16 @@ $suite->prueba('Esquema de cupos y asignaciones de licencias', static function (
                AND INDEX_NAME IN ('uq_licencia_empleado_activo','uq_licencia_equipo_activo')"
         )
     );
+    TestRunner::igual(
+        2,
+        $db->contar(
+            "SELECT COUNT(*) FROM information_schema.REFERENTIAL_CONSTRAINTS
+             WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='licencia_asignaciones'
+               AND CONSTRAINT_NAME IN ('fk_licencia_asignaciones_empleado','fk_licencia_asignaciones_equipo')
+               AND UPDATE_RULE IN ('RESTRICT','NO ACTION')"
+        ),
+        'Las relaciones usadas por el CHECK de destino no deben actualizarse en cascada'
+    );
 });
 
 $suite->prueba('Integridad de mantenimientos y equipos', static function () use ($db): void {
