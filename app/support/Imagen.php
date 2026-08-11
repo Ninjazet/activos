@@ -8,7 +8,7 @@ final class Imagen {
         return self::resolver(
             $ruta,
             IMG_EMPLEADOS,
-            '/public/img/empleados/',
+            'empleado',
             '/public/img/empleados/avatar1.png'
         );
     }
@@ -17,20 +17,30 @@ final class Imagen {
         return self::resolver(
             $ruta,
             IMG_EQUIPOS,
-            '/public/img/equipos/',
+            'equipo',
             '/public/icons/equipo.png'
         );
+    }
+
+    public static function firmaRuta(?string $ruta): string {
+        $archivo = basename(trim((string)$ruta));
+        return $archivo === '' ? '' : IMG_FIRMAS . $archivo;
     }
 
     private static function resolver(
         ?string $ruta,
         string $directorio,
-        string $urlDirectorio,
+        string $tipo,
         string $fallback
     ): string {
         $archivo = basename(trim((string)$ruta));
         if ($archivo !== '' && is_file($directorio . $archivo)) {
-            return BASE_URL . $urlDirectorio . rawurlencode($archivo);
+            return BASE_URL . '/media.php?' . http_build_query(
+                ['tipo' => $tipo, 'archivo' => $archivo],
+                '',
+                '&',
+                PHP_QUERY_RFC3986
+            );
         }
         return BASE_URL . $fallback;
     }

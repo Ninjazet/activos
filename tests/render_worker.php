@@ -4,6 +4,7 @@ $raiz = dirname(__DIR__);
 $rutas = [
     'index' => 'index.php',
     'equipos' => 'equipos.php',
+    'equipos_filtrados' => 'equipos.php',
     'empleados' => 'empleados.php',
     'asignaciones' => 'asignarequipo.php',
     'proveedores' => 'proveedores.php',
@@ -13,6 +14,7 @@ $rutas = [
     'licencia_detalle' => 'licencia.php',
     'software' => 'software.php',
     'consulta_mantenimientos' => 'consultas/mantenimientos.php',
+    'consulta_equipos_filtrados' => 'consultas/equipos.php',
     'reporte_mantenimientos' => 'reportes/mantenimientos.php',
     'areas_ajax' => 'app/ajax/maestros/areas.php',
     'cargos_ajax' => 'app/ajax/maestros/cargo.php',
@@ -66,6 +68,10 @@ $_SERVER['REQUEST_METHOD'] = $esAjax ? 'POST' : 'GET';
 $_SERVER['REQUEST_URI'] = BASE_URL . '/' . $rutas[$clave];
 $_POST = [];
 $_GET = [];
+if (in_array($clave, ['equipos_filtrados', 'consulta_equipos_filtrados'], true)) {
+    $_GET = ['estado_equipo' => '4', 'activo' => '1', 'garantia' => 'vencida'];
+    $_SERVER['REQUEST_URI'] .= '?estado_equipo=4&activo=1&garantia=vencida';
+}
 if ($clave === 'licencia_detalle') {
     $licencia = Database::getInstance()->fila('SELECT idlicencia FROM licencias ORDER BY idlicencia LIMIT 1');
     if (!$licencia) {
@@ -87,7 +93,15 @@ try {
     restore_error_handler();
     session_write_close();
     echo json_encode(
-        ['objetivo' => $clave, 'bytes' => strlen($html)],
+        [
+            'objetivo' => $clave,
+            'bytes' => strlen($html),
+            'filtros_aplicados' => in_array($clave, ['equipos_filtrados', 'consulta_equipos_filtrados'], true)
+                ? str_contains($html, '<option value="4" selected>')
+                    && str_contains($html, '<option value="1" selected>')
+                    && str_contains($html, '<option value="vencida" selected>')
+                : null,
+        ],
         JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
     );
 } catch (Throwable $e) {

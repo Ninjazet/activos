@@ -208,6 +208,9 @@ $filtroProveedores = array_column(
     'etiqueta',
     'valor'
 );
+$filtroInicialEstado = TableFilter::enum('estado_equipo', EquipoEstado::idsComoTexto(), $_GET);
+$filtroInicialActivo = TableFilter::enum('activo', ['0', '1'], $_GET);
+$filtroInicialGarantia = TableFilter::enum('garantia', ['vigente', 'vence_30', 'vencida', 'sin_fecha'], $_GET);
 
 $pageTitle = 'Equipos';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
@@ -238,13 +241,13 @@ initAjaxTableFilters('<?= BASE_URL ?>/app/ajax/maestros/equipos.php');
       'search_placeholder' => 'Código, serie, tipo, marca o modelo',
       'table_id' => 'tablaEquipo',
       'filters' => [
-        ['name' => 'estado_equipo', 'label' => 'Estado operativo', 'options' => EquipoEstado::opciones()],
+        ['name' => 'estado_equipo', 'label' => 'Estado operativo', 'options' => EquipoEstado::opciones(), 'value' => $filtroInicialEstado],
         ['name' => 'tipo_equipo', 'label' => 'Tipo', 'options' => $filtroTipos],
         ['name' => 'idmarca', 'label' => 'Marca', 'options' => $filtroMarcas],
         ['name' => 'idmodelo', 'label' => 'Modelo', 'options' => $filtroModelos],
         ['name' => 'idproveedor', 'label' => 'Proveedor', 'options' => $filtroProveedores],
-        ['name' => 'activo', 'label' => 'Registro', 'options' => [1 => 'Activo', 0 => 'Inactivo']],
-        ['name' => 'garantia', 'label' => 'Garantía', 'options' => ['vigente' => 'Vigente', 'vence_30' => 'Vence en 30 días', 'vencida' => 'Vencida', 'sin_fecha' => 'Sin fecha']],
+        ['name' => 'activo', 'label' => 'Registro', 'options' => [1 => 'Activo', 0 => 'Inactivo'], 'value' => $filtroInicialActivo],
+        ['name' => 'garantia', 'label' => 'Garantía', 'options' => ['vigente' => 'Vigente', 'vence_30' => 'Vence en 30 días', 'vencida' => 'Vencida', 'sin_fecha' => 'Sin fecha'], 'value' => $filtroInicialGarantia],
       ],
     ]); ?>
     <div id="datos" aria-live="polite"></div>

@@ -15,7 +15,7 @@ $resumen = $db->fila(
      COALESCE(SUM(activo=1 AND estado_equipo={$estadoDisponible}),0) disponibles,
      COALESCE(SUM(activo=1 AND estado_equipo={$estadoAsignado}),0) asignados,
      COALESCE(SUM(activo=1 AND estado_equipo={$estadoMantenimiento}),0) mantenimiento,
-     COALESCE(SUM(estado_equipo={$estadoPerdido}),0) perdidos,
+     COALESCE(SUM(activo=1 AND estado_equipo={$estadoPerdido}),0) perdidos,
      COALESCE(SUM(estado_equipo={$estadoBaja}),0) bajas FROM equipo"
 ) ?? [];
 
@@ -32,6 +32,33 @@ $metricas = [
     'garantias_vencidas' => $db->contar("SELECT COUNT(*) FROM equipo WHERE activo=1 AND vencimiento_garantia IS NOT NULL AND vencimiento_garantia<CURDATE()"),
     'garantias_proximas' => $db->contar("SELECT COUNT(*) FROM equipo WHERE activo=1 AND vencimiento_garantia BETWEEN CURDATE() AND DATE_ADD(CURDATE(),INTERVAL 30 DAY)"),
 ];
+
+$tiposEquipo = $db->consulta(
+    "SELECT COALESCE(NULLIF(TRIM(tipo_equipo),''),'Sin clasificar') tipo,
+            COUNT(*) total,
+            COALESCE(SUM(activo=1),0) activos,
+            COALESCE(SUM(activo=1 AND estado_equipo=?),0) disponibles
+     FROM equipo
+     GROUP BY COALESCE(NULLIF(TRIM(tipo_equipo),''),'Sin clasificar')
+     ORDER BY total DESC,tipo",
+    [$estadoDisponible]
+);
+
+$resumenEmpleados = $db->fila(
+    "SELECT COUNT(*) total,
+            COALESCE(SUM(e.activo=1),0) activos,
+            COALESCE(SUM(e.activo=0),0) inactivos,
+            COALESCE(SUM(e.activo=1 AND COALESCE(a.equipos,0)>0),0) con_equipo,
+            COALESCE(SUM(e.activo=1 AND COALESCE(a.equipos,0)=0),0) sin_equipo,
+            COALESCE(SUM(e.activo=1 AND COALESCE(a.equipos,0)>1),0) varios_equipos
+     FROM empleados e
+     LEFT JOIN (
+       SELECT idempleado,COUNT(*) equipos
+       FROM asignacion
+       WHERE activa=1
+       GROUP BY idempleado
+     ) a ON a.idempleado=e.idempleado"
+) ?? [];
 
 $movimientos = $db->consulta(
     "SELECT a.idasignacion,a.fecha_asignacion,a.fecha_devolucion,
@@ -64,29 +91,40 @@ if ($permisos['reportes']) $acciones[] = ['reportes/asignaciones.php','fa-file-p
 if ($permisos['seguridad']) $acciones[] = ['usuarios.php','fa-user-shield','Usuarios y permisos','Administrar accesos'];
 
 $urlEquipos = $permisos['maestros'] ? 'equipos.php' : ($permisos['consultas'] ? 'consultas/equipos.php' : null);
+$urlEmpleados = $permisos['maestros'] ? 'empleados.php' : ($permisos['consultas'] ? 'consultas/empleados.php' : null);
 $urlAsignaciones = $permisos['transacciones'] ? 'asignarequipo.php' : ($permisos['consultas'] ? 'consultas/asignaciones.php' : null);
 $urlMantenimientos = $permisos['mantenimientos'] ? 'mantenimientos.php' : ($permisos['consultas'] ? 'consultas/mantenimientos.php' : $urlEquipos);
+$urlConFiltros = static function (?string $url, array $filtros): ?string {
+    return $url === null
+        ? null
+        : $url . '?' . http_build_query($filtros, '', '&', PHP_QUERY_RFC3986);
+};
 $alertas = [];
 if ($metricas['firmas']) $alertas[] = ['warning','fa-signature',$metricas['firmas'],'entrega(s) pendiente(s) de firma',$urlAsignaciones];
 if ($metricas['mantenimiento']) $alertas[] = ['info','fa-screwdriver-wrench',$metricas['mantenimiento'],'equipo(s) en mantenimiento',$urlMantenimientos];
-if ($metricas['garantias_vencidas']) $alertas[] = ['danger','fa-shield-halved',$metricas['garantias_vencidas'],'garantía(s) vencida(s)',$urlEquipos];
-if ($metricas['garantias_proximas']) $alertas[] = ['warning','fa-calendar-day',$metricas['garantias_proximas'],'garantía(s) vencen en 30 días',$urlEquipos];
-if ($metricas['perdidos']) $alertas[] = ['danger','fa-triangle-exclamation',$metricas['perdidos'],'equipo(s) perdido(s) o robado(s)',$urlEquipos];
+if ($metricas['garantias_vencidas']) $alertas[] = ['danger','fa-shield-halved',$metricas['garantias_vencidas'],'garantía(s) vencida(s)',$urlConFiltros($urlEquipos, ['garantia' => 'vencida', 'activo' => '1'])];
+if ($metricas['garantias_proximas']) $alertas[] = ['warning','fa-calendar-day',$metricas['garantias_proximas'],'garantía(s) vencen en 30 días',$urlConFiltros($urlEquipos, ['garantia' => 'vence_30', 'activo' => '1'])];
+if ($metricas['perdidos']) $alertas[] = ['danger','fa-triangle-exclamation',$metricas['perdidos'],'equipo(s) perdido(s) o robado(s)',$urlConFiltros($urlEquipos, ['estado_equipo' => (string)EquipoEstado::PERDIDO_ROBADO, 'activo' => '1'])];
 
-$estados = [
+$estadosDetalle = [
     [EquipoEstado::nombre(EquipoEstado::DISPONIBLE),$metricas['disponibles'],'available'],
     [EquipoEstado::nombre(EquipoEstado::ASIGNADO),$metricas['asignados'],'assigned'],
     [EquipoEstado::nombre(EquipoEstado::MANTENIMIENTO),$metricas['mantenimiento'],'maintenance'],
     [EquipoEstado::nombre(EquipoEstado::PERDIDO_ROBADO),$metricas['perdidos'],'lost'],
     [EquipoEstado::nombre(EquipoEstado::BAJA),$metricas['bajas'],'retired'],
 ];
-$mostrarEstadoEquipos = false; // Cambiar a true para reactivar el bloque completo.
 $hora = (int)date('G');
 $saludo = $hora < 12 ? 'Buenos días' : ($hora < 18 ? 'Buenas tardes' : 'Buenas noches');
 $dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 $meses = [1=>'enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 $fechaActual = $dias[(int)date('w')].', '.date('j').' de '.$meses[(int)date('n')].' de '.date('Y');
 $total = max(1,$metricas['equipos']);
+$empleadosActivos = (int)($resumenEmpleados['activos'] ?? 0);
+$empleadosConEquipo = (int)($resumenEmpleados['con_equipo'] ?? 0);
+$empleadosSinEquipo = (int)($resumenEmpleados['sin_equipo'] ?? 0);
+$coberturaEmpleados = $empleadosActivos > 0
+    ? min(100,round($empleadosConEquipo / $empleadosActivos * 100))
+    : 0;
 $pageTitle = 'Inicio';
 require BASE_PATH . '/app/views/layouts/encabezado.php';
 ?>
@@ -110,30 +148,98 @@ require BASE_PATH . '/app/views/layouts/encabezado.php';
     <article class="metric-card metric-orange"><div><span>Empleados activos</span><strong><?= $metricas['empleados'] ?></strong><small>Personal habilitado</small></div></article>
   </section>
 
-  <div class="dashboard-main-grid<?= $mostrarEstadoEquipos ? '' : ' dashboard-main-grid-single' ?>">
-    <?php if ($mostrarEstadoEquipos): ?>
-    <section class="dashboard-panel">
-      <div class="dashboard-panel-header">
-        <div><span class="panel-kicker">Inventario</span><h2>Estado de los equipos</h2></div>
-        <?php if ($urlEquipos): ?><a href="<?= BASE_URL ?>/<?= $urlEquipos ?>">Ver inventario <i class="fa-solid fa-arrow-right"></i></a><?php endif; ?>
+  <details class="dashboard-breakdown">
+    <summary>
+      <div>
+        <span class="panel-kicker">Detalle del resumen</span>
+        <h2>Distribución y cobertura</h2>
+        <p>Consulta cómo se reparten los equipos y cuántos empleados tienen activos asignados.</p>
       </div>
-      <div class="inventory-status-list">
-        <?php foreach ($estados as [$etiqueta,$cantidad,$clase]): ?>
-        <div class="inventory-status-row">
-          <div class="inventory-status-label"><span><i class="status-dot status-<?= $clase ?>"></i><?= htmlspecialchars($etiqueta) ?></span><strong><?= $cantidad ?></strong></div>
-          <div class="status-track"><span class="status-fill status-<?= $clase ?>" style="width:<?= round($cantidad/$total*100) ?>%"></span></div>
+      <span class="dashboard-breakdown-action">
+        <span class="breakdown-show">Mostrar datos</span>
+        <span class="breakdown-hide">Ocultar datos</span>
+        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+      </span>
+    </summary>
+
+    <div class="dashboard-breakdown-content">
+      <section class="dashboard-insight" aria-labelledby="detalleInventario">
+        <div class="dashboard-insight-header">
+          <div>
+            <span class="panel-kicker">Inventario</span>
+            <h3 id="detalleInventario">Equipos por estado y tipo</h3>
+            <p><?= $metricas['equipos'] ?> registrados · <?= (int)($resumen['activos'] ?? 0) ?> activos · <?= max(0,$metricas['equipos']-(int)($resumen['activos'] ?? 0)) ?> inactivos</p>
+          </div>
+          <?php if ($urlEquipos): ?><a href="<?= BASE_URL ?>/<?= $urlEquipos ?>">Abrir inventario <i class="fa-solid fa-arrow-right"></i></a><?php endif; ?>
         </div>
-        <?php endforeach; ?>
-      </div>
-    </section>
-    <?php endif; ?>
+
+        <div class="inventory-status-list">
+          <?php foreach ($estadosDetalle as [$etiqueta,$cantidad,$clase]): ?>
+          <div class="inventory-status-row">
+            <div class="inventory-status-label">
+              <span><i class="status-dot status-<?= $clase ?>"></i><?= htmlspecialchars($etiqueta) ?></span>
+              <span><strong><?= $cantidad ?></strong><small><?= round($cantidad/$total*100) ?>%</small></span>
+            </div>
+            <div class="status-track"><span class="status-fill status-<?= $clase ?>" style="width:<?= round($cantidad/$total*100) ?>%"></span></div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+
+        <div class="dashboard-subsection-title"><strong>Distribución por tipo</strong><span>Total / activos / disponibles</span></div>
+        <div class="dashboard-type-list">
+          <?php foreach ($tiposEquipo as $tipo): ?>
+          <div class="dashboard-type-row">
+            <strong><?= htmlspecialchars($tipo['tipo']) ?></strong>
+            <span><b><?= (int)$tipo['total'] ?></b><small><?= (int)$tipo['activos'] ?> activos · <?= (int)$tipo['disponibles'] ?> disponibles</small></span>
+          </div>
+          <?php endforeach; ?>
+        </div>
+      </section>
+
+      <section class="dashboard-insight" aria-labelledby="detallePersonal">
+        <div class="dashboard-insight-header">
+          <div>
+            <span class="panel-kicker">Personal</span>
+            <h3 id="detallePersonal">Cobertura de empleados</h3>
+            <p><?= $empleadosConEquipo ?> de <?= $empleadosActivos ?> empleados activos tienen al menos un equipo.</p>
+          </div>
+          <?php if ($urlEmpleados): ?><a href="<?= BASE_URL ?>/<?= $urlEmpleados ?>">Abrir personal <i class="fa-solid fa-arrow-right"></i></a><?php endif; ?>
+        </div>
+
+        <div class="employee-coverage">
+          <div class="employee-coverage-copy">
+            <span>Cobertura actual</span>
+            <strong><?= $coberturaEmpleados ?>%</strong>
+          </div>
+          <div class="employee-coverage-track" role="progressbar" aria-label="Empleados activos con equipo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?= $coberturaEmpleados ?>">
+            <span style="width:<?= $coberturaEmpleados ?>%"></span>
+          </div>
+          <small>Se considera cubierto al empleado que tiene una o más asignaciones activas.</small>
+        </div>
+
+        <div class="employee-detail-grid">
+          <article><span>Con equipo</span><strong><?= $empleadosConEquipo ?></strong><small>Al menos una asignación activa</small></article>
+          <article><span>Sin equipo</span><strong><?= $empleadosSinEquipo ?></strong><small>Disponibles para una nueva entrega</small></article>
+          <article><span>Con varios equipos</span><strong><?= (int)($resumenEmpleados['varios_equipos'] ?? 0) ?></strong><small>Más de una asignación activa</small></article>
+          <article><span>Inactivos</span><strong><?= (int)($resumenEmpleados['inactivos'] ?? 0) ?></strong><small>Conservados en el historial</small></article>
+        </div>
+
+        <div class="dashboard-insight-note">
+          <strong><?= $metricas['asignaciones'] ?> asignaciones activas</strong>
+          <span>La diferencia entre asignaciones y empleados cubiertos corresponde a personas con más de un equipo.</span>
+        </div>
+      </section>
+    </div>
+  </details>
+
+  <div class="dashboard-main-grid dashboard-main-grid-single">
 
     <section class="dashboard-panel attention-panel">
       <div class="dashboard-panel-header"><div><span class="panel-kicker">Seguimiento</span><h2>Requiere atención</h2></div><span class="attention-count"><?= count($alertas) ?></span></div>
       <?php if ($alertas): ?>
       <div class="attention-list">
         <?php foreach ($alertas as [$tipo,$icono,$cantidad,$texto,$url]): ?>
-          <?php if ($url): ?><a href="<?= BASE_URL ?>/<?= $url ?>" class="attention-item attention-<?= $tipo ?>"><?php else: ?><div class="attention-item attention-<?= $tipo ?>"><?php endif; ?>
+          <?php if ($url): ?><a href="<?= htmlspecialchars(BASE_URL . '/' . $url, ENT_QUOTES, 'UTF-8') ?>" class="attention-item attention-<?= $tipo ?>"><?php else: ?><div class="attention-item attention-<?= $tipo ?>"><?php endif; ?>
             <span class="attention-icon"><i class="fa-solid <?= $icono ?>"></i></span>
             <span><strong><?= $cantidad ?></strong> <?= htmlspecialchars($texto) ?></span>
             <?php if ($url): ?><i class="fa-solid fa-chevron-right"></i><?php endif; ?>

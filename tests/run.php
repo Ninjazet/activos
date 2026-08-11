@@ -53,7 +53,42 @@ $suite->prueba('Normalización del formulario de equipos', static function (): v
 $suite->prueba('Resolución segura de imágenes', static function (): void {
     TestRunner::verdadero(str_ends_with(Imagen::empleado(null), '/avatar1.png'));
     TestRunner::verdadero(str_ends_with(Imagen::equipo('archivo-inexistente.png'), '/equipo.png'));
-    TestRunner::verdadero(str_ends_with(Imagen::empleado('avatar2.png'), '/avatar2.png'));
+    $avatar = Imagen::empleado('avatar2.png');
+    TestRunner::verdadero(str_contains($avatar, '/media.php?'));
+    TestRunner::verdadero(str_contains($avatar, 'tipo=empleado'));
+    TestRunner::verdadero(str_contains($avatar, 'archivo=avatar2.png'));
+});
+
+$suite->prueba('Imágenes desde almacenamiento externo', static function () use ($raiz): void {
+    $directorio = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gestactivos_media_' . bin2hex(random_bytes(5));
+    $empleados = $directorio . DIRECTORY_SEPARATOR . 'empleados';
+    if (!mkdir($empleados, 0775, true) && !is_dir($empleados)) {
+        throw new RuntimeException('No se pudo preparar el almacenamiento temporal.');
+    }
+    $origen = $raiz . '/public/img/empleados/avatar2.png';
+    $destino = $empleados . DIRECTORY_SEPARATOR . 'avatar-prueba.png';
+    if (!copy($origen, $destino)) {
+        throw new RuntimeException('No se pudo preparar la imagen temporal.');
+    }
+
+    try {
+        $resultado = TestRunner::proceso(
+            [PHP_BINARY, $raiz . '/tests/media_worker.php', 'empleado', 'avatar-prueba.png'],
+            ['APP_STORAGE_PATH' => $directorio]
+        );
+        TestRunner::igual(0, $resultado['codigo'], $resultado['error']);
+        TestRunner::verdadero(str_starts_with($resultado['salida'], "\x89PNG\r\n\x1a\n"));
+    } finally {
+        if (is_file($destino)) {
+            unlink($destino);
+        }
+        if (is_dir($empleados)) {
+            rmdir($empleados);
+        }
+        if (is_dir($directorio)) {
+            rmdir($directorio);
+        }
+    }
 });
 
 $suite->prueba('Configuración mediante variables de entorno', static function () use ($raiz): void {
@@ -304,6 +339,33 @@ $suite->prueba('Servicios de software y licencias consultan datos', static funct
     }
 });
 
+$suite->prueba('Resumen ampliado del inicio es coherente', static function () use ($db): void {
+    $empleados = $db->fila(
+        "SELECT COALESCE(SUM(e.activo=1),0) activos,
+                COALESCE(SUM(e.activo=1 AND COALESCE(a.equipos,0)>0),0) con_equipo,
+                COALESCE(SUM(e.activo=1 AND COALESCE(a.equipos,0)=0),0) sin_equipo,
+                COALESCE(SUM(e.activo=1 AND COALESCE(a.equipos,0)>1),0) varios_equipos
+         FROM empleados e
+         LEFT JOIN (
+           SELECT idempleado,COUNT(*) equipos
+           FROM asignacion WHERE activa=1 GROUP BY idempleado
+         ) a ON a.idempleado=e.idempleado"
+    );
+    TestRunner::igual(
+        (int)$empleados['activos'],
+        (int)$empleados['con_equipo'] + (int)$empleados['sin_equipo']
+    );
+    TestRunner::verdadero((int)$empleados['varios_equipos'] <= (int)$empleados['con_equipo']);
+    TestRunner::igual(
+        $db->contar('SELECT COUNT(DISTINCT idempleado) FROM asignacion WHERE activa=1'),
+        (int)$empleados['con_equipo']
+    );
+    TestRunner::igual(
+        0,
+        $db->contar('SELECT COUNT(*) FROM equipo WHERE estado_equipo NOT IN (1,2,3,4,5)')
+    );
+});
+
 $suite->prueba('Integridad de asignaciones y estados', static function () use ($db): void {
     $revisiones = [
         'SELECT COUNT(*) FROM equipo eq WHERE eq.estado_equipo=2 AND NOT EXISTS
@@ -348,7 +410,7 @@ $suite->prueba('Restricciones, charset y textos limpios', static function () use
     );
 });
 
-$suite->prueba('Imágenes y firmas referenciadas existen', static function () use ($db, $raiz): void {
+$suite->prueba('Imágenes y firmas referenciadas existen', static function () use ($db): void {
     foreach (['equipo' => IMG_EQUIPOS, 'empleados' => IMG_EMPLEADOS] as $tabla => $directorio) {
         foreach ($db->consulta("SELECT imagen FROM $tabla WHERE imagen IS NOT NULL AND imagen<>''") as $fila) {
             TestRunner::verdadero(
@@ -360,7 +422,7 @@ $suite->prueba('Imágenes y firmas referenciadas existen', static function () us
     foreach ($db->consulta('SELECT firma, firma_devolucion FROM asignacion') as $fila) {
         foreach (['firma', 'firma_devolucion'] as $campo) {
             if (!empty($fila[$campo])) {
-                TestRunner::verdadero(is_file($raiz . '/' . $fila[$campo]), 'Falta ' . $fila[$campo]);
+                TestRunner::verdadero(is_file(Imagen::firmaRuta($fila[$campo])), 'Falta ' . $fila[$campo]);
             }
         }
     }
@@ -419,6 +481,20 @@ foreach ([
         TestRunner::verdadero($datos['bytes'] > 500, 'La salida fue demasiado pequeña.');
     });
 }
+
+$suite->prueba('Alertas abren equipos con filtros aplicados', static function () use ($raiz): void {
+    $inicio = file_get_contents($raiz . '/index.php');
+    TestRunner::verdadero(str_contains($inicio, "['garantia' => 'vencida', 'activo' => '1']"));
+    TestRunner::verdadero(str_contains($inicio, "['garantia' => 'vence_30', 'activo' => '1']"));
+    TestRunner::verdadero(str_contains($inicio, "['estado_equipo' => (string)EquipoEstado::PERDIDO_ROBADO, 'activo' => '1']"));
+
+    foreach (['equipos_filtrados', 'consulta_equipos_filtrados'] as $objetivo) {
+        $resultado = TestRunner::proceso([PHP_BINARY, $raiz . '/tests/render_worker.php', $objetivo]);
+        TestRunner::igual(0, $resultado['codigo'], $resultado['error']);
+        $datos = json_decode($resultado['salida'], true, 512, JSON_THROW_ON_ERROR);
+        TestRunner::verdadero($datos['filtros_aplicados'] === true, 'No se seleccionaron los filtros en ' . $objetivo);
+    }
+});
 
 $suite->prueba('Generación de PDF sin avisos PHP', static function () use ($raiz): void {
     require_once $raiz . '/reportes/pdf_layout.php';

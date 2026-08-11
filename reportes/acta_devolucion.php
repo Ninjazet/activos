@@ -167,7 +167,7 @@ if ((int)$row['activa'] !== 0 || empty($row['firma_devolucion'])) {
     die('Esta asignación todavía no tiene una devolución firmada.');
 }
 
-$rutaFirma = BASE_PATH . '/' . ltrim($row['firma_devolucion'], '/');
+$rutaFirma = Imagen::firmaRuta($row['firma_devolucion']);
 if (!is_file($rutaFirma)) {
     die('No se encontró el archivo de la firma de devolución.');
 }

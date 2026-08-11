@@ -7,12 +7,15 @@ Tecnologías principales: PHP 8, MySQL/MariaDB, Apache, Bootstrap 5, jQuery/Data
 ## Inicio local con XAMPP
 
 1. Coloca el proyecto en `C:\xampp\htdocs\activos`.
-2. Importa `database/gestactivos.sql` en MySQL/MariaDB.
-3. Copia `.env.example` como `.env` y ajusta únicamente los valores de tu instalación.
-4. Inicia Apache y MySQL desde XAMPP.
-5. Abre `http://localhost/activos/` o la URL definida en `APP_BASE_URL`.
+2. Crea una base llamada `gestactivos` con codificación `utf8mb4`.
+3. Selecciona esa base e importa `database/gestactivos.sql`.
+4. Copia `.env.example` como `.env` y ajusta únicamente los valores de tu instalación.
+5. Inicia Apache y MySQL desde XAMPP.
+6. Abre `http://localhost/activos/` o la URL definida en `APP_BASE_URL`.
 
 El archivo `.env` contiene datos locales y está excluido de Git. Nunca deben guardarse contraseñas reales en `.env.example`.
+
+`database/gestactivos.sql` es el único respaldo de instalación y contiene el esquema junto con todos los datos existentes al 11 de agosto de 2026. No ejecutes migraciones adicionales después de importarlo.
 
 ## Configuración para XAMPP y Docker
 
@@ -29,7 +32,9 @@ La aplicación toma su configuración desde variables del sistema o desde un arc
 | `DB_USER`, `DB_PASS`, `DB_NAME` | Credenciales y base | según la instalación |
 | `DB_CHARSET` | Codificación de conexión | `utf8mb4` |
 
-Si se configura `APP_STORAGE_PATH`, PHP intentará crear automáticamente las subcarpetas `empleados`, `equipos` y `firmas` cuando se usen. En Docker, el volumen debe ser persistente y permitir escritura al usuario que ejecuta Apache/PHP.
+Si se configura `APP_STORAGE_PATH`, PHP intentará crear automáticamente las subcarpetas `empleados`, `equipos` y `firmas` cuando se usen. En Docker, monta un volumen persistente en esa ruta y concede escritura al usuario que ejecuta Apache/PHP. Por ejemplo, se puede usar `APP_STORAGE_PATH=/var/lib/gestactivos/media` y montar el volumen en `/var/lib/gestactivos/media`.
+
+Las fotos de empleados y equipos se entregan mediante la ruta autenticada `media.php`. Por eso el volumen puede estar fuera de la carpeta pública del servidor y las imágenes seguirán cargando con cualquier dominio o valor válido de `APP_BASE_URL`.
 
 ## Arquitectura actual
 
@@ -115,7 +120,7 @@ No borres historial de asignaciones ni mantenimientos. Las bajas de empleados, e
 - Una devolución con condición Con daño o No funcional cierra la asignación y abre el mantenimiento correctivo dentro de la misma transacción.
 - El estado En mantenimiento no se elige manualmente desde Inventario; lo controla este flujo.
 
-Para actualizar una instalación existente, ejecuta una sola vez `database/migracion_proveedores_mantenimientos_20260731.sql`. Una instalación nueva debe importarse directamente desde `database/gestactivos.sql`.
+Esta estructura ya está incorporada en `database/gestactivos.sql`.
 
 ## Licencias de software
 
@@ -130,13 +135,11 @@ La base del módulo separa el catálogo `software` de las compras `licencias` y 
 - Las licencias no se eliminan físicamente. Una licencia con asignaciones o instalaciones activas no puede desactivarse.
 - Los proveedores inactivos y productos inactivos se conservan en registros históricos, pero no se aceptan en compras nuevas.
 
-Las claves de producto nunca deben almacenarse sin protección. `SecretoLicencia` usa cifrado autenticado y obtiene la llave maestra exclusivamente de `APP_ENCRYPTION_KEY`; cada instalación XAMPP o Docker debe configurar una llave propia que no se envía a Git. El comando para generarla está documentado en `.env.example`.
+Las claves de producto nunca deben almacenarse sin protección. `SecretoLicencia` usa cifrado autenticado y obtiene la llave maestra exclusivamente de `APP_ENCRYPTION_KEY`. Para restaurar este respaldo conservando el acceso a las claves existentes, copia de forma privada la misma `APP_ENCRYPTION_KEY` de la instalación original. No incluyas esa llave en Git ni dentro del SQL.
 
 En una publicación con dominio, la aplicación debe servirse mediante HTTPS para proteger también la clave mientras viaja entre el navegador y el servidor al solicitar verla o copiarla.
 
-Para actualizar una instalación existente, ejecuta en orden y una sola vez `database/migracion_licencias_parte1_20260731.sql` y `database/migracion_licencias_parte3_cupos_20260731.sql`. La segunda migración genera los cupos de licencias finitas existentes y agrega las restricciones de asignación. El respaldo `database/gestactivos.sql` ya incluye la estructura completa para instalaciones nuevas.
-
-Para cargar los seis ejemplos de software y licencias ejecuta `C:\xampp\php\php.exe database\seed_demo_licencias.php`. El seed puede repetirse sin duplicar registros y cifra las claves ficticias con la `APP_ENCRYPTION_KEY` propia de esa instalación; por eso esos datos cifrados no se incluyen directamente en el respaldo compartido.
+El esquema, los productos, las licencias y sus cupos actuales ya están incorporados en `database/gestactivos.sql`.
 
 ## Pruebas de regresión
 
@@ -158,4 +161,4 @@ Después de una modificación visual, completa además una revisión manual en e
 
 - `documentacion_tecnica.html`: explicación extensa del sistema para otro programador.
 - `flujo-trabajo.html`: recorrido visual de los procesos principales.
-- `database/gestactivos.sql`: respaldo definitivo del esquema y los datos preparados para el repositorio.
+- `database/gestactivos.sql`: único respaldo completo de instalación; incluye el esquema final y los datos actuales.

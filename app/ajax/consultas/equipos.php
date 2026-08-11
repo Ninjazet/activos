@@ -13,8 +13,9 @@ $marcaFiltro = TableFilter::positiveInt('idmarca');
 $modeloFiltro = TableFilter::positiveInt('idmodelo');
 $proveedorFiltro = TableFilter::positiveInt('idproveedor');
 $activoFiltro = TableFilter::enum('activo', ['0', '1']);
+$garantiaFiltro = TableFilter::enum('garantia', ['vigente', 'vence_30', 'vencida', 'sin_fecha']);
 
-$sql = "SELECT eq.idequipo, eq.imagen, eq.activo, eq.codigo_activo, eq.numero_serie, eq.tipo_equipo, eq.estado_equipo, ma.nombreMarca, mo.nombreModelo, p.nombre AS proveedor
+$sql = "SELECT eq.idequipo, eq.imagen, eq.activo, eq.codigo_activo, eq.numero_serie, eq.tipo_equipo, eq.estado_equipo, eq.vencimiento_garantia, ma.nombreMarca, mo.nombreModelo, p.nombre AS proveedor
         FROM equipo eq
         INNER JOIN marca  ma ON eq.idmarca_equipo  = ma.idmarca
         INNER JOIN modelo mo ON eq.idmodelo_equipo = mo.idmodelo
@@ -32,6 +33,15 @@ if ($marcaFiltro > 0) { $conditions[] = 'eq.idmarca_equipo = ?'; $params[] = $ma
 if ($modeloFiltro > 0) { $conditions[] = 'eq.idmodelo_equipo = ?'; $params[] = $modeloFiltro; }
 if ($proveedorFiltro > 0) { $conditions[] = 'eq.idproveedor = ?'; $params[] = $proveedorFiltro; }
 if ($activoFiltro !== '') { $conditions[] = 'eq.activo = ?'; $params[] = (int)$activoFiltro; }
+if ($garantiaFiltro === 'vigente') {
+    $conditions[] = 'eq.vencimiento_garantia >= CURDATE()';
+} elseif ($garantiaFiltro === 'vence_30') {
+    $conditions[] = 'eq.vencimiento_garantia BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)';
+} elseif ($garantiaFiltro === 'vencida') {
+    $conditions[] = 'eq.vencimiento_garantia < CURDATE()';
+} elseif ($garantiaFiltro === 'sin_fecha') {
+    $conditions[] = 'eq.vencimiento_garantia IS NULL';
+}
 if ($conditions) { $sql .= ' WHERE ' . implode(' AND ', $conditions); }
 $sql .= " ORDER BY eq.idequipo DESC";
 

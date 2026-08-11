@@ -96,7 +96,7 @@ if (!empty($_POST['firma'])) {
     $row['firma'] = $firmaGuardada['relativa'];
     $row['firma_fecha'] = date('Y-m-d H:i:s');
 } elseif (!empty($row['firma'])) {
-    $rutaFirmaAbsoluta = BASE_PATH . '/' . ltrim($row['firma'], '/');
+    $rutaFirmaAbsoluta = Imagen::firmaRuta($row['firma']);
     $fechaFirma = $row['firma_fecha']
         ? date('d/m/Y h:i A', strtotime($row['firma_fecha']))
         : '';

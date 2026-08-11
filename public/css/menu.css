@@ -151,6 +151,11 @@ body {
     flex-shrink: 0;
 }
 
+#sidemenu #profile .profile-home-link {
+    display: block;
+    color: var(--sidebar-text-strong);
+}
+
 #sidemenu #profile #photo {
     box-sizing: border-box;
     margin: 0 auto;
@@ -162,6 +167,13 @@ body {
     border: 3px solid var(--accent);
     box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.25);
     object-fit: cover;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+#sidemenu #profile .profile-home-link:hover #photo img,
+#sidemenu #profile .profile-home-link:focus-visible #photo img {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 4px rgba(167, 139, 219, .34);
 }
 
 #sidemenu #profile #name {
@@ -185,6 +197,15 @@ body {
 
 #sidemenu #profile .icon:hover {
     background-color: var(--sidebar-hover);
+}
+
+#sidemenu #profile .profile-home-icon .icon {
+    width: 42px;
+    height: 42px;
+}
+
+#sidemenu #profile .profile-home-icon i {
+    font-size: 22px;
 }
 
 #sidemenu #profile #cerrar {
@@ -398,6 +419,8 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    color: inherit;
+    text-decoration: none;
 }
 
 #topbar-user img {

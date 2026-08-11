@@ -35,11 +35,15 @@ $esRutaActiva = static function (string $url) use ($rutaActual): bool {
     </div>
 
     <div id="profile">
-        <div id="photo">
-            <img id="mifoto" src="<?= htmlspecialchars($imagen) ?>" alt="Foto de <?= htmlspecialchars($nomApe) ?>">
-        </div>
-        <div id="name"><span><?= htmlspecialchars($nomApe) ?></span></div>
-        <a href="<?= BASE_URL ?>/index.php" aria-label="Ir al inicio" title="Ir al inicio"><div class="icon"><i class="fas fa-home" aria-hidden="true"></i></div></a>
+        <a href="<?= BASE_URL ?>/index.php" class="profile-home-link" aria-label="Ir al inicio">
+            <div id="photo">
+                <img id="mifoto" src="<?= htmlspecialchars($imagen) ?>" alt="Foto de <?= htmlspecialchars($nomApe) ?>">
+            </div>
+            <div id="name"><span><?= htmlspecialchars($nomApe) ?></span></div>
+        </a>
+        <a href="<?= BASE_URL ?>/index.php" class="profile-home-icon" aria-label="Ir al inicio" title="Ir al inicio">
+            <span class="icon"><i class="fas fa-home" aria-hidden="true"></i></span>
+        </a>
         <br>
         <a href="<?= BASE_URL ?>/cerrar.php" id="cerrar">[Cerrar Sesión]</a>
         <a href="<?= BASE_URL ?>/cerrar.php" title="Cerrar sesión" aria-label="Cerrar sesión" id="cerrarIcon">
@@ -235,10 +239,10 @@ $esRutaActiva = static function (string $url) use ($rutaActual): bool {
             <span>Panel de control · <?= htmlspecialchars(APP_NAME) ?></span>
         </div>
     </div>
-    <div id="topbar-user">
+    <a id="topbar-user" href="<?= BASE_URL ?>/index.php" aria-label="Ir al inicio">
         <img src="<?= htmlspecialchars($imagen) ?>" alt="Foto de <?= htmlspecialchars($nomApe) ?>">
         <span><?= htmlspecialchars($nomApe) ?></span>
-    </div>
+    </a>
 </div>
 
 <main id="contenido-principal" class="app-content" tabindex="-1">
