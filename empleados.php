@@ -94,11 +94,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "SELECT COUNT(*) FROM asignacion WHERE idempleado=? AND activa=1",
                 [$idEmpleadoDel]
             );
+            $licenciasActivas = $db->contar(
+                "SELECT COUNT(*) FROM licencia_asignaciones WHERE idempleado=? AND activa=1",
+                [$idEmpleadoDel]
+            );
             $tieneUsuario = $db->fila("SELECT idusuario FROM usuarios WHERE idempleado=? AND estado=1", [$idEmpleadoDel]);
 
             if ($asignacionesAbiertas > 0) {
                 $detalle = $asignacionesAbiertas === 1 ? '1 asignación abierta' : "$asignacionesAbiertas asignaciones abiertas";
                 Auth::flash('error', "No se puede inactivar al empleado: tiene $detalle. Debes devolver los equipos primero.");
+            } elseif ($licenciasActivas > 0) {
+                $detalle = $licenciasActivas === 1 ? '1 licencia asignada' : "$licenciasActivas licencias asignadas";
+                Auth::flash('error', "No se puede inactivar al empleado: tiene $detalle. Devuelve primero las licencias desde su ficha.");
             } elseif ($tieneUsuario) {
                 Auth::flash('error', 'No se puede inactivar: este empleado tiene una cuenta de usuario activa. Desactiva primero esa cuenta en Seguridad.');
             } else {

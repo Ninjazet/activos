@@ -83,7 +83,11 @@ $db = Database::getInstance();
 
 $suite->prueba('Conexión y esquema principal', static function () use ($db): void {
     TestRunner::igual(1, (int)$db->fila('SELECT 1 valor')['valor']);
-    foreach (['equipo', 'empleados', 'asignacion', 'usuarios', 'permisos', 'proveedores', 'mantenimientos'] as $tabla) {
+    foreach ([
+        'equipo', 'empleados', 'asignacion', 'usuarios', 'permisos', 'proveedores', 'mantenimientos',
+        'software', 'licencias', 'licencia_cupos', 'licencia_asignaciones',
+        'licencia_instalaciones', 'licencia_renovaciones',
+    ] as $tabla) {
         TestRunner::verdadero(
             $db->contar(
                 'SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?',
@@ -99,6 +103,44 @@ $suite->prueba('Estados de mantenimiento centralizados', static function (): voi
     TestRunner::igual('Preventivo', MantenimientoEstado::tipos()[MantenimientoEstado::PREVENTIVO]);
     TestRunner::igual('success', MantenimientoEstado::badge(MantenimientoEstado::COMPLETADO));
     TestRunner::verdadero(in_array(MantenimientoEstado::ABIERTO, MantenimientoEstado::estadosActivos(), true));
+});
+
+$suite->prueba('Modalidades y estados de licencias centralizados', static function (): void {
+    $hoy = new DateTimeImmutable('2026-07-31');
+    TestRunner::igual(3, count(LicenciaEstado::modalidades()));
+    TestRunner::igual(5, count(LicenciaEstado::metricas()));
+    TestRunner::igual(['empleado'], LicenciaEstado::destinosPermitidos(LicenciaEstado::POR_USUARIO));
+    TestRunner::igual(['equipo'], LicenciaEstado::destinosPermitidos(LicenciaEstado::POR_DISPOSITIVO));
+    TestRunner::igual(
+        LicenciaEstado::VENCIDA,
+        LicenciaEstado::estado(['activo' => 1, 'modalidad' => 'Suscripción', 'fecha_vencimiento' => '2026-07-30'], 0, $hoy)
+    );
+    TestRunner::igual(
+        LicenciaEstado::PROXIMA_VENCER,
+        LicenciaEstado::estado(['activo' => 1, 'modalidad' => 'Suscripción', 'fecha_vencimiento' => '2026-08-15'], 0, $hoy)
+    );
+    TestRunner::igual(
+        LicenciaEstado::AGOTADA,
+        LicenciaEstado::estado(['activo' => 1, 'modalidad' => 'Suscripción', 'fecha_vencimiento' => '2027-07-31', 'cantidad_total' => 10], 10, $hoy)
+    );
+    TestRunner::igual(
+        LicenciaEstado::PERPETUA_VIGENTE,
+        LicenciaEstado::estado(['activo' => 1, 'modalidad' => 'Perpetua', 'fecha_vencimiento' => null], 0, $hoy)
+    );
+});
+
+$suite->prueba('Cifrado autenticado de claves de licencia', static function () use ($raiz): void {
+    $resultado = TestRunner::proceso(
+        [PHP_BINARY, $raiz . '/tests/licencia_crypto_worker.php'],
+        ['APP_ENCRYPTION_KEY' => base64_encode(str_repeat(chr(73), 32))]
+    );
+    TestRunner::igual(0, $resultado['codigo'], $resultado['error']);
+    $datos = json_decode($resultado['salida'], true, 512, JSON_THROW_ON_ERROR);
+    TestRunner::igual('ABCD-EFGH-IJKL-9876', $datos['descifrado']);
+    TestRunner::igual('••••-••••-9876', $datos['mascara']);
+    TestRunner::verdadero($datos['huella_igual']);
+    TestRunner::verdadero($datos['rechazo_alteracion']);
+    TestRunner::verdadero(!str_contains($datos['cifrado'], 'ABCD-EFGH'));
 });
 
 $suite->prueba('Esquema de proveedores y mantenimientos', static function () use ($db): void {
@@ -133,6 +175,53 @@ $suite->prueba('Esquema de proveedores y mantenimientos', static function () use
     );
 });
 
+$suite->prueba('Esquema base de licencias', static function () use ($db): void {
+    TestRunner::igual(
+        1,
+        $db->contar(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='permisos' AND COLUMN_NAME='licencias'"
+        )
+    );
+    TestRunner::igual(
+        17,
+        $db->contar(
+            "SELECT COUNT(*) FROM information_schema.REFERENTIAL_CONSTRAINTS
+             WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME LIKE 'licencia%'"
+        )
+    );
+    TestRunner::igual(
+        2,
+        $db->contar(
+            "SELECT COUNT(DISTINCT INDEX_NAME) FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA=DATABASE()
+               AND INDEX_NAME IN ('uq_licencia_cupo_asignado_activo','uq_licencia_instalacion_activa')"
+        )
+    );
+});
+
+$suite->prueba('Esquema de cupos y asignaciones de licencias', static function () use ($db): void {
+    foreach (['motivo_devolucion', 'empleado_asignado_activo', 'equipo_asignado_activo'] as $columna) {
+        TestRunner::igual(
+            1,
+            $db->contar(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='licencia_asignaciones' AND COLUMN_NAME=?",
+                [$columna]
+            ),
+            'Falta la columna ' . $columna
+        );
+    }
+    TestRunner::igual(
+        2,
+        $db->contar(
+            "SELECT COUNT(DISTINCT INDEX_NAME) FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='licencia_asignaciones'
+               AND INDEX_NAME IN ('uq_licencia_empleado_activo','uq_licencia_equipo_activo')"
+        )
+    );
+});
+
 $suite->prueba('Integridad de mantenimientos y equipos', static function () use ($db): void {
     $revisiones = [
         "SELECT COUNT(*) FROM equipo eq WHERE eq.activo=1 AND eq.estado_equipo=3
@@ -151,6 +240,48 @@ $suite->prueba('Integridad de mantenimientos y equipos', static function () use 
     }
 });
 
+$suite->prueba('Integridad de historiales de licencias', static function () use ($db): void {
+    $revisiones = [
+        "SELECT COUNT(*) FROM licencia_asignaciones
+         WHERE ((idempleado IS NOT NULL) + (idequipo IS NOT NULL)) <> 1",
+        "SELECT COUNT(*) FROM licencia_asignaciones
+         WHERE (activa=1 AND fecha_devolucion IS NOT NULL)
+            OR (activa=0 AND fecha_devolucion IS NULL)",
+        "SELECT COUNT(*) FROM licencia_instalaciones
+         WHERE (activa=1 AND fecha_desinstalacion IS NOT NULL)
+            OR (activa=0 AND fecha_desinstalacion IS NULL)",
+        "SELECT COUNT(*) FROM (
+             SELECT lc.idlicencia
+             FROM licencia_cupos lc
+             INNER JOIN licencias l ON l.idlicencia=lc.idlicencia
+             WHERE lc.activo=1 AND l.cantidad_total IS NOT NULL
+             GROUP BY lc.idlicencia, l.cantidad_total
+             HAVING COUNT(*) > l.cantidad_total
+         ) excesos",
+        "SELECT COUNT(*) FROM (
+             SELECT idcupo
+             FROM licencia_asignaciones
+             WHERE activa=1 AND idcupo IS NOT NULL
+             GROUP BY idcupo
+             HAVING COUNT(*) > 1
+         ) duplicados",
+        "SELECT COUNT(*) FROM licencia_asignaciones la
+         INNER JOIN licencias l ON l.idlicencia=la.idlicencia
+         LEFT JOIN licencia_cupos lc ON lc.idcupo=la.idcupo
+         WHERE la.activa=1 AND l.cantidad_total IS NOT NULL
+           AND (la.idcupo IS NULL OR lc.activo<>1)",
+        "SELECT COUNT(*) FROM licencia_asignaciones la
+         INNER JOIN empleados e ON e.idempleado=la.idempleado
+         WHERE la.activa=1 AND e.activo<>1",
+        "SELECT COUNT(*) FROM licencia_asignaciones la
+         INNER JOIN equipo eq ON eq.idequipo=la.idequipo
+         WHERE la.activa=1 AND eq.activo<>1",
+    ];
+    foreach ($revisiones as $sql) {
+        TestRunner::igual(0, $db->contar($sql), $sql);
+    }
+});
+
 $suite->prueba('Servicios de proveedores y mantenimientos consultan datos', static function () use ($db): void {
     TestRunner::verdadero(is_array((new ProveedorService($db))->listar()));
     $mantenimientos = new MantenimientoService($db);
@@ -158,6 +289,18 @@ $suite->prueba('Servicios de proveedores y mantenimientos consultan datos', stat
     $metricas = $mantenimientos->metricas();
     foreach (['abiertos', 'en_proceso', 'cerrados_mes', 'costo_mes'] as $campo) {
         TestRunner::verdadero(array_key_exists($campo, $metricas), 'Falta la mÃ©trica ' . $campo);
+    }
+});
+
+$suite->prueba('Servicios de software y licencias consultan datos', static function () use ($db): void {
+    $software = new SoftwareService($db);
+    TestRunner::verdadero(is_array($software->listar()));
+    TestRunner::verdadero(is_array($software->opciones()));
+    $licencias = new LicenciaService($db);
+    TestRunner::verdadero(is_array($licencias->listar()));
+    $metricas = $licencias->metricas();
+    foreach (['total', 'activas', 'vencidas', 'proximas'] as $campo) {
+        TestRunner::verdadero(array_key_exists($campo, $metricas), 'Falta la métrica ' . $campo);
     }
 });
 
@@ -254,10 +397,11 @@ $suite->prueba('Endpoints AJAX conservan control de permisos', static function (
 
 foreach ([
     'index', 'equipos', 'empleados', 'asignaciones',
-    'proveedores', 'mantenimientos', 'consulta_mantenimientos', 'reporte_mantenimientos',
+    'proveedores', 'mantenimientos', 'usuarios', 'licencias', 'licencia_detalle', 'software',
+    'consulta_mantenimientos', 'reporte_mantenimientos',
     'areas_ajax', 'cargos_ajax', 'marcas_ajax', 'modelos_ajax',
     'equipos_ajax', 'empleados_ajax', 'asignaciones_ajax',
-    'proveedores_ajax', 'mantenimientos_ajax',
+    'proveedores_ajax', 'mantenimientos_ajax', 'usuarios_ajax', 'licencias_ajax', 'software_ajax',
     'consulta_mantenimientos_ajax', 'reporte_mantenimientos_ajax',
 ] as $objetivo) {
     $suite->prueba('Renderizado: ' . $objetivo, static function () use ($raiz, $objetivo): void {

@@ -50,7 +50,8 @@ final class ProveedorService {
     public function obtener(int $id): ?array {
         return $this->db->fila(
             "SELECT p.*, COUNT(eq.idequipo) AS equipos,
-                    COALESCE(SUM(eq.costo),0) AS total_compras
+                    COALESCE(SUM(eq.costo),0) AS total_compras,
+                    (SELECT COUNT(*) FROM licencias l WHERE l.idproveedor=p.idproveedor) AS licencias
              FROM proveedores p
              LEFT JOIN equipo eq ON eq.idproveedor=p.idproveedor
              WHERE p.idproveedor=? GROUP BY p.idproveedor",
@@ -68,6 +69,19 @@ final class ProveedorService {
              INNER JOIN modelo mo ON mo.idmodelo=eq.idmodelo_equipo
              WHERE eq.idproveedor=?
              ORDER BY eq.fecha_compra DESC, eq.idequipo DESC",
+            [$id]
+        );
+    }
+
+    public function licencias(int $id): array {
+        return $this->db->consulta(
+            "SELECT l.idlicencia,l.codigo_licencia,l.modalidad,l.metrica,l.cantidad_total,
+                    l.fecha_compra,l.fecha_vencimiento,l.costo_total,l.moneda,l.activo,
+                    s.nombre AS software,s.fabricante,s.version,s.edicion
+             FROM licencias l
+             INNER JOIN software s ON s.idsoftware=l.idsoftware
+             WHERE l.idproveedor=?
+             ORDER BY l.fecha_compra DESC,l.idlicencia DESC",
             [$id]
         );
     }

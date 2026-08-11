@@ -8,6 +8,10 @@ $rutas = [
     'asignaciones' => 'asignarequipo.php',
     'proveedores' => 'proveedores.php',
     'mantenimientos' => 'mantenimientos.php',
+    'usuarios' => 'usuarios.php',
+    'licencias' => 'licencias.php',
+    'licencia_detalle' => 'licencia.php',
+    'software' => 'software.php',
     'consulta_mantenimientos' => 'consultas/mantenimientos.php',
     'reporte_mantenimientos' => 'reportes/mantenimientos.php',
     'areas_ajax' => 'app/ajax/maestros/areas.php',
@@ -19,6 +23,9 @@ $rutas = [
     'asignaciones_ajax' => 'app/ajax/transacciones/asignarequipo.php',
     'proveedores_ajax' => 'app/ajax/maestros/proveedores.php',
     'mantenimientos_ajax' => 'app/ajax/transacciones/mantenimientos.php',
+    'usuarios_ajax' => 'app/ajax/maestros/usuarios.php',
+    'licencias_ajax' => 'app/ajax/transacciones/licencias.php',
+    'software_ajax' => 'app/ajax/maestros/software.php',
     'consulta_mantenimientos_ajax' => 'app/ajax/consultas/mantenimientos.php',
     'reporte_mantenimientos_ajax' => 'app/ajax/reportes/mantenimientos.php',
 ];
@@ -50,6 +57,7 @@ $_SESSION = [
     'actas' => '1',
     'seguridad' => '1',
     'mantenimientos' => '1',
+    'licencias' => '1',
     'estado' => '0',
 ];
 
@@ -57,6 +65,16 @@ $esAjax = str_ends_with($clave, '_ajax');
 $_SERVER['REQUEST_METHOD'] = $esAjax ? 'POST' : 'GET';
 $_SERVER['REQUEST_URI'] = BASE_URL . '/' . $rutas[$clave];
 $_POST = [];
+$_GET = [];
+if ($clave === 'licencia_detalle') {
+    $licencia = Database::getInstance()->fila('SELECT idlicencia FROM licencias ORDER BY idlicencia LIMIT 1');
+    if (!$licencia) {
+        fwrite(STDERR, 'No hay una licencia para renderizar la ficha.');
+        exit(4);
+    }
+    $_GET['id'] = (int)$licencia['idlicencia'];
+    $_SERVER['REQUEST_URI'] .= '?id=' . (int)$licencia['idlicencia'];
+}
 
 set_error_handler(static function (int $nivel, string $mensaje, string $archivo, int $linea): bool {
     throw new ErrorException($mensaje, 0, $nivel, $archivo, $linea);

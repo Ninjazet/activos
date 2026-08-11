@@ -4,3 +4,537 @@
    - Crear una tabla `mantenimientos` (`idequipo`, `fecha`, `descripcion`, `costo`, `tipo: Preventivo/Correctivo`).
    - Botón en el Inventario para enviar un equipo a "Soporte" (cambia su estado y abre una bitácora de reparación).
 agregar licencias
+
+
+
+
+1. Dependencias CDN locales
+Actualmente varias librerías se cargan desde Internet mediante enlaces CDN, por ejemplo:
+https://cdn.jsdelivr.net/npm/bootstrap...
+https://cdnjs.cloudflare.com/ajax/libs/toastr...
+https://ajax.googleapis.com/ajax/libs/jquery...
+Esto incluye componentes como:
+Bootstrap.
+Bootstrap Icons.
+jQuery.
+DataTables.
+Toastr.
+El inconveniente es que, si el servidor no tiene Internet, el CDN falla o cambia alguna política, el sitio podría aparecer sin estilos o dejar de ejecutar funciones JavaScript.
+“Hacerlas locales” significa descargar versiones específicas y guardarlas dentro del proyecto:
+public/vendor/
+├── bootstrap/
+├── bootstrap-icons/
+├── jquery/
+├── datatables/
+└── toastr/
+Después, en lugar del enlace externo:
+<script src="https://ajax.googleapis.com/.../jquery.min.js"></script>
+se usaría:
+<script src="<?= BASE_URL ?>/public/vendor/jquery/jquery.min.js"></script>
+Beneficios:
+El sistema funciona sin Internet.
+No depende de servidores externos.
+Las versiones no cambian inesperadamente.
+Es más apropiado para una intranet o instalación empresarial.
+Desventajas:
+Aumenta un poco el tamaño del proyecto.
+Las actualizaciones deben hacerse manualmente.
+Hay que comprobar que no se carguen dos versiones distintas.
+Prioridad recomendada: media. Conviene hacerlo antes de desplegar definitivamente, pero no bloquea módulos nuevos.
+
+
+
+
+
+
+
+2. Actualización oficial de TCPDF
+TCPDF es la biblioteca utilizada para generar:
+Reportes PDF.
+Actas de asignación.
+Actas de devolución.
+Firmas dentro de documentos.
+La copia actual funciona, pero es antigua y necesitó una corrección de compatibilidad para evitar avisos con PHP 8.2.
+Una actualización oficial significa reemplazar esa copia por una versión más reciente y mantenida, preferiblemente mediante Composer:
+composer.json
+vendor/
+└── tecnickcom/tcpdf/
+En lugar de incluir directamente:
+require_once BASE_PATH . '/lib/tcpdf/tcpdf.php';
+se cargaría mediante:
+require_once BASE_PATH . '/vendor/autoload.php';
+No debe actualizarse simplemente reemplazando archivos sin probar. Una versión diferente podría cambiar:
+Fuentes.
+Cálculo de alturas.
+Saltos de página.
+Márgenes.
+Posición del logo.
+Tamaño de imágenes y firmas.
+Algunos métodos internos.
+Después de actualizar habría que revisar visualmente todos los documentos PDF.
+Prioridad recomendada: baja mientras la versión actual funcione. Pasa a prioridad alta si se actualiza PHP o comienzan a aparecer errores en los PDF.
+
+
+
+
+
+
+
+
+3. Automatización con navegador real
+Las 24 pruebas actuales revisan:
+PHP.
+Base de datos.
+Integridad de asignaciones.
+Permisos AJAX.
+Renderizado de páginas.
+Generación de PDF.
+Validaciones y estados.
+Sin embargo, no abren Chrome para hacer clic como una persona.
+Una prueba con navegador real utilizaría herramientas como Playwright, Selenium o Cypress para simular este proceso:
+Abrir el login.
+Escribir usuario y contraseña.
+Presionar “Iniciar sesión”.
+Entrar a Equipos.
+Abrir un modal.
+Crear un registro.
+Buscarlo en la tabla.
+Editarlo.
+Crear una asignación.
+Firmar o simular una firma.
+Devolver el equipo.
+Comprobar el resultado visible.
+Repetir algunas vistas con tamaño móvil.
+Esto detecta problemas que una prueba PHP no puede encontrar, por ejemplo:
+Un botón que no abre el modal.
+JavaScript que falla en Chrome.
+Campos ocultos o recortados.
+Tablas móviles que no muestran las acciones.
+Selectores que dejaron de coincidir.
+Una actualización de Bootstrap que rompió atributos.
+CSS que tapa un botón.
+Errores de navegación y redirección.
+Para hacerlo correctamente se necesitaría:
+Una base separada, como gestactivos_pruebas.
+Un usuario exclusivo de automatización.
+Datos preparados o seeds.
+Limpieza automática después de cada prueba.
+Un servidor XAMPP o Docker destinado a pruebas.
+Prioridad recomendada: media. Sería especialmente útil antes de agregar módulos grandes o modificar nuevamente Bootstrap.
+
+
+
+
+
+
+
+Es totalmente viable. El mejor orden sería:
+
+1. Proveedores.
+2. Mantenimientos.
+3. Licencias de software.
+4. Ficha integral del equipo, alertas y reportes.
+
+No recomiendo agregar todo directamente a la tabla `equipo`. Cada módulo necesita conservar su propio historial.
+
+## Diseño general recomendado
+
+```text
+Proveedor
+ ├── Equipos comprados
+ ├── Mantenimientos externos
+ └── Licencias adquiridas
+
+Equipo
+ ├── Historial de asignaciones
+ ├── Historial de mantenimientos
+ └── Licencias instaladas
+
+Empleado
+ └── Licencias asignadas por usuario
+```
+
+La primera imagen aporta una idea especialmente útil: crear una ficha individual para cada equipo. En lugar de seguir agregando columnas a la tabla de Inventario, habría una acción “Ver ficha” con secciones:
+
+- Información general.
+- Compra y proveedor.
+- Asignación actual.
+- Historial de asignaciones.
+- Mantenimientos.
+- Licencias instaladas.
+- Documentos o actas.
+
+Esto evitaría que la tabla de equipos se vuelva demasiado ancha.
+
+---
+
+## 1. Gestión de proveedores
+
+Viabilidad: alta.  
+Complejidad: baja.
+
+Como los proveedores no cambian con frecuencia, funcionaría como un catálogo ampliado.
+
+### Tabla propuesta
+
+```text
+proveedores
+├── idproveedor
+├── nombre
+├── rtn
+├── contacto
+├── telefono
+├── correo
+├── direccion
+├── observaciones
+├── activo
+├── fecha_creacion
+└── fecha_actualizacion
+```
+
+En [equipo](/C:/xampp/htdocs/activos/database/gestactivos.sql:201) se agregaría:
+
+```sql
+idproveedor INT NULL
+```
+
+No sería obligatorio para los registros antiguos.
+
+### Funcionamiento
+
+- Pantalla para ver, buscar, crear, editar, inactivar y reactivar proveedores.
+- Selector de proveedor al crear o editar un equipo.
+- Solamente proveedores activos aparecen para compras nuevas.
+- Si un proveedor se inactiva, los equipos comprados anteriormente conservan la relación.
+- En su detalle se mostraría cuántos equipos y licencias se le han comprado.
+
+No crearía todavía un módulo completo de órdenes de compra. Los campos actuales `fecha_compra`, `costo` y `factura` pueden seguir en `equipo`; solamente se agrega el proveedor.
+
+Ubicación sugerida: `Configuración / Catálogos → Proveedores`.
+
+---
+
+## 2. Módulo de mantenimientos
+
+Viabilidad: alta.  
+Complejidad: media.
+
+El estado “En mantenimiento” ya existe en [EquipoEstado.php](/C:/xampp/htdocs/activos/app/domain/EquipoEstado.php:12), por lo que el módulo encaja naturalmente.
+
+La tabla propuesta inicialmente necesita algunos campos adicionales para controlar correctamente la apertura y el cierre.
+
+### Tabla propuesta
+
+```text
+mantenimientos
+├── idmantenimiento
+├── idequipo
+├── idproveedor              NULL si es soporte interno
+├── tipo                     Preventivo / Correctivo
+├── estado                   Abierto / En proceso / Completado / Cancelado
+├── fecha_ingreso
+├── fecha_cierre             NULL mientras siga abierto
+├── descripcion_problema
+├── diagnostico
+├── trabajo_realizado
+├── costo
+├── resultado                Reparado / No reparable
+├── observaciones
+├── idusuario_apertura
+└── idusuario_cierre
+```
+
+### Flujo desde Inventario
+
+1. Presionar “Enviar a mantenimiento”.
+2. Seleccionar tipo, problema y proveedor opcional.
+3. Crear el registro de mantenimiento.
+4. Cambiar el equipo a En mantenimiento.
+5. Mostrarlo en el módulo de Mantenimientos.
+6. Registrar diagnóstico, reparación y costo.
+7. Cerrar el mantenimiento.
+
+Al cerrar:
+
+- `Reparado` → equipo Disponible.
+- `No reparable` → equipo Dado de baja.
+- `Cancelado` → recuperar el estado anterior, cuando corresponda.
+
+### Reglas importantes
+
+- No se puede enviar a mantenimiento un equipo con una asignación abierta.
+- Si el equipo se devuelve con daño, la devolución debe cerrar la asignación y abrir automáticamente el mantenimiento en la misma transacción.
+- Solo puede existir un mantenimiento abierto por equipo.
+- Un mantenimiento cerrado no se elimina.
+- El estado En mantenimiento ya no debería seleccionarse manualmente desde “Editar equipo”; lo debe controlar el módulo.
+- Los equipos que actualmente están En mantenimiento deben recibir un registro inicial durante la migración para no quedar sin historial.
+
+### Pantalla del módulo
+
+Indicadores superiores:
+
+- Mantenimientos abiertos.
+- En proceso.
+- Cerrados durante el mes.
+- Costo del mes.
+
+Filtros:
+
+- Equipo.
+- Código de activo.
+- Tipo.
+- Estado.
+- Proveedor.
+- Rango de fechas.
+
+Ubicación sugerida: módulo propio `Mantenimientos` en el sidebar.
+
+---
+
+## 3. Administración de licencias de software
+
+Viabilidad: alta.  
+Complejidad: media-alta.
+
+No conviene guardar todo en una sola tabla, porque debemos separar:
+
+- El producto de software.
+- La licencia comprada.
+- Los equipos o empleados que utilizan esa licencia.
+
+### Tablas propuestas
+
+#### Productos de software
+
+```text
+software
+├── idsoftware
+├── nombre
+├── fabricante
+├── categoria
+├── descripcion
+└── activo
+```
+
+Ejemplos:
+
+- Microsoft 365.
+- Adobe Photoshop.
+- AutoCAD.
+- Windows 11 Pro.
+- Antivirus empresarial.
+
+#### Licencias compradas
+
+```text
+licencias
+├── idlicencia
+├── idsoftware
+├── idproveedor
+├── modalidad                 Perpetua / Suscripción
+├── metrica                   Por equipo / Por usuario / Corporativa
+├── cantidad_total
+├── fecha_compra
+├── fecha_inicio
+├── fecha_vencimiento
+├── costo
+├── factura
+├── clave_producto_cifrada
+├── observaciones
+└── activo
+```
+
+Es mejor separar modalidad y métrica:
+
+- Una licencia puede ser una suscripción por usuario.
+- Otra puede ser perpetua por dispositivo.
+- Otra puede ser corporativa sin límite individual.
+
+#### Asignaciones por equipo
+
+```text
+licencia_equipo
+├── idasignacion
+├── idlicencia
+├── idequipo
+├── fecha_asignacion
+├── fecha_retiro
+└── activa
+```
+
+#### Asignaciones por empleado
+
+```text
+licencia_empleado
+├── idasignacion
+├── idlicencia
+├── idempleado
+├── fecha_asignacion
+├── fecha_retiro
+└── activa
+```
+
+Recomiendo vincular licencias de usuario con `empleados`, no con los usuarios que inician sesión en GestActivos. Un empleado puede tener Microsoft 365 aunque no tenga una cuenta administrativa en el sistema.
+
+### Funcionamiento
+
+La pantalla principal tendría columnas similares a la segunda referencia:
+
+- Software.
+- Fabricante.
+- Modalidad.
+- Proveedor.
+- Fecha de vencimiento.
+- Cantidad total.
+- Asignadas.
+- Disponibles.
+- Estado.
+- Acciones.
+
+Acciones principales:
+
+- Asignar licencia.
+- Retirar licencia.
+- Ver asignaciones.
+- Editar compra.
+- Inactivar.
+
+En español usaría “Asignar” y “Retirar”, en lugar de “Checkout” y “Check-in”.
+
+### Reglas importantes
+
+- No permitir más asignaciones que licencias disponibles.
+- No asignar a equipos dados de baja.
+- No asignar licencias personales a empleados inactivos.
+- Conservar el historial al retirar una licencia.
+- No mostrar la clave completa directamente en la tabla.
+- Guardar claves cifradas si realmente necesitan almacenarlas.
+- Avisar cuando una licencia vence en 30, 60 o 90 días.
+- Una licencia inactiva conserva sus asignaciones históricas, pero no permite asignaciones nuevas.
+
+Ubicación sugerida: módulo propio `Licencias`.
+
+---
+
+## 4. Permisos
+
+Actualmente [permisos](/C:/xampp/htdocs/activos/database/gestactivos.sql:294) utiliza permisos generales. Para estos módulos recomiendo:
+
+```text
+proveedores      → utilizar permiso maestros
+mantenimientos   → nuevo permiso mantenimientos
+licencias        → nuevo permiso licencias
+```
+
+Esto permitiría que:
+
+- Soporte técnico administre mantenimientos sin acceder a usuarios.
+- Administración de licencias trabaje sin tener permiso completo de seguridad.
+- Proveedores permanezca como parte de datos maestros.
+
+Habría que actualizar:
+
+- Tabla `permisos`.
+- Creación y edición de usuarios.
+- Inicio de sesión.
+- Variables de sesión.
+- Sidebar.
+- Endpoints directos.
+- Pruebas automáticas.
+
+---
+
+## Orden de implementación
+
+### Bloque 1: Proveedores
+
+- Migración SQL.
+- Servicio y controlador.
+- Listado de proveedores.
+- Selector en equipos.
+- Filtros y ficha de proveedor.
+- Pruebas.
+
+Es la base más sencilla y después será reutilizada por mantenimiento y licencias.
+
+### Bloque 2: Mantenimientos
+
+- Tabla e historial.
+- Permiso independiente.
+- Servicio transaccional.
+- Botón “Enviar a mantenimiento”.
+- Apertura automática después de una devolución con daño.
+- Cierre como Disponible o Dado de baja.
+- Migración de equipos que actualmente están En mantenimiento.
+- Consultas, indicadores y reporte.
+
+### Bloque 3: Licencias
+
+- Catálogo de software.
+- Compras de licencias.
+- Asignaciones a equipos y empleados.
+- Control de cantidades.
+- Protección de claves.
+- Alertas de vencimiento.
+- Reporte de licencias.
+
+### Bloque 4: Integración visual
+
+- Ficha individual del equipo.
+- Historial completo.
+- Proveedor y compra.
+- Mantenimientos.
+- Licencias instaladas.
+- Nuevas tarjetas de atención en el inicio.
+- Reportes consolidados.
+
+## Recomendación final
+
+No copiaría exactamente el diseño de las imágenes. Mantendría el estilo actual de GestActivos y tomaría solamente estas ideas:
+
+- Ficha detallada del activo de la primera imagen.
+- Control de cantidades y asignación/retiro de licencias de la segunda.
+- Información extensa fuera de la tabla principal.
+- Acciones rápidas desde la ficha del equipo.
+
+El primer desarrollo debería ser Proveedores. Después Mantenimientos y finalmente Licencias, porque proveedores será compartido por los otros dos y mantenimiento aprovecha inmediatamente los estados que ya existen.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Firmas y archivos subidos
+No existe .gitignore, y actualmente hay fotografías y firmas guardadas en Git. La carpeta de firmas tampoco tiene .htaccess.
+Como ya decidiste que las firmas se eliminarán al final, esto puede mantenerse temporalmente, pero antes de producción habría que:
+Eliminar las firmas.
+Evitar que nuevas firmas o fotografías se agreguen a Git.
+Conservar únicamente .gitkeep, .htaccess y avatares predeterminados.

@@ -7,6 +7,7 @@ require_once __DIR__ . '/env.php';
 
 define('APP_NAME',    (string)gestEnv('APP_NAME', 'GestActivos'));
 define('APP_VERSION', (string)gestEnv('APP_VERSION', '2.0.0'));
+define('APP_ENCRYPTION_KEY', (string)gestEnv('APP_ENCRYPTION_KEY', ''));
 
 // Ruta absoluta a la raíz del proyecto (donde está bootstrap.php)
 define('BASE_PATH', dirname(__DIR__));

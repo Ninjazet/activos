@@ -6,7 +6,7 @@ $db = Database::getInstance();
 
 $sql = "SELECT us.idusuario, us.idempleado, username, us.estado,
                CONCAT(nombre, ' ', apellidos) AS Nombre,
-               datosmaestros, transacciones, mantenimientos, consultas, reportes, actas, seguridad
+               datosmaestros, transacciones, mantenimientos, licencias, consultas, reportes, actas, seguridad
         FROM usuarios us
         INNER JOIN empleados em ON us.idempleado = em.idempleado
         INNER JOIN permisos  pe ON us.idusuario  = pe.idusuario";
@@ -15,7 +15,7 @@ $params = [];
 
 $q = TableFilter::text('query');
 $estadoUsuarioFiltro = TableFilter::enum('estado_usuario', ['0', '1']);
-$permisoFiltro = TableFilter::enum('permiso', ['datosmaestros', 'transacciones', 'mantenimientos', 'consultas', 'reportes', 'actas', 'seguridad']);
+$permisoFiltro = TableFilter::enum('permiso', ['datosmaestros', 'transacciones', 'mantenimientos', 'licencias', 'consultas', 'reportes', 'actas', 'seguridad']);
 if ($q !== '') {
     $conditions[] = "(username LIKE ? OR CONCAT(nombre, ' ', apellidos) LIKE ? OR us.idusuario LIKE ?)";
     $params = ["%$q%", "%$q%", "%$q%"];
@@ -61,6 +61,7 @@ $empleados_todos = $db->consulta(
             <th>Maestros</th>
             <th>Transacciones</th>
             <th>Mantenimientos</th>
+            <th>Licencias</th>
             <th>Consultas</th>
             <th>Reportes</th>
             <th>Actas</th>
@@ -76,7 +77,7 @@ $empleados_todos = $db->consulta(
             <td><?= htmlspecialchars($registro['username']) ?></td>
             <td><?= htmlspecialchars($registro['Nombre']) ?></td>
             <td><?= $activo === 1 ? '<span class="badge app-badge-success">Activo</span>' : '<span class="badge app-badge-muted">Inactivo</span>' ?></td>
-            <?php foreach (['datosmaestros', 'transacciones', 'mantenimientos', 'consultas', 'reportes', 'actas', 'seguridad'] as $permiso): ?>
+            <?php foreach (['datosmaestros', 'transacciones', 'mantenimientos', 'licencias', 'consultas', 'reportes', 'actas', 'seguridad'] as $permiso): ?>
             <?php $permitido = (int)$registro[$permiso] === 1; ?>
             <td class="permission-cell" data-permission="<?= $permitido ? 1 : 0 ?>" data-order="<?= $permitido ? 1 : 0 ?>">
                 <span class="permission-indicator <?= $permitido ? 'is-granted' : 'is-denied' ?>"
@@ -157,6 +158,7 @@ $(document).ready(function(){
                             <label class="permission-option" for="maestros"><input type="checkbox" name="maestros" id="maestros"><span><strong>Datos maestros</strong><small>Inventario, personal y catálogos</small></span></label>
                             <label class="permission-option" for="transacciones"><input type="checkbox" name="transacciones" id="transacciones"><span><strong>Transacciones</strong><small>Asignar y devolver; incluye acceso a actas</small></span></label>
                             <label class="permission-option" for="mantenimientos"><input type="checkbox" name="mantenimientos" id="mantenimientos"><span><strong>Mantenimientos</strong><small>Abrir, actualizar y cerrar reparaciones</small></span></label>
+                            <label class="permission-option" for="licencias"><input type="checkbox" name="licencias" id="licencias"><span><strong>Licencias</strong><small>Administrar software y licenciamiento</small></span></label>
                             <label class="permission-option" for="consultas"><input type="checkbox" name="consultas" id="consultas"><span><strong>Consultas</strong><small>Consultar información operativa</small></span></label>
                             <label class="permission-option" for="reportes"><input type="checkbox" name="reportes" id="reportes"><span><strong>Reportes</strong><small>Visualizar y descargar reportes</small></span></label>
                             <label class="permission-option" for="actas"><input type="checkbox" name="actas" id="actas"><span><strong>Actas firmadas</strong><small>Consultar documentos de entrega y devolución</small></span></label>
@@ -220,6 +222,7 @@ $(document).ready(function(){
                             <label class="permission-option" for="maestrosAct"><input type="checkbox" name="maestrosAct" id="maestrosAct"><span><strong>Datos maestros</strong><small>Inventario, personal y catálogos</small></span></label>
                             <label class="permission-option" for="transaccionesAct"><input type="checkbox" name="transaccionesAct" id="transaccionesAct"><span><strong>Transacciones</strong><small>Asignar y devolver; incluye acceso a actas</small></span></label>
                             <label class="permission-option" for="mantenimientosAct"><input type="checkbox" name="mantenimientosAct" id="mantenimientosAct"><span><strong>Mantenimientos</strong><small>Abrir, actualizar y cerrar reparaciones</small></span></label>
+                            <label class="permission-option" for="licenciasAct"><input type="checkbox" name="licenciasAct" id="licenciasAct"><span><strong>Licencias</strong><small>Administrar software y licenciamiento</small></span></label>
                             <label class="permission-option" for="consultasAct"><input type="checkbox" name="consultasAct" id="consultasAct"><span><strong>Consultas</strong><small>Consultar información operativa</small></span></label>
                             <label class="permission-option" for="reportesAct"><input type="checkbox" name="reportesAct" id="reportesAct"><span><strong>Reportes</strong><small>Visualizar y descargar reportes</small></span></label>
                             <label class="permission-option" for="actasAct"><input type="checkbox" name="actasAct" id="actasAct"><span><strong>Actas firmadas</strong><small>Consultar documentos de entrega y devolución</small></span></label>
@@ -267,15 +270,15 @@ $(document).ready(function(){
 </div>
 
 <script>
-// Columnas: 0=ID, 1=Usuario, 2=Empleado, 3=Estado, 4=Maestros...10=Seguridad
+// Columnas: 0=ID, 1=Usuario, 2=Empleado, 3=Estado, 4=Maestros...11=Seguridad
 function modalEdit(evento) {
     var tr = $(evento.target).closest('tr');
     $("#idusuario").val(tr.find('td').eq(0).text());
     $("#usuarioAct").val(tr.find('td').eq(1).text());
     $("#empleadoAct").val(String(tr.data('idempleado')));
     $("#passAct").val(''); // nunca pre-llenar la contraseña
-    var perms = [4,5,6,7,8,9,10];
-    var ids   = ['maestrosAct','transaccionesAct','mantenimientosAct','consultasAct','reportesAct','actasAct','seguridadAct'];
+    var perms = [4,5,6,7,8,9,10,11];
+    var ids   = ['maestrosAct','transaccionesAct','mantenimientosAct','licenciasAct','consultasAct','reportesAct','actasAct','seguridadAct'];
     perms.forEach(function(col, i){
         var val = parseInt(tr.find('td').eq(col).attr('data-permission'), 10);
         $('#'+ids[i]).prop('checked', val === 1);

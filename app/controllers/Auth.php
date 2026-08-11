@@ -93,14 +93,21 @@ class Auth {
 
     // Verifica el token recibido por POST. Si falla, detiene la ejecución.
     public static function verificarCsrf(): void {
-        self::iniciar();
         $recibido = $_POST['csrf_token'] ?? '';
-        if (empty($_SESSION['csrf_token']) || !is_string($recibido) || !hash_equals($_SESSION['csrf_token'], $recibido)) {
+        if (!self::csrfValido($recibido)) {
             self::flash('error', 'Tu sesión o el formulario expiraron. Intenta de nuevo.');
             $destino = $_SESSION['pagina'] ?? (BASE_URL . '/index.php');
             header('Location: ' . $destino);
             exit();
         }
+    }
+
+    // Permite validar CSRF en endpoints JSON sin redirigir ni producir HTML.
+    public static function csrfValido($recibido): bool {
+        self::iniciar();
+        return !empty($_SESSION['csrf_token'])
+            && is_string($recibido)
+            && hash_equals($_SESSION['csrf_token'], $recibido);
     }
 
     // ------------------------------------------------------------------

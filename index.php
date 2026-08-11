@@ -46,6 +46,7 @@ $permisos = [
     'maestros' => ($_SESSION['maestros'] ?? '0') == '1',
     'transacciones' => ($_SESSION['transacciones'] ?? '0') == '1',
     'mantenimientos' => ($_SESSION['mantenimientos'] ?? '0') == '1',
+    'licencias' => ($_SESSION['licencias'] ?? '0') == '1',
     'consultas' => ($_SESSION['consultas'] ?? '0') == '1',
     'reportes' => ($_SESSION['reportes'] ?? '0') == '1',
     'seguridad' => ($_SESSION['seguridad'] ?? '0') == '1',
@@ -53,6 +54,7 @@ $permisos = [
 $acciones = [];
 if ($permisos['transacciones']) $acciones[] = ['asignarequipo.php','fa-laptop-file','Nueva asignación','Entregar un equipo disponible'];
 if ($permisos['mantenimientos']) $acciones[] = ['mantenimientos.php','fa-screwdriver-wrench','Mantenimientos','Abrir y dar seguimiento a reparaciones'];
+if ($permisos['licencias']) $acciones[] = ['licencias.php','fa-key','Licencias','Administrar software y vigencias'];
 if ($permisos['maestros']) {
     $acciones[] = ['equipos.php','fa-laptop','Inventario','Registrar o actualizar equipos'];
     $acciones[] = ['empleados.php','fa-users','Personal','Administrar empleados'];

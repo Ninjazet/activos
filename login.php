@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reg = $db->fila(
                 "SELECT us.idusuario, us.username, us.pass, us.idempleado,
                         em.nombre, em.apellidos, em.imagen,
-                        pe.datosmaestros, pe.transacciones, pe.mantenimientos,
+                        pe.datosmaestros, pe.transacciones, pe.mantenimientos, pe.licencias,
                         pe.consultas, pe.reportes, pe.actas, pe.seguridad
                  FROM usuarios us
                  INNER JOIN empleados em ON us.idempleado = em.idempleado
@@ -65,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['maestros']      = $reg['datosmaestros'];
                 $_SESSION['transacciones'] = $reg['transacciones'];
                 $_SESSION['mantenimientos'] = $reg['mantenimientos'];
+                $_SESSION['licencias']     = $reg['licencias'];
                 $_SESSION['consultas']     = $reg['consultas'];
                 $_SESSION['reportes']      = $reg['reportes'];
                 $_SESSION['actas']         = $reg['actas'];

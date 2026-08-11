@@ -60,6 +60,8 @@ final class ProveedorController {
             die('Proveedor no encontrado.');
         }
         $equipos = $service->equipos((int)$id);
+        $puedeVerLicencias = (string)Auth::get('licencias') === '1';
+        $licencias = $puedeVerLicencias ? $service->licencias((int)$id) : [];
         $pageTitle = 'Ficha del Proveedor';
         require BASE_PATH . '/app/views/layouts/encabezado.php';
         require BASE_PATH . '/app/views/maestros/proveedores/detalle.php';

@@ -98,6 +98,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (in_array($datos['estado'], [EquipoEstado::ASIGNADO, EquipoEstado::MANTENIMIENTO], true)) {
                 $datos['estado'] = EquipoEstado::DISPONIBLE;
             }
+            if ($datos['estado'] === EquipoEstado::BAJA && $db->fila(
+                'SELECT idasignacion_licencia FROM licencia_asignaciones
+                 WHERE idequipo=? AND activa=1 LIMIT 1',
+                [$datos['id']]
+            )) {
+                throw new RuntimeException('No se puede dar de baja: devuelve primero las licencias de software asignadas al equipo.');
+            }
 
             if (!Upload::estaVacio($_FILES['archivoAct'] ?? null)) {
                 $archivoGuardado = Upload::guardarImagen($_FILES['archivoAct'], IMG_EQUIPOS, 'equipo');
@@ -148,8 +155,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'SELECT idmantenimiento FROM mantenimientos WHERE idequipo=? AND estado IN (?,?)',
                 [$idEquipoDel, MantenimientoEstado::ABIERTO, MantenimientoEstado::EN_PROCESO]
             );
+            $tieneLicencia = $db->fila(
+                'SELECT idasignacion_licencia FROM licencia_asignaciones
+                 WHERE idequipo=? AND activa=1 LIMIT 1',
+                [$idEquipoDel]
+            );
             if ($tieneAsignacion) {
                 Auth::flash('error', 'No se puede dar de baja: este equipo tiene una asignación activa. Quita primero la asignación.');
+            } elseif ($tieneLicencia) {
+                Auth::flash('error', 'No se puede dar de baja: devuelve primero las licencias de software asignadas al equipo.');
             } elseif ($tieneMantenimiento) {
                 Auth::flash('error', 'No se puede dar de baja directamente: cierra el mantenimiento con resultado No reparable.');
             } else {

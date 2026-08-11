@@ -4,7 +4,7 @@
       <div class="module-header-copy">
         <a href="<?= BASE_URL ?>/proveedores.php" class="small"><i class="fa fa-arrow-left" aria-hidden="true"></i> Volver a proveedores</a>
         <h2><?= htmlspecialchars($proveedor['nombre']) ?></h2>
-        <p>Ficha comercial y activos adquiridos.</p>
+        <p>Ficha comercial, activos y licencias adquiridas.</p>
       </div>
       <span class="badge app-badge-<?= (int)$proveedor['activo'] === 1 ? 'success' : 'muted' ?>">
         <?= (int)$proveedor['activo'] === 1 ? 'Activo' : 'Inactivo' ?>
@@ -12,9 +12,10 @@
     </div>
 
     <div class="row g-3 mb-4">
-      <div class="col-md-4"><div class="card h-100"><div class="card-body"><small class="text-muted">Equipos relacionados</small><h3><?= (int)$proveedor['equipos'] ?></h3></div></div></div>
-      <div class="col-md-4"><div class="card h-100"><div class="card-body"><small class="text-muted">Total registrado en compras</small><h3>L <?= number_format((float)$proveedor['total_compras'], 2) ?></h3></div></div></div>
-      <div class="col-md-4"><div class="card h-100"><div class="card-body"><small class="text-muted">RTN</small><h3 class="h5"><?= htmlspecialchars($proveedor['rtn'] ?: 'No registrado') ?></h3></div></div></div>
+      <div class="col-md-<?= $puedeVerLicencias ? '3' : '4' ?>"><div class="card h-100"><div class="card-body"><small class="text-muted">Equipos relacionados</small><h3><?= (int)$proveedor['equipos'] ?></h3></div></div></div>
+      <?php if ($puedeVerLicencias): ?><div class="col-md-3"><div class="card h-100"><div class="card-body"><small class="text-muted">Licencias relacionadas</small><h3><?= (int)$proveedor['licencias'] ?></h3></div></div></div><?php endif; ?>
+      <div class="col-md-<?= $puedeVerLicencias ? '3' : '4' ?>"><div class="card h-100"><div class="card-body"><small class="text-muted">Total registrado en equipos</small><h3>L <?= number_format((float)$proveedor['total_compras'], 2) ?></h3></div></div></div>
+      <div class="col-md-<?= $puedeVerLicencias ? '3' : '4' ?>"><div class="card h-100"><div class="card-body"><small class="text-muted">RTN</small><h3 class="h5"><?= htmlspecialchars($proveedor['rtn'] ?: 'No registrado') ?></h3></div></div></div>
     </div>
 
     <div class="row g-3 mb-4">
@@ -45,5 +46,26 @@
       <script>$(function(){ $('#equiposProveedor').DataTable({dom:'lrtip',order:[[3,'desc']]}); });</script>
       <?php else: ?><p class="text-muted mb-0">Todavía no hay equipos relacionados.</p><?php endif; ?>
     </div></div>
+
+    <?php if ($puedeVerLicencias): ?>
+    <div class="card mt-4"><div class="card-body">
+      <h3 class="h5">Licencias compradas a este proveedor</h3>
+      <?php if ($licencias): ?><div class="table-responsive"><table class="table table-striped table-bordered" id="licenciasProveedor"><thead><tr><th>Código</th><th>Software</th><th>Modalidad</th><th>Cantidad</th><th>Compra</th><th>Vencimiento</th><th>Costo</th><th>Estado</th></tr></thead><tbody>
+      <?php foreach ($licencias as $licenciaProveedor): ?>
+        <tr class="<?= (int)$licenciaProveedor['activo'] === 1 ? '' : 'text-muted' ?>">
+          <td><a href="<?= BASE_URL ?>/licencia.php?id=<?= (int)$licenciaProveedor['idlicencia'] ?>"><strong><?= htmlspecialchars($licenciaProveedor['codigo_licencia']) ?></strong></a></td>
+          <td><?= htmlspecialchars($licenciaProveedor['fabricante'].' · '.$licenciaProveedor['software']) ?></td>
+          <td><?= htmlspecialchars($licenciaProveedor['modalidad']) ?></td>
+          <td><?= $licenciaProveedor['cantidad_total']===null?'Sin límite':(int)$licenciaProveedor['cantidad_total'] ?></td>
+          <td><?= $licenciaProveedor['fecha_compra']?date('d/m/Y',strtotime($licenciaProveedor['fecha_compra'])):'—' ?></td>
+          <td><?= $licenciaProveedor['fecha_vencimiento']?date('d/m/Y',strtotime($licenciaProveedor['fecha_vencimiento'])):'—' ?></td>
+          <td><?= $licenciaProveedor['costo_total']!==null?htmlspecialchars($licenciaProveedor['moneda']).' '.number_format((float)$licenciaProveedor['costo_total'],2):'—' ?></td>
+          <td><?= (int)$licenciaProveedor['activo']===1?'Activo':'Inactivo' ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody></table></div><script>$(function(){ $('#licenciasProveedor').DataTable({dom:'lrtip',order:[[4,'desc']]}); });</script>
+      <?php else: ?><p class="text-muted mb-0">Todavía no hay licencias relacionadas.</p><?php endif; ?>
+    </div></div>
+    <?php endif; ?>
   </div>
 </div>

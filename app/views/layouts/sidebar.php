@@ -11,6 +11,7 @@ $imagen = Imagen::empleado(Auth::get('foto'));
 $mae  = $_SESSION['maestros']      ?? '0';
 $tran = $_SESSION['transacciones'] ?? '0';
 $mant = $_SESSION['mantenimientos'] ?? '0';
+$lic  = $_SESSION['licencias']      ?? '0';
 $con  = $_SESSION['consultas']     ?? '0';
 $rep  = $_SESSION['reportes']      ?? '0';
 $seg  = $_SESSION['seguridad']     ?? '0';
@@ -101,6 +102,27 @@ $esRutaActiva = static function (string $url) use ($rutaActual): bool {
                 <div class="icon"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i></div>
                 <div class="title"><span>Mantenimientos</span></div>
             </a>
+        </div>
+        <div class="item separator"></div>
+        <?php endif; ?>
+
+        <?php if ($lic == '1'): ?>
+        <?php $licenciasActivo = $esRutaActiva('licencias.php') || $esRutaActiva('licencia.php') || $esRutaActiva('software.php'); ?>
+        <div class="item has-submenu <?= $licenciasActivo ? 'is-open' : '' ?>" id="menu-licencias">
+            <a href="#menu-licencias" class="<?= $licenciasActivo ? 'active' : '' ?>">
+                <div class="icon"><i class="fa-solid fa-key" aria-hidden="true"></i></div>
+                <div class="title"><span>Licencias</span></div>
+            </a>
+            <div class="subitem">
+                <a href="<?= BASE_URL ?>/licencias.php" class="<?= $esRutaActiva('licencias.php') || $esRutaActiva('licencia.php') ? 'active' : '' ?>">
+                    <div class="icon"><i class="fa-solid fa-id-card" aria-hidden="true"></i></div>
+                    <div class="title"><span>Licencias de software</span></div>
+                </a>
+                <a href="<?= BASE_URL ?>/software.php" class="<?= $esRutaActiva('software.php') ? 'active' : '' ?>">
+                    <div class="icon"><i class="fa-solid fa-box" aria-hidden="true"></i></div>
+                    <div class="title"><span>Catálogo de software</span></div>
+                </a>
+            </div>
         </div>
         <div class="item separator"></div>
         <?php endif; ?>
