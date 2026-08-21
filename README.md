@@ -6,22 +6,8 @@ Tecnologías principales: PHP 8, MySQL/MariaDB, Apache, Bootstrap 5, jQuery/Data
 
 El esquema de instalación es compatible con MariaDB 10.4 o posterior y MySQL 8.0 o posterior. La conexión y todas las tablas utilizan `utf8mb4`.
 
-## Inicio local con XAMPP
-
-1. Coloca el proyecto en `C:\xampp\htdocs\activos`.
-2. Crea una base llamada `gestactivos` con codificación `utf8mb4`.
-3. Selecciona esa base e importa `database/gestactivos.sql`.
-4. Copia `.env.example` como `.env` y ajusta únicamente los valores de tu instalación.
-5. Inicia Apache y MySQL desde XAMPP.
-6. Abre `http://localhost/activos/` o la URL definida en `APP_BASE_URL`.
-
-El archivo `.env` contiene datos locales y está excluido de Git. Nunca deben guardarse contraseñas reales en `.env.example`.
-
-`database/gestactivos.sql` es el único respaldo de instalación y contiene el esquema junto con todos los datos existentes al 11 de agosto de 2026. No ejecutes migraciones adicionales después de importarlo.
 
 ## Configuración para XAMPP y Docker
-
-La aplicación toma su configuración desde variables del sistema o desde un archivo `.env`. Las variables del sistema tienen prioridad.
 
 | Variable | Uso | Valor local habitual |
 |---|---|---|
@@ -34,9 +20,6 @@ La aplicación toma su configuración desde variables del sistema o desde un arc
 | `DB_USER`, `DB_PASS`, `DB_NAME` | Credenciales y base | según la instalación |
 | `DB_CHARSET` | Codificación de conexión | `utf8mb4` |
 
-Si se configura `APP_STORAGE_PATH`, PHP intentará crear automáticamente las subcarpetas `empleados`, `equipos` y `firmas` cuando se usen. En Docker, monta un volumen persistente en esa ruta y concede escritura al usuario que ejecuta Apache/PHP. Por ejemplo, se puede usar `APP_STORAGE_PATH=/var/lib/gestactivos/media` y montar el volumen en `/var/lib/gestactivos/media`.
-
-Las fotos de empleados y equipos se entregan mediante la ruta autenticada `media.php`. Por eso el volumen puede estar fuera de la carpeta pública del servidor y las imágenes seguirán cargando con cualquier dominio o valor válido de `APP_BASE_URL`.
 
 ## Arquitectura actual
 
