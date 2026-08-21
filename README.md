@@ -42,7 +42,7 @@ Las fotos de empleados y equipos se entregan mediante la ruta autenticada `media
 
 El flujo normal de una petición es:
 
-`página o endpoint` → `autenticación y permiso` → `servicio/regla de negocio` → `Database` → `vista o respuesta AJAX`
+`página o endpoint` → `autenticación y permiso` → `servicio/regla de negocio` → `Databasep` → `vista o respuesta AJAX`
 
 Las responsabilidades están distribuidas así:
 
@@ -71,48 +71,6 @@ tests/                           Suite automatizada de regresión
 database/                        Respaldo y migraciones SQL
 ```
 
-Toda entrada PHP debe comenzar cargando `bootstrap.php`. No deben incluirse manualmente clases individuales.
-
-## Fuentes únicas de reglas comunes
-
-- `EquipoEstado`: identificadores, nombres, opciones y estilos de los estados del equipo. No vuelvas a crear arreglos de estados dentro de una página.
-- `Imagen`: valida la referencia almacenada y devuelve la imagen real o el avatar predeterminado.
-- `Validacion`: normaliza fechas, correos, costos, textos, identificadores y números de serie.
-- `EquipoFormulario`: transforma los formularios de creación y edición de equipos en datos normalizados.
-- `AsignacionService`: protege el ciclo de asignación dentro de transacciones de base de datos.
-- `ProveedorService` y `ProveedorController`: administran el catálogo ampliado y su ficha de compras.
-- `MantenimientoEstado`: centraliza tipos, estados, resultados y estilos de mantenimiento.
-- `MantenimientoService`: abre, actualiza, cancela y cierra mantenimientos manteniendo sincronizado el estado del equipo.
-- `SoftwareService`: administra productos, fabricantes, versiones y ediciones sin borrar su historial.
-- `LicenciaService`: registra compras, vigencias, titulares y claves protegidas, y controla sus bajas lógicas.
-- `LicenciaEstado`: centraliza modalidades, métricas, destinos permitidos y estados calculados de vigencia.
-- `SecretoLicencia`: cifra y enmascara claves de producto mediante la llave local de cada instalación.
-- `CatalogoService` y `CatalogoController`: reúnen el CRUD de áreas, cargos, marcas y modelos.
-
-## Cómo modificar un módulo existente
-
-1. Ubica primero su página principal y su endpoint en `app/ajax`.
-2. Si el cambio es una regla de negocio, colócalo en `app/domain` o `app/services`, no dentro del HTML.
-3. Si es una validación reutilizable, agrégala a `Validacion`.
-4. Si cambia una etiqueta o estado de equipo, modifica únicamente `EquipoEstado`.
-5. Conserva `Auth::requerirPermiso(...)` en cada archivo invocable directamente.
-6. En todo formulario que escriba datos, conserva el campo y la verificación CSRF.
-7. Usa consultas preparadas y `Database::transaccion()` cuando una acción actualice más de una tabla.
-8. Ejecuta la suite de regresión antes de probar visualmente.
-
-## Cómo agregar funcionalidad nueva
-
-Para un catálogo simple, agrega su definición permitida en `CatalogoService`, crea las dos rutas pequeñas que delegan en `CatalogoController` y agrega el enlace con su permiso en el sidebar. Las tablas y modales comunes no deben copiarse.
-
-Para una operación de negocio:
-
-1. Crea un servicio en `app/services` con validación y transacción.
-2. Deja en la página principal solo autenticación, CSRF, llamada al servicio, bitácora y redirección.
-3. Coloca los fragmentos visuales en `app/views/<módulo>`.
-4. Usa el endpoint AJAX únicamente para filtros, consultas y renderizado.
-5. Agrega al menos una prueba de la nueva regla en `tests/run.php`.
-
-No borres historial de asignaciones ni mantenimientos. Las bajas de empleados, equipos, proveedores y catálogos son lógicas y deben respetar sus dependencias.
 
 ## Proveedores y mantenimientos
 
@@ -139,28 +97,4 @@ La base del módulo separa el catálogo `software` de las compras `licencias` y 
 
 Las claves de producto nunca deben almacenarse sin protección. `SecretoLicencia` usa cifrado autenticado y obtiene la llave maestra exclusivamente de `APP_ENCRYPTION_KEY`. Para restaurar este respaldo conservando el acceso a las claves existentes, copia de forma privada la misma `APP_ENCRYPTION_KEY` de la instalación original. No incluyas esa llave en Git ni dentro del SQL.
 
-En una publicación con dominio, la aplicación debe servirse mediante HTTPS para proteger también la clave mientras viaja entre el navegador y el servidor al solicitar verla o copiarla.
 
-El esquema, los productos, las licencias y sus cupos actuales ya están incorporados en `database/gestactivos.sql`.
-
-## Pruebas de regresión
-
-Desde la raíz del proyecto ejecuta:
-
-```powershell
-C:\xampp\php\php.exe tests\run.php
-```
-
-La suite comprueba reglas de estados, validaciones, configuración por entorno, conexión y esquema, integridad de asignaciones y mantenimientos, restricciones SQL, archivos referenciados, permisos AJAX, renderizado de páginas, generación de PDF y sintaxis PHP global. No crea, edita ni elimina datos operativos; solamente genera sesiones temporales dentro de `tests/.tmp`.
-
-`tests/module_flow_worker.php` cubre escrituras reales de proveedores, cierres de mantenimiento y devoluciones con daño. Tiene un bloqueo de seguridad y solo funciona cuando `DB_NAME` contiene `_feature_test_`; debe ejecutarse sobre una copia temporal desechable, nunca sobre la base operativa.
-
-`tests/licencia_flow_worker.php` valida en una base temporal la creación y edición de software y licencias, generación y ajuste de cupos, asignación, devolución, cifrado de claves, prevención de duplicados y reglas de inactivación/reactivación. Requiere además una `APP_ENCRYPTION_KEY` de prueba.
-
-Después de una modificación visual, completa además una revisión manual en escritorio y móvil. Para cambios de asignación, recorre siempre creación, firma de entrega y devolución.
-
-## Documentos del proyecto
-
-- `documentacion_tecnica.html`: explicación extensa del sistema para otro programador.
-- `flujo-trabajo.html`: recorrido visual de los procesos principales.
-- `database/gestactivos.sql`: único respaldo completo de instalación; incluye el esquema final y los datos actuales.
